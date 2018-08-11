@@ -7,7 +7,8 @@
     "start": "moleculer-runner",
     "ci": "jest --watch",
     "test": "jest --coverage",
-    "lint": "eslint services"
+    "lint": "eslint services",
+    "deps": "npm-check -u"
   },
   "keywords": [
     "microservices",
@@ -15,14 +16,23 @@
   ],
   "author": "Icebob",
   "devDependencies": {
-    "eslint": "^5.0.1",
-    "jest": "^23.3.0",
-    "jest-cli": "^23.3.0",
-    "moleculer-repl": "^0.5.0"
+    "eslint": "5.3.0",
+    "jest": "23.5.0",
+    "jest-cli": "23.5.0",
+    "moleculer-repl": "0.5.1",
+    "npm-check": "5.8.0"
   },
   "dependencies": {
-    "moleculer-web": "^0.8.0",
-    "moleculer": "^0.13.0"
+    "bluebird": "3.5.1",
+    "cross-env": "5.2.0",
+    "dotenv": "6.0.0",
+    "jsonwebtoken": "8.3.0",
+    "moleculer": "0.13.1",
+    "moleculer-db": "0.7.5",
+    "moleculer-db-adapter-mongo": "0.4.1",
+    "moleculer-mail": "1.2.1",
+    "moleculer-web": "0.8.1",
+    "moment": "2.22.2"
   },
   "engines": {
     "node": ">= 8.x.x"

@@ -4,6 +4,8 @@ const ApiGateway = require("moleculer-web");
 
 module.exports = {
 	name: "api",
+	version: 1,
+
 	mixins: [ApiGateway],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
