@@ -5,7 +5,7 @@ const passport 			= require("passport");
 
 function loadStrategy(name) {
 	try {
-		return require(name);
+		return require(name).Strategy;
 	}
 	catch (error) {
 		this.logger.error(`The '${name}' package is missing. Please install it with 'npm install ${name}' command.`);
