@@ -6,20 +6,22 @@ const _ 			= require("lodash");
 
 const jwt 			= require("jsonwebtoken");
 
+const DbService = require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
-
+const HASH_SALT_ROUND = 10;
 /**
  * account service
  */
 module.exports = {
-	name: "account",
+	name: "accounts",
 	version: 1,
 
 	mixins: [
+		DbService("accounts"),
 		CacheCleaner([
-			"cache.clean.users"
+			"cache.clean.accounts"
 		])
 	],
 
@@ -37,14 +39,29 @@ module.exports = {
 
 		defaultRoles: ["user"],
 		defaultPlan: "free",
+		JWTTokenExpiresIn: "30d",
 
 		actions: {
-			createUser: "v1.users.create",
-			updateUser: "v1.users.update",
-			findUsers: "v1.users.find",
-			checkPassword: "v1.users.checkPassword",
 			sendMail: "mail.send"
 		},
+
+		fields: [
+			"_id",
+			"username",
+			"firstName",
+			"lastName",
+			"email",
+			"avatar",
+			"roles",
+			"socialLinks",
+			"status",
+			"plan",
+			"verified",
+			"passwordless",
+			"createdAt",
+			"updatedAt",
+			"lastLoginAt"
+		]		
 	},
 
 	/**
@@ -58,14 +75,32 @@ module.exports = {
 	 * Service dependencies
 	 */
 	dependencies: [
-		{ name: "users", version: 1 },
-		"mail"
+		{ name: "users", version: 1 }
 	],
 
 	/**
 	 * Actions
 	 */
 	actions: {
+		// Change visibility of default actions 
+		create: {
+			visibility: "protected"
+		},
+		list: {
+			visibility: "protected"
+		},
+		find: {
+			visibility: "protected"
+		},
+		get: {
+			visibility: "protected"
+		},
+		update: {
+			visibility: "protected"
+		},
+		remove: {
+			visibility: "protected"
+		},
 
 		/**
 		 * Get user by JWT token (for API GW authentication)
@@ -152,7 +187,7 @@ module.exports = {
 				}
 
 				// Create new user
-				const user = await ctx.call(this.settings.actions.createUser, entity);
+				const user = await ctx.call(`${this.fullName}.create`, entity);
 
 				// Send email
 				if (user.verified) {
@@ -175,8 +210,17 @@ module.exports = {
 				token: { type: "string" }
 			},
 			async handler(ctx) {
-				const user = await ctx.call("users.verify", { token: ctx.params.token });
+				let user = await this.adapter.findOne({ verificationToken: ctx.params.token });
+				if (!user)
+					throw new MoleculerClientError("Invalid verification token or expired!", 400, "INVALID_TOKEN");
 
+				user = await this.adapter.updateById(user._id, {
+					"$set": {
+						verified: true,
+						verificationToken: null
+					}
+				});
+				
 				// Send welcome email
 				this.sendMail(ctx, user, "welcome");
 
@@ -195,7 +239,14 @@ module.exports = {
 				if (!this.settings.enablePasswordless)
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
 
-				return ctx.call("users.checkPasswordlessToken", { token: ctx.params.token });
+				const user = await this.adapter.findOne({ passwordlessToken: ctx.params.token });
+				if (!user)
+					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
+
+				if (user.passwordlessTokenExpires < Date.now())
+					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
+
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -215,7 +266,7 @@ module.exports = {
 					throw new MoleculerClientError("Email is not registered.", 400, "ERR_EMAIL_NOT_FOUND");
 
 				// Save the token to user
-				user = await ctx.call(this.settings.actions.updateUser, {
+				user = await ctx.call(`${this.fullName}.update`, {
 					id: user._id,
 					resetToken: token,
 					resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
@@ -234,7 +285,14 @@ module.exports = {
 				token: { type: "string" }
 			},			
 			async handler(ctx) {
-				return ctx.call("users.checkResetPasswordToken", { token: ctx.params.token });
+				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
+				if (!user)
+					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
+
+				if (user.resetTokenExpires < Date.now())
+					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
+
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -251,7 +309,7 @@ module.exports = {
 				let user = await ctx.call("users.checkResetPasswordToken", { token: ctx.params.token });
 				
 				// Change the password
-				user = await ctx.call(this.settings.actions.updateUser, {
+				user = await ctx.call(`${this.fullName}.update`, {
 					id: user._id,
 					password: await bcrypt.hash(ctx.params.password, 10),
 					passwordless: false,
@@ -276,7 +334,7 @@ module.exports = {
 				userData: { type: "object" },
 			},
 			async handler(ctx) {
-				return ctx.call(this.settings.actions.updateUser, {
+				return ctx.call(`${this.fullName}.update`, {
 					id: ctx.params.user._id,
 					[`socialLinks.${ctx.params.provider}`]: ctx.params.userData.id,
 					verified: true, // if not verified yet via email
@@ -294,7 +352,7 @@ module.exports = {
 				provider: { type: "string" }
 			},
 			async handler(ctx) {
-				return ctx.call(this.settings.actions.updateUser, {
+				return ctx.call(`${this.fullName}.update`, {
 					id: ctx.params.user._id,
 					[`socialLinks.${ctx.params.provider}`]: null
 				});
@@ -324,7 +382,7 @@ module.exports = {
 				}
 
 				// Get user 							
-				const users = await ctx.call(this.settings.actions.findUsers, { query });
+				const users = await ctx.call(`${this.fullName}.find`, { query });
 				if (users.length == 0) 
 					throw new MoleculerClientError("User is not exist!", 400, "ERR_USER_NOT_FOUND");
 
@@ -347,7 +405,7 @@ module.exports = {
 				// Authenticate
 				if (ctx.params.password) {
 					// Login with password
-					await ctx.call(this.settings.actions.checkPassword, { id: user._id, password: ctx.params.password });
+					await ctx.call(`${this.fullName}.checkPassword`, { id: user._id, password: ctx.params.password });
 
 				} else if (this.settings.enablePasswordless) {
 					// Send magic link
@@ -383,7 +441,7 @@ module.exports = {
 
 					if (ctx.meta.user) {
 						// There is logged in user. Link to the logged in user
-						const users = await ctx.call(this.settings.actions.findUsers, { query });
+						const users = await ctx.call(`${this.fullName}.find`, { query });
 						if (users.length > 0) {
 							const user = users[0];
 							if (user._id != ctx.meta.user._id) 
@@ -405,7 +463,7 @@ module.exports = {
 						let foundBySocialID = false;
 						
 						let user;
-						const users = await ctx.call(this.settings.actions.findUsers, { query });
+						const users = await ctx.call(`${this.fullName}.find`, { query });
 						if (users.length > 0) {
 							// User found.
 							foundBySocialID = true;
@@ -474,9 +532,9 @@ module.exports = {
 		 * @param {Object} payload 
 		 * @param {String|Number} expiresIn 
 		 */
-		generateJWT(payload, expiresIn = "90d") {
+		generateJWT(payload, expiresIn) {
 			return new this.Promise((resolve, reject) => {
-				return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn }, (err, token) => {
+				return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: expiresIn || this.settings.JWTTokenExpiresIn }, (err, token) => {
 					if (err) {
 						this.logger.warn("JWT token generation error:", err);
 						return reject(new MoleculerRetryableError("Unable to generate token", 500, "UNABLE_GENERATE_TOKEN"));
@@ -514,7 +572,7 @@ module.exports = {
 		async sendMagicLink(ctx, user) {
 			const token = this.generateToken();
 
-			const usr = await ctx.call(this.settings.actions.updateUser, {
+			const usr = await ctx.call(`${this.fullName}.update`, {
 				id: user._id,
 				passwordlessToken: token,
 				passwordlessTokenExpires: Date.now() + 3600 * 1000 // 1 hour
@@ -555,7 +613,7 @@ module.exports = {
 		 * @param {String} email 
 		 */
 		async getUserByEmail(ctx, email) {
-			const users = await ctx.call(this.settings.actions.findUsers, { query: { email }});
+			const users = await ctx.call(`${this.fullName}.find`, { query: { email }});
 			return users.length > 0 ? users[0] : null;
 		},
 			
@@ -566,103 +624,8 @@ module.exports = {
 		 * @param {String} username 
 		 */
 		async getUserByUsername(ctx, username) {
-			const users = await ctx.call(this.settings.actions.findUsers, { query: { username }});
+			const users = await ctx.call(`${this.fullName}.find`, { query: { username }});
 			return users.length > 0 ? users[0] : null;
-		},
-
-		/**
-		 * Get 'user' entity from social profile
-		 * 
-		 * @param {*} provider 
-		 * @param {*} profile 
-		 */
-		getUserDataFromSocialProfile(provider, profile) {
-			switch(provider) {
-				case "google": return this.getUserDataFromGoogleProfile(profile);
-				case "facebook": return this.getUserDataFromFacebookProfile(profile);
-				case "github": return this.getUserDataFromGithubProfile(profile);
-				case "twitter": return this.getUserDataFromTwitterProfile(profile);
-			}
-
-			return null;
-		},
-
-		/**
-		 * Get 'user' entity fields from Google social profile
-		 * 
-		 * @param {*} profile 
-		 */
-		getUserDataFromGoogleProfile(profile) {
-			const res = {
-				id: profile.id,
-				name: profile.displayName,
-			};
-			if (profile.emails && profile.emails.length > 0) {
-				res.email = profile.emails[0].value;
-				res.username = res.email;
-			}
-
-			if (profile.photos && profile.photos.length > 0)
-				res.avatar = profile.photos[0].value.replace("sz=50", "sz=200");
-
-			return res;
-		},
-
-		/**
-		 * Get 'user' entity fields from Facebook social profile
-		 * 
-		 * @param {*} profile 
-		 */
-		getUserDataFromFacebookProfile(profile) {
-			const res = {
-				id: profile.id,
-				username: profile._json.email,
-				name: profile.name.givenName + " " + profile.name.familyName,
-				email: profile._json.email,
-				avatar: `https://graph.facebook.com/${profile.id}/picture?type=large`
-			};
-			return res;
-		},
-
-		/**
-		 * Get 'user' entity fields from Github social profile
-		 * 
-		 * @param {*} profile 
-		 */
-		getUserDataFromGithubProfile(profile) {
-			const res = {
-				id: profile.id,
-				username: profile.username,
-				name: profile.displayName,
-				avatar: profile._json.avatar_url
-			};
-
-			if (profile.emails && profile.emails.length > 0) {
-				let email = profile.emails.find(email => email.primary);
-				if (!email) 
-					email = profile.emails[0];
-				
-				res.email = email.value;
-			}
-
-			return res;
-		},
-
-		/**
-		 * Get 'user' entity fields from Twitter social profile
-		 * 
-		 * @param {*} profile 
-		 */
-		getUserDataFromTwitterProfile(profile) {
-			const res = {
-				id: profile.id,
-				username: profile.username,
-				name: profile.displayName,
-				email: `${profile.username}@twitter.com`,
-				avatar: profile._json.profile_image_url_https
-			};
-
-			return res;
 		},
 
 		/**
@@ -672,6 +635,50 @@ module.exports = {
 		 */
 		generateToken(len = 25) {
 			return crypto.randomBytes(len).toString("hex");
+		},
+
+		async hashPassword(pass) {
+			return bcrypt.hash(pass, HASH_SALT_ROUND);
+		},		
+
+		async seedDB() {
+			const res = await this.adapter.insertMany([
+				// Administrator
+				{
+					username: "admin",
+					password: await this.hashPassword("admin"),
+					firstName: "Administrator",
+					lastName: "",
+					email: "admin@kantab.moleculer.services",
+					avatar: "http://romaniarising.com/wp-content/uploads/2014/02/avatar-admin-robot-150x150.jpg",
+					roles: ["admin"],
+					socialLinks: {},
+					status: 1,
+					plan: "full",
+					verified: true,
+					passwordless: false,					
+					createdAt: Date.now(),
+				},
+
+				// Test user
+				{
+					username: "test",
+					password: await this.hashPassword("test"),
+					firstName: "Test",
+					lastName: "User",
+					email: "test@kantab.moleculer.services",
+					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+					roles: ["user"],
+					socialLinks: {},
+					status: 1,
+					plan: "free",
+					verified: true,
+					passwordless: false,
+					createdAt: Date.now(),
+				}
+			]);
+
+			this.logger.info(`Generated ${res.length} users!`);
 		}		
 	},
 
