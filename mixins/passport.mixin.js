@@ -1,17 +1,7 @@
 "use strict";
 
-const _ 				= require("lodash");
-const passport 			= require("passport");
-
-function loadStrategy(name) {
-	try {
-		return require(name).Strategy;
-	}
-	catch (error) {
-		this.logger.error(`The '${name}' package is missing. Please install it with 'npm install ${name}' command.`);
-		return;
-	}
-}
+const _ 		= require("lodash");
+const passport 	= require("passport");
 
 module.exports = function(mixinOptions) {
 	mixinOptions = mixinOptions || {};
@@ -61,7 +51,7 @@ module.exports = function(mixinOptions) {
 				const fnName = `register${_.capitalize(provider)}Strategy`;
 				if (!_.isObject(setting))
 					setting = {};
-					
+
 				if (_.isFunction(this[fnName])) {
 					this[fnName](setting, route);
 				} else {

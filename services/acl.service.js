@@ -1,7 +1,14 @@
 "use strict";
 
+/**
+ * acl service
+ * 
+ * https://blog.nodeswat.com/implement-access-control-in-node-js-8567e7b484d1
+ * https://github.com/DeadAlready/easy-rbac
+ */
 module.exports = {
-	name: "greeter",
+	name: "acl",
+	version: 1,
 
 	/**
 	 * Service settings
@@ -11,37 +18,25 @@ module.exports = {
 	},
 
 	/**
+	 * Service metadata
+	 */
+	metadata: {
+
+	},
+
+	/**
 	 * Service dependencies
 	 */
-	dependencies: [],	
+	dependencies: [
+		{ name: "roles", version: 1 },
+		{ name: "users", version: 1 },
+	],
 
 	/**
 	 * Actions
 	 */
 	actions: {
 
-		/**
-		 * Say a 'Hello'
-		 *
-		 * @returns
-		 */
-		hello() {
-			return "Hello Moleculer";
-		},
-
-		/**
-		 * Welcome a username
-		 *
-		 * @param {String} name - User name
-		 */
-		welcome: {
-			params: {
-				name: "string"
-			},
-			handler(ctx) {
-				return `Welcome, ${ctx.params.name}`;
-			}
-		}
 	},
 
 	/**

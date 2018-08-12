@@ -23,6 +23,7 @@
     "npm-check": "5.8.0"
   },
   "dependencies": {
+    "bcrypt": "3.0.0",
     "bluebird": "3.5.1",
     "cross-env": "5.2.0",
     "dotenv": "6.0.0",

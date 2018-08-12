@@ -1,5 +1,6 @@
 "use strict";
 
+const _ 			= require("lodash");
 const DbService		= require("moleculer-db");
 const MongoAdapter 	= require("moleculer-db-adapter-mongo");
 
@@ -27,6 +28,14 @@ module.exports = function(collection) {
 
 				return id;
 			}
-		}
+		},
+
+		async afterConnected() {
+			const count = await this.adapter.count();
+			if (count == 0 && _.isFunction(this.seedDB)) {
+				this.logger.info(`Seed '${collection}' collection...`);
+				this.seedDB();
+			}
+		}		
 	};
 };
