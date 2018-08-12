@@ -26,6 +26,13 @@ module.exports = {
 	],
 
 	/**
+	 * Service dependencies
+	 */
+	dependencies: [
+		{ name: "config", version: 1 }
+	],
+
+	/**
 	 * Service settings
 	 */
 	settings: {
@@ -63,20 +70,6 @@ module.exports = {
 			"lastLoginAt"
 		]		
 	},
-
-	/**
-	 * Service metadata
-	 */
-	metadata: {
-
-	},
-
-	/**
-	 * Service dependencies
-	 */
-	dependencies: [
-		{ name: "users", version: 1 }
-	],
 
 	/**
 	 * Actions

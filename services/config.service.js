@@ -99,7 +99,7 @@ module.exports = {
 				const value = this.settings.defaultConfig[key];
 				const has = await this.has(key);
 				if (!has) {
-					this.logger.info(`Save new config. "${key}" =`, value);
+					this.logger.info(`Save new config: "${key}" =`, value);
 					return this.adapter.insert({ key, value });
 				}
 			}));

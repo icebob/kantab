@@ -4,7 +4,19 @@ const MailService = require("moleculer-mail");
 
 module.exports = {
 	name: "mail",
+	
 	mixins: [MailService],
+
+	/**
+	 * Service dependencies
+	 */
+	dependencies: [
+		{ name: "config", version: 1 }
+	],
+
+	/**
+	 * Service settings
+	 */
 	settings: {
 		from: "no-reply@kantab.moleculer.services",
 		transport: {

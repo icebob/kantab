@@ -4,8 +4,7 @@ const DbService 	= require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
 
 /**
- * roles service
- * 
+ * Roles service 
  */
 module.exports = {
 	name: "roles",

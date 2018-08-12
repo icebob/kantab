@@ -29,7 +29,7 @@ module.exports = {
 	 */
 	dependencies: [
 		{ name: "roles", version: 1 },
-		{ name: "users", version: 1 },
+		{ name: "accounts", version: 1 },
 	],
 
 	/**
