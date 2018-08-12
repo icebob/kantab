@@ -26,6 +26,7 @@
     "bluebird": "3.5.1",
     "cross-env": "5.2.0",
     "dotenv": "6.0.0",
+    "glob": "7.1.2",
     "jsonwebtoken": "8.3.0",
     "moleculer": "0.13.1",
     "moleculer-db": "0.7.5",
