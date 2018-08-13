@@ -4,7 +4,6 @@ module.exports = {
     node: true
   },
   'extends': [
-    'plugin:vue/essential',
     'eslint:recommended'
   ],
   rules: {
@@ -35,11 +34,11 @@ module.exports = {
         ]
   },
   parserOptions: {
-    parser: 'babel-eslint'
-  },
-  ecmaVersion: 2017,
-      ecmaFeatures: {
-          experimentalObjectRestSpread: true
-      }
+    parser: 'babel-eslint',
+    sourceType: "module",
+    ecmaVersion: 2017,
+    ecmaFeatures: {
+        experimentalObjectRestSpread: true
+    }
   }
 };
