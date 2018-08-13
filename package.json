@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "description": "Kanban board application with microservices",
   "scripts": {
-    "dev": "moleculer-runner --repl --hot services",
+    "dev": "moleculer-runner --repl --hot backend/services",
     "start": "moleculer-runner",
     "ci": "jest --watch",
     "test": "jest --coverage",
-    "lint": "eslint services",
+    "lint": "eslint backend frontend",
     "deps": "npm-check -u"
   },
   "keywords": [
@@ -42,9 +42,9 @@
   "jest": {
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "rootDir": "./services",
+    "rootDir": "./",
     "roots": [
-      "../test"
+      "./test"
     ]
   }
 }
