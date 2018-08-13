@@ -3,30 +3,24 @@
 # KanTab
 KanTab is a kanban board application. Powered by Moleculer &amp; Vue.
 
-## Build Setup
+## Tech stack
+Desired features & modules:
 
-``` bash
-# Install dependencies
-npm install
+- [ ] Node v8.x with async/await
+- [ ] Moleculer microservices backend
+- [ ] VueJS frontend (VueX, Vue-router)
+- [ ] Central configuration
+- [ ] REST API
+- [ ] GraphQL
+- [ ] Passport.js
+- [ ] ACL/RBAC (user roles & permissions)
+- [ ] Plans & payments
+- [ ] LDAP (?)
+- [ ] I18N
+- [ ] MongoDB
+- [ ] Websocket
+- [ ] Plugin system
+- [ ] Caching
+- [ ] Metrics & monitoring
+- [ ] Unit test & E2E test with Jest, Cypress
 
-# Start developing with REPL
-npm run dev
-
-# Start production
-npm start
-
-# Run unit tests
-npm test
-
-# Run continuous test mode
-npm run ci
-
-# Run ESLint
-npm run lint
-```
-
-## Run in Docker
-
-```bash
-$ docker-compose up -d --build
-```
