@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "description": "Kanban board application with microservices",
   "scripts": {
-    "dev": "moleculer-runner --repl --hot backend/services",
-    "start": "moleculer-runner",
+    "dev": "moleculer-runner --envfile=backend/.env --repl --hot backend/services",
+    "start": "moleculer-runner --envfile=backend/.env",
     "ci": "jest --watch",
     "test": "jest --coverage",
     "lint": "eslint backend frontend",

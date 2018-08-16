@@ -4,7 +4,7 @@ const MailService = require("moleculer-mail");
 
 module.exports = {
 	name: "mail",
-	
+
 	mixins: [MailService],
 
 	/**
@@ -25,9 +25,9 @@ module.exports = {
 			auth: {
 				user: process.env.MAILTRAP_USER,
 				pass: process.env.MAILTRAP_PASS
-			}			
+			}
 		},
-		templateFolder: "./templates/mail",
+		templateFolder: "./backend/templates/mail",
 
 		// Common data
 		data: {
