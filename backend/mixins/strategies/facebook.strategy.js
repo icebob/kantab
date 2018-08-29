@@ -15,7 +15,7 @@ module.exports = {
 		catch (error) {
 			this.logger.error("The 'passport-facebook' package is missing. Please install it with 'npm i passport-facebook' command.");
 			return;
-		}		
+		}
 
 		passport.use(providerName, new Strategy(Object.assign({
 			clientID: process.env.FACEBOOK_CLIENT_ID,
@@ -37,7 +37,9 @@ module.exports = {
 		const res = {
 			provider: profile.provider,
 			socialID: profile.id,
-			name: profile.name.givenName + " " + profile.name.familyName,
+			username: profile.username,
+			firstName: profile.name.givenName,
+			lastName: profile.name.familyName,
 			email: profile._json.email,
 			avatar: `https://graph.facebook.com/${profile.id}/picture?type=large`
 		};

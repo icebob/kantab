@@ -3,5 +3,6 @@
 const glob = require("glob").sync;
 
 module.exports = function() {
-	return glob("*.strategy.js", { cwd: __dirname });
+	return glob("*.strategy.js", { cwd: __dirname })
+		.map(filename => require("./" + filename));
 };

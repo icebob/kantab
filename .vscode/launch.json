@@ -12,7 +12,8 @@
 			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",
 			"cwd": "${workspaceRoot}",
 			"args": [
-				"services"
+				"--hot",
+				"backend/services"
 			]
 		},
 		{

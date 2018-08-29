@@ -1,5 +1,8 @@
 "use strict";
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
 	namespace: "",
@@ -12,7 +15,7 @@ module.exports = {
 
 	serializer: "JSON",
 
-	requestTimeout: 10 * 1000,
+	//requestTimeout: 10 * 1000,
 	retryPolicy: {
 		enabled: false,
 		retries: 5,

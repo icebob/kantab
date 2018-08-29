@@ -68,14 +68,14 @@ module.exports = {
 			"createdAt",
 			"updatedAt",
 			"lastLoginAt"
-		]		
+		]
 	},
 
 	/**
 	 * Actions
 	 */
 	actions: {
-		// Change visibility of default actions 
+		// Change visibility of default actions
 		create: {
 			visibility: "protected"
 		},
@@ -117,7 +117,64 @@ module.exports = {
 		},
 
 		/**
+		 * Get user by JWT token (for API GW authentication)
+		 *
+		 * @actions
+		 * @param {String} token - JWT token
+		 *
+		 * @returns {Object} Resolved user
+		 */
+		resolveToken: {
+			cache: {
+				keys: ["token"],
+				ttl: 60 * 60 // 1 hour
+			},
+			params: {
+				token: "string"
+			},
+			async handler(ctx) {
+				const decoded = await this.verifyJWT(ctx.params.token);
+				if (!decoded.id)
+					throw new MoleculerClientError("Invalid token", 401, "INVALID_TOKEN");
+
+				const user = await this.getById(decoded.id);
+				if (!user)
+					throw new MoleculerClientError("User is not registered", 401, "USER_NOT_FOUND");
+
+				if (user.status !== 1)
+					throw new MoleculerClientError("User is disabled", 401, "USER_DISABLED");
+
+				return await this.transformDocuments(ctx, {}, user);
+			}
+		},
+
+		/**
+		 * Check user password
+		 */
+		checkPassword: {
+			visibility: "protected",
+			params: {
+				id: "any",
+				password: "string"
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(this.adapter.stringToObjectID(ctx.params.id));
+				if (!user)
+					throw new MoleculerClientError("User is not exist!", 400, "ERR_USER_NOT_FOUND");
+
+				const res = await bcrypt.compare(ctx.params.password, user.password);
+				if (!res)
+					throw new MoleculerClientError("Wrong password!", 400, "ERR_WRONG_PASSWORD");
+
+				// Transform user entity (remove password and all protected fields)
+				return user;
+			}
+		},
+
+		/**
 		 * Register a new user account
+		 *
+		 * TODO: move to method, because socialLogin must call it without verification
 		 */
 		register: {
 			params: {
@@ -134,7 +191,7 @@ module.exports = {
 
 				const params = Object.assign({}, ctx.params);
 				const entity = {};
-				
+
 				// TODO validate params by settings (username, password...)
 
 				// Verify email
@@ -148,18 +205,18 @@ module.exports = {
 					if (found)
 						throw new MoleculerClientError("Username has already been registered.", 400, "ERR_USERNAME_EXISTS");
 				}
-									
+
 				// Set basic data
 				if (this.settings.enableUsername)
 					entity.username = params.username;
 				entity.email = params.email;
-				entity.firstName = params.firstName;	
-				entity.lastName = params.lastName;	
+				entity.firstName = params.firstName;
+				entity.lastName = params.lastName;
 				entity.roles = this.settings.defaultRoles;
 				entity.plan = this.settings.defaultPlan;
 				entity.avatar = params.avatar;
-				entity.socialLinks = {};	
-				entity.createdAt = Date.now();	
+				entity.socialLinks = {};
+				entity.createdAt = Date.now();
 				entity.verified = true;
 				entity.status = 1;
 
@@ -189,7 +246,7 @@ module.exports = {
 				} else {
 					// Send verification email
 					this.sendMail(ctx, user, "activate", { token: entity.verificationToken });
-				}						
+				}
 
 				return user;
 			}
@@ -213,11 +270,11 @@ module.exports = {
 						verificationToken: null
 					}
 				});
-				
+
 				// Send welcome email
 				this.sendMail(ctx, user, "welcome");
 
-				return user;					
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -227,7 +284,7 @@ module.exports = {
 		passwordless: {
 			params: {
 				token: { type: "string" }
-			},			
+			},
 			async handler(ctx) {
 				if (!this.settings.enablePasswordless)
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
@@ -264,9 +321,11 @@ module.exports = {
 					resetToken: token,
 					resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
 				});
-				
+
 				// Send a passwordReset email
 				this.sendMail(ctx, user, "reset-password", { token });
+
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -276,7 +335,7 @@ module.exports = {
 		checkResetToken: {
 			params: {
 				token: { type: "string" }
-			},			
+			},
 			async handler(ctx) {
 				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
 				if (!user)
@@ -296,11 +355,11 @@ module.exports = {
 			params: {
 				token: { type: "string" },
 				password: { type: "string", min: 6 }
-			},			
+			},
 			async handler(ctx) {
 				// Check the token & expires
-				let user = await ctx.call("users.checkResetPasswordToken", { token: ctx.params.token });
-				
+				let user = await ctx.call(`${this.fullName}.checkResetToken`, { token: ctx.params.token });
+
 				// Change the password
 				user = await ctx.call(`${this.fullName}.update`, {
 					id: user._id,
@@ -313,7 +372,7 @@ module.exports = {
 				// Send password-changed email
 				this.sendMail(ctx, user, "password-changed");
 
-				return user;
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -324,15 +383,17 @@ module.exports = {
 			params: {
 				user: { type: "object" },
 				provider: { type: "string" },
-				userData: { type: "object" },
+				profile: { type: "object" },
 			},
 			async handler(ctx) {
-				return ctx.call(`${this.fullName}.update`, {
-					id: ctx.params.user._id,
-					[`socialLinks.${ctx.params.provider}`]: ctx.params.userData.id,
+				const user = await ctx.call(`${this.fullName}.update`, {
+					id: this.adapter.stringToObjectID(ctx.params.user._id),
+					[`socialLinks.${ctx.params.provider}`]: ctx.params.profile.socialID,
 					verified: true, // if not verified yet via email
 					verificationToken: null
 				});
+
+				return user;
 			}
 		},
 
@@ -345,10 +406,12 @@ module.exports = {
 				provider: { type: "string" }
 			},
 			async handler(ctx) {
-				return ctx.call(`${this.fullName}.update`, {
+				const user = ctx.call(`${this.fullName}.update`, {
 					id: ctx.params.user._id,
 					[`socialLinks.${ctx.params.provider}`]: null
 				});
+
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -374,12 +437,10 @@ module.exports = {
 					query = { email: ctx.params.email };
 				}
 
-				// Get user 							
-				const users = await ctx.call(`${this.fullName}.find`, { query });
-				if (users.length == 0) 
+				// Get user
+				const user = await this.adapter.findOne(query);
+				if (!user)
 					throw new MoleculerClientError("User is not exist!", 400, "ERR_USER_NOT_FOUND");
-
-				const user = users[0];
 
 				// Check verified
 				if (!user.verified) {
@@ -411,7 +472,12 @@ module.exports = {
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
 				}
 
-				return user;
+				//return this.transformDocuments(ctx, {}, user);
+				const payload = { id: user._id.toString() };
+
+				return {
+					token: await this.generateJWT(payload)
+				};
 			}
 		},
 
@@ -426,82 +492,81 @@ module.exports = {
 				refreshToken: { type: "string", optional: true },
 			},
 			async handler(ctx) {
-				const provider = ctx.params.provider;
-				const userData = this.getUserDataFromSocialProfile(provider, ctx.params.profile);
+				const { provider, profile } = ctx.params;
 
-				if (userData) {
-					const query = { [`socialLinks.${provider}`]: userData.id };
+				const query = { [`socialLinks.${provider}`]: profile.socialID };
+				if (ctx.meta.user) {
+					// There is logged in user. Link to the logged in user
+					let user = await this.adapter.findOne(query);
+					if (user) {
+						if (user._id != ctx.meta.user._id)
+							throw new MoleculerClientError("This social account has been linked to another account.", 400, "ERR_SOCIAL_ACCOUNT_MISMATCH");
 
-					if (ctx.meta.user) {
-						// There is logged in user. Link to the logged in user
-						const users = await ctx.call(`${this.fullName}.find`, { query });
-						if (users.length > 0) {
-							const user = users[0];
-							if (user._id != ctx.meta.user._id) 
-								throw new MoleculerClientError("This social account has been linked to an other account.", 400, "ERR_SOCIAL_ACCOUNT_MISMATCH");
-						
-							// Same user
-							return user;
-
-						} else {
-							// Not found linked account. Create the link
-							return ctx.call("account.link", { user: ctx.meta.user, provider, userData });
-						}
+						// Same user
+						user.token = await this.generateJWT({ id: user._id.toString() });
+						return user;
 
 					} else {
-						// No logged in user
-						if (!userData.email)
-							throw new MoleculerClientError("Missing e-mail address in social profile", 400, "ERR_NO_SOCIAL_EMAIL");
+						// Not found linked account. Create the link
+						user = await ctx.call(`${this.fullName}.link`, { user: ctx.meta.user, provider, profile });
 
-						let foundBySocialID = false;
-						
-						let user;
-						const users = await ctx.call(`${this.fullName}.find`, { query });
-						if (users.length > 0) {
-							// User found.
-							foundBySocialID = true;
-							user = users[0];
-						} else {
-							// Try to search user by email
-							user = await this.getUserByEmail(ctx, userData.email);
-						}
-
-						if (user) {
-							// Check status
-							if (user.status !== 1) {
-								throw new MoleculerClientError("Account is disabled!", 400, "ACCOUNT_DISABLED");
-							}
-							
-							// Found the user by email.
-
-							if (!foundBySocialID) {
-								// Not found linked account. Create the link
-								await ctx.call("account.link", { user, provider, userData });
-							}
-							
-							return user;
-						}
-
-						if (!this.settings.enableSignUp)
-							throw new MoleculerClientError("Sign up is not available", 400, "ERR_SIGNUP_DISABLED");
-
-						// Create a new user and link 
-						user = await ctx.call("account.register", {
-							username: userData.username,
-							password: bcrypt.genSaltSync(),
-							email: userData.email,
-							fullName: userData.name,
-							avatar: userData.avatar
-						});
-
-						if (!foundBySocialID)
-							return ctx.call("account.link", { user, provider, userData });
-						
+						user.token = await this.generateJWT({ id: user._id.toString() });
 						return user;
 					}
 
-				} else
-					throw new MoleculerClientError(`Unsupported provider: ${provider}`, 400, "ERR_UNSUPPORTED_PROVIDER");
+				} else {
+					// No logged in user
+					if (!profile.email)
+						throw new MoleculerClientError("Missing e-mail address in social profile", 400, "ERR_NO_SOCIAL_EMAIL");
+
+					let foundBySocialID = false;
+
+					let user = await this.adapter.findOne(query);
+					if (user) {
+						// User found.
+						foundBySocialID = true;
+					} else {
+						// Try to search user by email
+						user = await this.getUserByEmail(ctx, profile.email);
+					}
+
+					if (user) {
+						// Check status
+						if (user.status !== 1) {
+							throw new MoleculerClientError("Account is disabled!", 400, "ACCOUNT_DISABLED");
+						}
+
+						// Found the user by email.
+
+						if (!foundBySocialID) {
+							// Not found linked account. Create the link
+							user = await ctx.call(`${this.fullName}.link`, { user, provider, profile });
+						}
+
+						user.token = await this.generateJWT({ id: user._id.toString() });
+						return user;
+					}
+
+					if (!this.settings.enableSignUp)
+						throw new MoleculerClientError("Sign up is not available", 400, "ERR_SIGNUP_DISABLED");
+
+					// Create a new user and link
+					user = await ctx.call(`${this.fullName}.register`, {
+						username: profile.username || profile.email.split("@")[0],
+						password: await bcrypt.genSalt(),
+						email: profile.email,
+						firstName: profile.firstName,
+						lastName: profile.lastName,
+						avatar: profile.avatar
+					});
+
+					if (!foundBySocialID)
+						user = await ctx.call(`${this.fullName}.link`, { user, provider, profile });
+
+					user.token = await this.generateJWT({ id: user._id });
+
+					return user;
+				}
 			}
 		}
 
@@ -521,9 +586,9 @@ module.exports = {
 	methods: {
 		/**
 		 * Generate a JWT token from user entity.
-		 * 
-		 * @param {Object} payload 
-		 * @param {String|Number} expiresIn 
+		 *
+		 * @param {Object} payload
+		 * @param {String|Number} expiresIn
 		 */
 		generateJWT(payload, expiresIn) {
 			return new this.Promise((resolve, reject) => {
@@ -540,8 +605,8 @@ module.exports = {
 
 		/**
 		 * Verify a JWT token and return the decoded payload
-		 * 
-		 * @param {String} token 
+		 *
+		 * @param {String} token
 		 */
 		verifyJWT(token) {
 			return new this.Promise((resolve, reject) => {
@@ -558,9 +623,9 @@ module.exports = {
 
 		/**
 		 * Send login magic link to user email
-		 * 
-		 * @param {Context} ctx 
-		 * @param {Object} user 
+		 *
+		 * @param {Context} ctx
+		 * @param {Object} user
 		 */
 		async sendMagicLink(ctx, user) {
 			const token = this.generateToken();
@@ -576,11 +641,11 @@ module.exports = {
 
 		/**
 		 * Send email to the user email address
-		 * 
-		 * @param {Context} ctx 
-		 * @param {Object} user 
-		 * @param {String} template 
-		 * @param {Object?} data 
+		 *
+		 * @param {Context} ctx
+		 * @param {Object} user
+		 * @param {String} template
+		 * @param {Object?} data
 		 */
 		async sendMail(ctx, user, template, data) {
 			if (!this.settings.sendMail)
@@ -601,20 +666,20 @@ module.exports = {
 
 		/**
 		 * Get user by email
-		 * 
-		 * @param {Context} ctx 
-		 * @param {String} email 
+		 *
+		 * @param {Context} ctx
+		 * @param {String} email
 		 */
 		async getUserByEmail(ctx, email) {
 			const users = await ctx.call(`${this.fullName}.find`, { query: { email }});
 			return users.length > 0 ? users[0] : null;
 		},
-			
+
 		/**
 		 * Get user by username
-		 * 
-		 * @param {Context} ctx 
-		 * @param {String} username 
+		 *
+		 * @param {Context} ctx
+		 * @param {String} username
 		 */
 		async getUserByUsername(ctx, username) {
 			const users = await ctx.call(`${this.fullName}.find`, { query: { username }});
@@ -623,7 +688,7 @@ module.exports = {
 
 		/**
 		 * Generate a token
-		 * 
+		 *
 		 * @param {Number} len Token length
 		 */
 		generateToken(len = 25) {
@@ -632,7 +697,7 @@ module.exports = {
 
 		async hashPassword(pass) {
 			return bcrypt.hash(pass, HASH_SALT_ROUND);
-		},		
+		},
 
 		async seedDB() {
 			const res = await this.adapter.insertMany([
@@ -649,7 +714,7 @@ module.exports = {
 					status: 1,
 					plan: "full",
 					verified: true,
-					passwordless: false,					
+					passwordless: false,
 					createdAt: Date.now(),
 				},
 
@@ -672,7 +737,7 @@ module.exports = {
 			]);
 
 			this.logger.info(`Generated ${res.length} users!`);
-		}		
+		}
 	},
 
 	/**
