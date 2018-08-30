@@ -25,7 +25,8 @@ module.exports = {
 		passport.use(providerName, new Strategy(Object.assign({
 			consumerKey: process.env.TWITTER_CLIENT_ID,
 			consumerSecret: process.env.TWITTER_CLIENT_SECRET,
-			callbackURL: `/auth/${providerName}/callback`
+			callbackURL: `/auth/${providerName}/callback`,
+			includeEmail: true,
 		}, setting), (accessToken, refreshToken, profile, done) => {
 			this.logger.info(`Received '${providerName}' social profile: `, profile);
 
