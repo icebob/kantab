@@ -13,7 +13,10 @@ module.exports = {
 	mixins: [ApiGateway, PassportMixin()],
 
 	providers: {
-		google: true
+		google: true,
+		facebook: true,
+		github: true,
+		//twitter: true
 	},
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html

@@ -4,6 +4,9 @@ const passport = require("passport");
 
 const providerName = "google";
 
+/**
+ * Handle keys: https://console.developers.google.com/project/express-mongo-boilerplate/apiui/consent
+ */
 module.exports = {
 	name: providerName,
 
@@ -17,19 +20,30 @@ module.exports = {
 			return;
 		}
 
+		setting = Object.assign({}, {
+			scope: "profile email"
+		}, setting);
+
 		passport.use(providerName, new Strategy(Object.assign({
 			clientID: process.env.GOOGLE_CLIENT_ID,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 			callbackURL: `/auth/${providerName}/callback`
 		}, setting), (accessToken, refreshToken, profile, done) => {
-			this.logger.debug(`Received '${providerName}' social profile: `, profile);
+			this.logger.info(`Received '${providerName}' social profile: `, profile);
 
-			this.signInSocialUser({ provider: providerName, accessToken, refreshToken, profile: this.processGoogleProfile(profile) }, done);
+			this.signInSocialUser({
+				provider: providerName,
+				accessToken,
+				refreshToken,
+				profile: this.processGoogleProfile(profile)
+			}, done);
 		}));
 
 		// Create route aliases
-		route.aliases[`GET /${providerName}`] = (req, res) => passport.authenticate(providerName, { scope: setting.scope || "profile email" })(req, res);
-		route.aliases[`GET /${providerName}/callback`] = (req, res) => this.socialAuthCallback(req, res, setting, providerName);
+		const callback = this.socialAuthCallback(setting, providerName);
+
+		route.aliases[`GET /${providerName}`] = (req, res) => passport.authenticate(providerName, { scope: setting.scope })(req, res, callback(req, res));
+		route.aliases[`GET /${providerName}/callback`] = (req, res) => passport.authenticate(providerName, { session: false })(req, res, callback(req, res));
 	},
 
 	processProfile(profile) {

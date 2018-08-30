@@ -2,10 +2,10 @@
 
 const passport = require("passport");
 
-const providerName = "facebook";
+const providerName = "github";
 
 /**
- * Handle keys: https://developers.facebook.com/apps/
+ * Handle keys: https://github.com/settings/applications/new
  */
 module.exports = {
 	name: providerName,
@@ -13,22 +13,21 @@ module.exports = {
 	register(setting, route) {
 		let Strategy;
 		try {
-			Strategy = require("passport-facebook").Strategy;
+			Strategy = require("passport-github").Strategy;
 		}
 		catch (error) {
-			this.logger.error("The 'passport-facebook' package is missing. Please install it with 'npm i passport-facebook' command.");
+			this.logger.error("The 'passport-github' package is missing. Please install it with 'npm i passport-github' command.");
 			return;
 		}
 
 		setting = Object.assign({}, {
-			scope: ["email", "user_location"]
+			scope: "user:email"
 		}, setting);
 
 		passport.use(providerName, new Strategy(Object.assign({
-			clientID: process.env.FACEBOOK_CLIENT_ID,
-			clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-			callbackURL: `/auth/${providerName}/callback`,
-			profileFields: ["first_name","last_name", "email", "link", "locale", "timezone"],
+			clientID: process.env.GITHUB_CLIENT_ID,
+			clientSecret: process.env.GITHUB_CLIENT_SECRET,
+			callbackURL: `/auth/${providerName}/callback`
 		}, setting), (accessToken, refreshToken, profile, done) => {
 			this.logger.info(`Received '${providerName}' social profile: `, profile);
 
@@ -36,7 +35,7 @@ module.exports = {
 				provider: providerName,
 				accessToken,
 				refreshToken,
-				profile: this.processFacebookProfile(profile)
+				profile: this.processGithubProfile(profile)
 			}, done);
 		}));
 
@@ -51,11 +50,19 @@ module.exports = {
 		const res = {
 			provider: profile.provider,
 			socialID: profile.id,
-			firstName: profile.name.givenName,
-			lastName: profile.name.familyName,
-			email: profile._json.email,
-			avatar: `https://graph.facebook.com/${profile.id}/picture?type=large`
+			username: profile.username,
+			firstName: profile.displayName,
+			lastName: "",
+			avatar: profile._json.avatar_url
 		};
+
+		if (profile.emails && profile.emails.length > 0) {
+			let email = profile.emails.find(email => email.primary);
+			if (!email)
+				email = profile.emails[0];
+
+			res.email = email.value;
+		}
 
 		return res;
 	}

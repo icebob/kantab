@@ -26,8 +26,8 @@ module.exports = function(mixinOptions) {
 				}
 			},
 
-			socialAuthCallback(req, res, setting, providerName) {
-				passport.authenticate(providerName, { session: false, scope: setting.scope || "profile email" })(req, res, err => {
+			socialAuthCallback(setting, providerName) {
+				return (req, res) => err => {
 					if (err) {
 						/*
 						if (err.type == "MAGIC_LINK_SENT") {
@@ -56,7 +56,7 @@ module.exports = function(mixinOptions) {
 					this.logger.info(`Successful authentication with '${providerName}'.`);
 					this.logger.info("User", req.user);
 					this.sendRedirect(res, "/", 302);
-				});
+				};
 			}
 		},
 
