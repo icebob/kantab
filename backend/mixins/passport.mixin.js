@@ -19,50 +19,37 @@ module.exports = function(mixinOptions) {
 			...strategyMethods,
 
 			async signInSocialUser(params, cb) {
-				try {
-					cb(null, await this.broker.call("v1.accounts.socialLogin", params));
-				} catch(err) {
-					cb(err);
-				}
+				const msg = `Missing 'signInSocialUser' method implementation in the '${this.name}' service.`;
+				this.logger.warn(msg);
+				cb(new Error(msg));
 			},
 
 			socialAuthCallback(setting, providerName) {
 				return (req, res) => err => {
 					if (err) {
-						/*
-						if (err.type == "MAGIC_LINK_SENT") {
-							// Passwordless login
-							req.flash("info", err.message);
-							return this.sendRedirect(res, "/login");
-						}
-						req.flash("error", err.message);
-						if (req.user)
-							// Linking error
-							return this.sendRedirect(res, "/");
-						else
-							return this.sendRedirect(res, "/login");
-						*/
 						this.logger.warn("Authentication error.", err);
 						this.sendError(req, res, err);
 						return;
 					}
 
-					res.setHeader("Set-Cookie", cookie.serialize("jwt-token", req.user.token, {
-						httpOnly: true,
-						path: "/",
-						maxAge: 60 * 60 * 24 * 90 // 90 days
-					}));
+					if (mixinOptions.cookieName !== false) {
+						res.setHeader("Set-Cookie", cookie.serialize(mixinOptions.cookieName || "jwt-token", req.user.token, Object.assign({
+							httpOnly: true,
+							path: "/",
+							maxAge: 60 * 60 * 24 * 90 // 90 days
+						}, mixinOptions.cookieOptions || {})));
+					}
 
 					this.logger.info(`Successful authentication with '${providerName}'.`);
 					this.logger.info("User", req.user);
-					this.sendRedirect(res, "/", 302);
+					this.sendRedirect(res, mixinOptions.successRedirect || "/", 302);
 				};
 			}
 		},
 
 		created() {
-			if (!this.schema.providers)
-				throw new Error("Missing 'providers' property in service schema");
+			if (!this.mixinOptions.providers)
+				throw new Error("Missing 'providers' property in service mixin options");
 
 			const route = {
 				path: mixinOptions.routePath || "/auth",
@@ -81,7 +68,7 @@ module.exports = function(mixinOptions) {
 				},
 			};
 
-			_.forIn(this.schema.providers, (setting, provider) => {
+			_.forIn(mixinOptions.providers, (setting, provider) => {
 				const fnName = `register${_.capitalize(provider)}Strategy`;
 				if (!_.isObject(setting))
 					setting = {};
@@ -89,7 +76,7 @@ module.exports = function(mixinOptions) {
 				if (_.isFunction(this[fnName])) {
 					this[fnName](setting, route);
 				} else {
-					throw new Error(`Missing registered Passport strategy for '${provider}'`);
+					throw new Error(`Missing Passport strategy for '${provider}'`);
 				}
 			});
 

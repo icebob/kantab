@@ -10,14 +10,16 @@ module.exports = {
 	name: "api",
 	version: 1,
 
-	mixins: [ApiGateway, PassportMixin()],
-
-	providers: {
-		google: true,
-		facebook: true,
-		github: true,
-		//twitter: true
-	},
+	mixins: [ApiGateway, PassportMixin({
+		routePath: "/auth",
+		successRedirect: "/",
+		providers: {
+			google: true,
+			facebook: true,
+			github: true,
+			twitter: false
+		}
+	})],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
 	settings: {
@@ -72,6 +74,14 @@ module.exports = {
 			}
 
 			//return this.Promise.reject(new UnAuthorizedError());
+		},
+
+		async signInSocialUser(params, cb) {
+			try {
+				cb(null, await this.broker.call("v1.accounts.socialLogin", params));
+			} catch(err) {
+				cb(err);
+			}
 		},
 	}
 };
