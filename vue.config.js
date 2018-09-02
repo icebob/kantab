@@ -17,7 +17,11 @@ module.exports = {
 	outputDir: "./public",
 	assetsDir: undefined,
 	runtimeCompiler: undefined,
-	productionSourceMap: undefined,
+	productionSourceMap: false,
 	parallel: undefined,
-	css: undefined
+	css: undefined,
+
+	pwa: {
+		name: "KanTab"
+	}
 };

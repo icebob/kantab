@@ -17,10 +17,10 @@ function initWebpackMiddlewares() {
 	const webpack	 		= require("webpack");
 	const devMiddleware 	= require("webpack-dev-middleware");
 	const hotMiddleware 	= require("webpack-hot-middleware");
-	const config 			= require("@vue/cli-service/webpack.config.js");
+	const config 			= _.cloneDeep(require("@vue/cli-service/webpack.config.js"));
 
 	config.entry.app.unshift("webpack-hot-middleware/client");
-	require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
+	//require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
 	const compiler 			= webpack(config);
 
 

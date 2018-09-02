@@ -6,8 +6,8 @@ module.exports = {
 	"plugins": [
 		"html"
 	],
-	'extends': [
-		'eslint:recommended'
+	"extends": [
+		"eslint:recommended"
 	],
 	rules: {
 		"indent": [
@@ -39,11 +39,8 @@ module.exports = {
 		]
 	},
 	parserOptions: {
-		parser: 'babel-eslint',
+		parser: "babel-eslint",
 		sourceType: "module",
-		ecmaVersion: 2017,
-		ecmaFeatures: {
-			experimentalObjectRestSpread: true
-		}
+		ecmaVersion: 2017
 	}
 };

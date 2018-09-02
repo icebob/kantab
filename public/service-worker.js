@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.ac8e9e3ec0aad69d61eb6246a971e204.js"
+  "/precache-manifest.870fa506d4f6c290e308e0e3e9a13a39.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "kantab"});
