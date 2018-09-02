@@ -48,7 +48,7 @@ module.exports = function(mixinOptions) {
 		},
 
 		created() {
-			if (!this.mixinOptions.providers)
+			if (!mixinOptions.providers)
 				throw new Error("Missing 'providers' property in service mixin options");
 
 			const route = {
@@ -69,6 +69,8 @@ module.exports = function(mixinOptions) {
 			};
 
 			_.forIn(mixinOptions.providers, (setting, provider) => {
+				if (setting === false) return;
+
 				const fnName = `register${_.capitalize(provider)}Strategy`;
 				if (!_.isObject(setting))
 					setting = {};

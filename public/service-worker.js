@@ -14,10 +14,10 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.3d4eab782a44ce06b11f2bfb1b234798.js"
+  "/precache-manifest.ac8e9e3ec0aad69d61eb6246a971e204.js"
 );
 
-workbox.core.setCacheNameDetails({prefix: "frontend"});
+workbox.core.setCacheNameDetails({prefix: "kantab"});
 
 /**
  * The workboxSW.precacheAndRoute() method efficiently caches and responds to
