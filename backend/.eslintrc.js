@@ -11,10 +11,7 @@ module.exports = {
     "extends": "eslint:recommended",
     "parserOptions": {
         "sourceType": "module",
-		"ecmaVersion": 2017,
-        "ecmaFeatures": {
-            "experimentalObjectRestSpread": true
-        }
+		"ecmaVersion": 2017
     },
     "rules": {
         "indent": [

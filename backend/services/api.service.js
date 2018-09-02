@@ -1,10 +1,44 @@
 "use strict";
 
 const ApiGateway 		= require("moleculer-web");
-const PassportMixin 	= require("../mixins/passport.mixin");
 const _ 				= require("lodash");
 const helmet 			= require("helmet");
 const cookie 			= require("cookie");
+
+const PassportMixin 	= require("../mixins/passport.mixin");
+
+/**
+ * Initialize Webpack middleware in development
+ */
+function initWebpackMiddlewares() {
+	if (process.env.NODE_ENV == "production")
+		return [];
+
+	const webpack	 		= require("webpack");
+	const devMiddleware 	= require("webpack-dev-middleware");
+	const hotMiddleware 	= require("webpack-hot-middleware");
+	const config 			= require("@vue/cli-service/webpack.config.js");
+
+	config.entry.app.unshift("webpack-hot-middleware/client");
+	require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
+	const compiler 			= webpack(config);
+
+
+	return [
+		// Webpack middleware
+		devMiddleware(compiler, {
+			noInfo: true,
+			publicPath: config.output.publicPath,
+			headers: { "Access-Control-Allow-Origin": "*" },
+			stats: {colors: true}
+		}),
+
+		// Webpack hot replacement
+		hotMiddleware(compiler, {
+			log: console.info
+		})
+	];
+}
 
 module.exports = {
 	name: "api",
@@ -29,20 +63,58 @@ module.exports = {
 			helmet()
 		],
 
-		routes: [{
-			path: "/api",
-			whitelist: [
-				// Access to any actions in all services under "/api" URL
-				"**"
-			],
-			camelCaseNames: true,
-			authorization: true,
-		}],
+		routes: [
+			/**
+			 * API routes
+			 */
+			{
+				path: "/api",
 
-		// Serve assets from "public" folder
-		assets: {
-			folder: "public"
-		}
+				whitelist: [
+				// Access to any actions in all services under "/api" URL
+					"**"
+				],
+
+				camelCaseNames: true,
+
+				authorization: true,
+
+				aliases: {
+				},
+
+				// Disable to call not-mapped actions
+				mappingPolicy: "restrict",
+
+				// Use bodyparser modules
+				bodyParsers: {
+					json: { limit: "2MB" },
+					urlencoded: { extended: true, limit: "2MB" }
+				},
+			},
+			/**
+			 * Static routes
+			 */
+			{
+				path: "/",
+
+				use: [
+					// handle fallback for HTML5 history API
+					require("connect-history-api-fallback")(),
+
+					// Webpack middlewares
+					...initWebpackMiddlewares(),
+
+					// Serve static
+					ApiGateway.serveStatic("./public"),
+				],
+
+				// Action aliases
+				aliases: {
+				},
+
+				mappingPolicy: "restrict",
+			},
+		]
 	},
 
 	methods: {

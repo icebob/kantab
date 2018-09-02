@@ -51,7 +51,7 @@
                         "loader": "cache-loader",
                         "options": {
                             "cacheDirectory": "D:\\Work\\kantab\\kantab\\node_modules\\.cache\\vue-loader",
-                            "cacheIdentifier": "6ed9048a"
+                            "cacheIdentifier": "3baa857d"
                         }
                     },
                     {
@@ -61,7 +61,7 @@
                                 "preserveWhitespace": false
                             },
                             "cacheDirectory": "D:\\Work\\kantab\\kantab\\node_modules\\.cache\\vue-loader",
-                            "cacheIdentifier": "6ed9048a"
+                            "cacheIdentifier": "3baa857d"
                         }
                     }
                 ]
@@ -898,7 +898,7 @@
                         "loader": "cache-loader",
                         "options": {
                             "cacheDirectory": "D:\\Work\\kantab\\kantab\\node_modules\\.cache\\babel-loader",
-                            "cacheIdentifier": "6621b7b3"
+                            "cacheIdentifier": "c825551c"
                         }
                     },
                     {
@@ -923,7 +923,7 @@
                                 ".vue"
                             ],
                             "cache": true,
-                            "cacheIdentifier": "5f2ac1df",
+                            "cacheIdentifier": "256b6590",
                             "emitWarning": true,
                             "emitError": false
                         }
@@ -972,7 +972,7 @@
         {},
         {
             "options": {
-                "template": "D:\\Work\\kantab\\kantab\\node_modules\\@vue\\cli-service\\lib\\config\\index-default.html",
+                "template": "D:\\Work\\kantab\\kantab\\public\\index.html",
                 "filename": "index.html",
                 "hash": false,
                 "inject": true,
@@ -1027,7 +1027,8 @@
                     {}
                 ]
             }
-        }
+        },
+        {}
     ],
     "entry": {
         "app": [
