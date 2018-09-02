@@ -42,7 +42,7 @@ module.exports = {
 		config.entry.app = [path.join(folder, "main.js")];
 		config.resolve.alias["@"] = folder;
 
-		require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
+		//require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
 		/*
 		config.plugins.copy.args[0] = [{
 			from: path.resolve(__dirname, "./frontend/public"),

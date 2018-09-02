@@ -83,7 +83,7 @@ module.exports = {
 				},
 
 				// Disable to call not-mapped actions
-				mappingPolicy: "restrict",
+				//mappingPolicy: "restrict",
 
 				// Use bodyparser modules
 				bodyParsers: {

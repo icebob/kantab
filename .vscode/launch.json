@@ -7,27 +7,6 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Launch Program",
-			"program": "${workspaceFolder}/node_modules/@vue/cli-service/bin/vue-cli-service.js",
-			"args": [
-				"build"
-			]
-		},
-		{
-			"type": "node",
-			"request": "launch",
-			"name": "Launch via NPM",
-			"runtimeExecutable": "npm",
-			"runtimeArgs": [
-				"run-script",
-				"build"
-			],
-			"port": 9229,
-			"stopOnEntry": true
-		},
-		{
-			"type": "node",
-			"request": "launch",
 			"name": "Debug",
 			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",
 			"cwd": "${workspaceRoot}",

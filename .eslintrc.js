@@ -4,6 +4,7 @@ module.exports = {
 		node: true
 	},
 	"plugins": [
+		"vue"
 	],
 	"extends": [
 		"eslint:recommended",
