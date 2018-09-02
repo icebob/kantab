@@ -1,9 +1,9 @@
 <template>
-<div>
+<div class="content">
 	<form @submit.prevent="login">
 		<h1>Login</h1>
-		<input type="text" :model="email" />
-		<input type="text" :model="password" />
+		<input type="text" :model="email" placeholder="E-mail" />
+		<input type="text" :model="password" placeholder="Password" />
 		<input type="submit" value="Log In" />
 	</form>
 	<hr/>
@@ -46,6 +46,31 @@ export default {
 };
 </script>
 
+<style lang="scss">
+	html, body {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+
+		background-image: url("../assets/bg7.jpg");
+
+		background-size: cover;
+		background-position: center center;
+
+		color: white;
+		font-size: 16px;
+	}
+
+	.content {
+		content: "";
+		position: absolute;
+		left: 0; right: 0; top: 0; bottom: 0;
+		background-color: rgba(#000, 0.7);
+	}
+</style>
+
+
 <style lang="scss" scoped>
 	.social-icons {
 		margin: 2em 0;
@@ -77,7 +102,7 @@ export default {
 			}
 
 			&.github svg path {
-				fill: black;
+				fill: white;
 			}
 
 		}
