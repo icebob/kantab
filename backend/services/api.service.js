@@ -105,7 +105,7 @@ module.exports = {
 					...initWebpackMiddlewares(),
 
 					// Serve static
-					ApiGateway.serveStatic("./public"),
+					ApiGateway.serveStatic("./static"),
 				],
 
 				// Action aliases
