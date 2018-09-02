@@ -4,10 +4,10 @@ module.exports = {
 		node: true
 	},
 	"plugins": [
-		"html"
 	],
 	"extends": [
-		"eslint:recommended"
+		"eslint:recommended",
+		"plugin:vue/essential"
 	],
 	rules: {
 		"indent": [
@@ -41,6 +41,6 @@ module.exports = {
 	parserOptions: {
 		parser: "babel-eslint",
 		sourceType: "module",
-		ecmaVersion: 2017
+		ecmaVersion: 9
 	}
 };
