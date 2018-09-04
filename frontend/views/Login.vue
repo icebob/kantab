@@ -1,10 +1,30 @@
 <template>
 <div class="content">
+	<h3>
+		<span>Kan</span><span>Tab</span>
+	</h3>
 	<form @submit.prevent="login">
-		<h1>Login</h1>
-		<input type="text" :model="email" placeholder="E-mail" />
-		<input type="text" :model="password" placeholder="Password" />
-		<input type="submit" value="Log In" />
+		<div class="alert error">{{ error }}</div>
+		<fieldset class="email">
+			<input type="text" :model="email" placeholder="E-mail or username" />
+			<i class="fa fa-user"></i>
+		</fieldset>
+		<fieldset class="password">
+			<input type="text" :model="password" placeholder="Password" />
+			<i class="fa fa-lock"></i>
+			<div class="forgot">
+				<a href="#">Forgot password?</a>
+			</div>
+		</fieldset>
+		<fieldset class="remember-me">
+			<input type="checkbox" id="remember" :model="remember" />
+        	<label for="remember">Remember me</label>
+		</fieldset>
+		<input type="submit" value="Login" />
+		<fieldset>
+			<span>Don't have an account?</span>
+			<a href="#"> Sign Up</a>
+		</fieldset>
 	</form>
 	<hr/>
 	<div class="social-icons">
@@ -22,19 +42,19 @@
 </template>
 
 <script>
+// https://codepen.io/icebob/pen/rcKEo?editors=1100
 // https://dribbble.com/shots/5085224-Fitness-App-Sign-In/attachments/1127039
 
 import axios from "axios";
-
-// @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
 
 export default {
 	data() {
 		return {
 			email: "",
-			password: ""
-		}
+			password: "",
+			remember: true,
+			error: null
+		};
 	},
 
 	methods: {
@@ -46,65 +66,214 @@ export default {
 };
 </script>
 
-<style lang="scss">
-	html, body {
-		margin: 0;
-		padding: 0;
-		width: 100%;
-		height: 100%;
-
-		background-image: url("../assets/bg7.jpg");
-
-		background-size: cover;
-		background-position: center center;
-
-		color: white;
-		font-size: 16px;
-	}
-
-	.content {
-		content: "";
-		position: absolute;
-		left: 0; right: 0; top: 0; bottom: 0;
-		background-color: rgba(#000, 0.7);
-	}
-</style>
-
-
 <style lang="scss" scoped>
-	.social-icons {
-		margin: 2em 0;
+$w: 250px;
+$bg1: #1D2124;
+$bg2: #454F56;
+$hoverBG: #454F56;
+$textColor: #FFFFFF;
+$textColor2: #BBBBBB;
+$selected: #A1C72C;
+$greenBG: desaturate($selected, 10);
+$textColor: #A0A0A0;
+$linkTextColor: white;
+$placeholderColor: #a7b9c4;
 
-		a {
-			margin: 0 1em;
 
-			svg {
-				width: 48px;
-				height: 48px;
-				transform: scale(1.0);
 
-				&:hover {
-					transform: scale(1.2);
-					transition: transform 0.2s ease-in-out;
-				}
-			}
+.content {
+	position: absolute;
+	left: 0; right: 0; top: 0; bottom: 0;
+	background-color: rgba(#000, 0.7);
 
-			&.google svg path {
-				fill: #DC4E41;
-			}
+	height: 100%;
+	min-height: 100%;
 
-			&.facebook svg path {
-				fill: #3B5998;
-			}
+	background-image: -webkit-radial-gradient(center center, $bg2, $bg1);
+}
 
-			&.twitter svg path {
-				fill: #1DA1F2;
-			}
+h3 {
+	width: $w;
+	margin: 0 auto;
+	margin-top: 120px;
+	text-align: center;
+	font-size: 2em;
+	font-weight: 700;
+	color: White;
+	text-shadow: 0px 0px 20px rgba(0,0,0, 0.4);
 
-			&.github svg path {
-				fill: white;
-			}
+	font-family: "Roboto Condensed";
 
+	span:first-child {
+		color: $selected;
+		//font-size: 1.1em;
+	}
+}
+
+form {
+	width: $w;
+	margin: 0 auto;
+	margin-top: 1.5em;
+	color: $textColor;
+}
+
+fieldset {
+	border: none;
+	padding: 0;
+	position: relative;
+	margin: 1.0em 0;
+}
+
+a {
+	color: $linkTextColor;
+	text-decoration: none;
+}
+
+.alert {
+	text-align: center;
+	color: rgb(255,128,128);
+	text-shadow: 0 0 10px rgb(255,0,0);
+}
+
+fieldset.email input, fieldset.password input {
+	background: lighten($bg2, 10);
+	box-sizing: border-box;
+	border-radius: 5px;
+	border: 1px solid lighten($bg1, 10);
+	box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+	color: #fff;
+	font-size: 1.2em;
+	font-family:"Open Sans", Arial, sans-serif;
+	font-weight: 200;
+	padding: 10px 40px 10px 10px;
+	width: 100%;
+}
+
+fieldset i {
+	content: '\f007';
+	font-family: 'font-awesome';
+	font-size: 26px;
+	color: lighten($bg2, 20);
+	position: absolute;
+	right: 12px;
+	top: 10px;
+	width: 20px;
+	height: 20px;
+	//color: White;
+}
+
+.forgot {
+	text-align: right;
+	margin-top: 0.2em;
+	font-size: 0.8em;
+
+	a {
+		color: $textColor;
+		&:hover {
+			color: $linkTextColor;
 		}
 	}
+}
+
+input[type=submit] {
+	background-image: linear-gradient(lighten($selected, 10), $selected);
+	border-radius: 5px;
+	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+	border: solid 1px $selected;
+	color: $bg2;
+	font-size: 1.2em;
+	font-family: "Open Sans", Arial, sans-serif;
+	font-weight: 500;
+	padding: 8px 30px;
+	text-align: center;
+	text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
+
+	&:hover {
+		background-image: linear-gradient(lighten($selected, 20), lighten($selected, 10));
+		box-shadow:0 0 5px rgba($selected, 0.8);
+	}
+	&:active {
+		box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.4);
+	}
+}
+
+input {
+	&::-webkit-input-placeholder {
+		color: $placeholderColor;
+	}
+	&:-moz-placeholder {
+		color: $placeholderColor;
+	}
+	&:-ms-input-placeholder {
+		color: $placeholderColor;
+	}
+}
+
+label {
+	font-size: 1.1em;
+	font-family:"Open Sans", Arial, sans-serif;
+	color: #fff;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, .4);
+}
+
+input[type=checkbox] {
+	background: #10548C;
+	box-sizing: border-box;
+	border-radius: 5px;
+	border: 1px solid lighten($bg1, 10);
+	box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+	color: #fff;
+	width: 1.5em;
+	height: 1.5em;
+}
+
+input:focus {
+	border: 1px solid rgba($selected, 0.6);
+	box-shadow:0 0 5px rgba($selected, 0.6);
+	outline: none;
+}
+
+hr {
+	width: 30%;
+	min-width: 200px;
+	margin-top: 2em;
+	border: 0;
+	border-top: 1px solid rgba(white, 0.3);
+}
+
+.social-icons {
+	margin: 2em 0;
+
+	a {
+		margin: 0 1em;
+
+		svg {
+			width: 48px;
+			height: 48px;
+			transform: scale(1.0);
+
+			&:hover {
+				transform: scale(1.2);
+				transition: transform 0.2s ease-in-out;
+			}
+		}
+
+		&.google svg path {
+			fill: #DC4E41;
+		}
+
+		&.facebook svg path {
+			fill: #3B5998;
+		}
+
+		&.twitter svg path {
+			fill: #1DA1F2;
+		}
+
+		&.github svg path {
+			fill: white;
+		}
+
+	}
+}
 </style>
