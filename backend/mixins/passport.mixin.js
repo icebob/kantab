@@ -68,6 +68,9 @@ module.exports = function(mixinOptions) {
 				},
 			};
 
+			if (mixinOptions.localAuthAlias)
+				route.aliases["POST /local"] = mixinOptions.localAuthAlias;
+
 			_.forIn(mixinOptions.providers, (setting, provider) => {
 				if (setting === false) return;
 

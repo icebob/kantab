@@ -103,7 +103,7 @@ module.exports = {
 		 *
 		 * @returns {Object} Resolved payload
 		 */
-		verifyJWT: {
+		/*verifyJWT: {
 			cache: {
 				keys: ["token"],
 				ttl: 60 * 60 // 1 hour
@@ -114,7 +114,7 @@ module.exports = {
 			handler(ctx) {
 				return this.verifyJWT(ctx.params.token);
 			}
-		},
+		},*/
 
 		/**
 		 * Get user by JWT token (for API GW authentication)
@@ -151,7 +151,7 @@ module.exports = {
 		/**
 		 * Check user password
 		 */
-		checkPassword: {
+		/*checkPassword: {
 			visibility: "protected",
 			params: {
 				id: "any",
@@ -169,7 +169,7 @@ module.exports = {
 				// Transform user entity (remove password and all protected fields)
 				return user;
 			}
-		},
+		},*/
 
 		/**
 		 * Register a new user account
@@ -420,7 +420,7 @@ module.exports = {
 		 */
 		login: {
 			params: {
-				email: { type: "string", optional: true },
+				email: { type: "string", optional: false },
 				password: { type: "string", optional: true }
 			},
 			async handler(ctx) {
@@ -459,7 +459,8 @@ module.exports = {
 				// Authenticate
 				if (ctx.params.password) {
 					// Login with password
-					await ctx.call(`${this.fullName}.checkPassword`, { id: user._id, password: ctx.params.password });
+					if (!(await bcrypt.compare(ctx.params.password, user.password)))
+						throw new MoleculerClientError("Wrong password!", 400, "ERR_WRONG_PASSWORD");
 
 				} else if (this.settings.enablePasswordless) {
 					// Send magic link

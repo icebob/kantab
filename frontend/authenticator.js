@@ -69,15 +69,10 @@ export default new class Authenticator {
 		return !!store.state.user;
 	}
 
-	async login() {
-		try {
-			const res = await axios.post("/api/v1/accounts/login", { email: this.email, password: this.password });
-			store.commit("LOGIN", res);
-		} catch(err) {
-			//console.log(JSON.stringify(err, null, 2));
-			this.error = err.response ? err.response.data.message : err.message;
-		}
-
+	async login(email, password) {
+		const res = await axios.post("/auth/local", { email, password });
+		store.commit("LOGIN", res);
+		return res;
 	}
 
 	async logout() {

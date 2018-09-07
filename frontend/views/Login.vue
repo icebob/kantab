@@ -2,19 +2,19 @@
 <page-content>
 	<page-center>
 		<logo />
-		<form @submit.prevent="login">
+		<form @submit.prevent="submit">
 			<div class="alert error">{{ error }}</div>
 			<fieldset class="email">
-				<input type="text" :model="email" placeholder="E-mail or username" />
+				<input type="text" v-model="email" placeholder="E-mail or username" />
 				<i class="fa fa-user"></i>
 			</fieldset>
 			<fieldset class="password">
-				<input type="password" :model="password" placeholder="Password" />
+				<input type="password" v-model="password" placeholder="Password" />
 				<i class="fa fa-lock"></i>
-				<div class="remember">
-					<input type="checkbox" id="remember" :model="remember" />
+				<!-- div class="remember">
+					<input type="checkbox" id="remember" v-model="remember" />
 					<label for="remember">Remember me</label>
-				</div>
+				</div -->
 				<div class="forgot">
 					<a href="#">Forgot password?</a>
 				</div>
@@ -34,9 +34,6 @@
 </template>
 
 <script>
-// https://codepen.io/icebob/pen/rcKEo?editors=1100
-// https://dribbble.com/shots/5085224-Fitness-App-Sign-In/attachments/1127039
-
 import axios from "axios";
 
 import Logo from "../components/Logo";
@@ -61,13 +58,14 @@ export default {
 	},
 
 	methods: {
-		async login() {
+		async submit() {
 			this.error = null;
 			try {
-				const res = await axios.post("/api/v1/accounts/login", { email: this.email, password: this.password });
+				const res = await this.$authenticator.login(this.email, this.password);
+				console.log(res);
 			} catch(err) {
 				//console.log(JSON.stringify(err, null, 2));
-				this.error = err.response ? err.response.data.message : err.message;
+				this.error = err.message;
 			}
 
 		}
@@ -183,8 +181,8 @@ fieldset i {
 }
 
 .forgot {
-	display: inline-block;
-	width: 50%;
+	//display: inline-block;
+	//width: 50%;
 
 	text-align: right;
 	margin-top: 0.2em;

@@ -17,8 +17,9 @@ import store from "./store";
 import "./registerServiceWorker";
 
 // Authenticator
-import Authenticator from "./authenticator";
-Authenticator.protectRoutes();
+import authenticator from "./authenticator";
+authenticator.protectRoutes();
+Vue.prototype.$authenticator = authenticator;
 
 Vue.config.productionTip = false;
 

@@ -46,6 +46,7 @@ module.exports = {
 
 	mixins: [ApiGateway, PassportMixin({
 		routePath: "/auth",
+		localAuthAlias: "v1.accounts.login",
 		successRedirect: "/",
 		providers: {
 			google: true,
