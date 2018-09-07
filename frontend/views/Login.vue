@@ -34,8 +34,6 @@
 </template>
 
 <script>
-import axios from "axios";
-
 import Logo from "../components/Logo";
 import SocialAuth from "../components/SocialAuth";
 import PageCenter from "../components/PageCenter";
@@ -63,6 +61,7 @@ export default {
 			try {
 				const res = await this.$authenticator.login(this.email, this.password);
 				console.log(res);
+				this.$router.push({ name: "home" });
 			} catch(err) {
 				//console.log(JSON.stringify(err, null, 2));
 				this.error = err.message;

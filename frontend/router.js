@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 import Home from "./views/Home.vue";
-import Login from "./views/Login.vue";
+//import Login from "./views/Login.vue";
 import Protected from "./views/Protected.vue";
 
 Vue.use(Router);
@@ -18,10 +18,10 @@ export default new Router({
 		{
 			path: "/login",
 			name: "login",
-			//component: () => import("Components/Route/SignIn"),
-			component: Login,
+			component: () => import(/* webpackChunkName: "auth" */ "./views/Login.vue"),
+			//component: Login,
 			meta: {
-				redirectAuth: { name: "teams" },
+				redirectAuth: "home",
 				title: "Sign In",
 			},
 		},
@@ -40,7 +40,7 @@ export default new Router({
 			name: "signup",
 			component: () => import("Components/Route/SignUp"),
 			meta: {
-				redirectAuth: { name: "teams" },
+				redirectAuth: "home",
 				title: "Sign Up",
 			},
 		},
@@ -49,7 +49,7 @@ export default new Router({
 			name: "forgotpassword",
 			component: () => import("Components/Route/ForgotPassword"),
 			meta: {
-				redirectAuth: { name: "teams" },
+				redirectAuth: "home",
 				title: "Forgot Password",
 			},
 		},
@@ -58,7 +58,7 @@ export default new Router({
 			name: "resetpassword",
 			component: () => import("Components/Route/ResetPassword"),
 			meta: {
-				redirectAuth: { name: "teams" },
+				redirectAuth: "home",
 				title: "Reset Password",
 			},
 		},*/

@@ -149,6 +149,26 @@ module.exports = {
 		},
 
 		/**
+		 * Get current user entity.
+		 *
+		 * @actions
+		 *
+		 * @returns {Object} User entity
+		 */
+		me: {
+			cache: {
+				keys: ["#user._id"]
+			},
+			async handler(ctx) {
+				const user = await this.getById(ctx.meta.user._id);
+				if (!user)
+					return this.Promise.reject(new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND"));
+
+				return await this.transformDocuments(ctx, {}, user);
+			}
+		},
+
+		/**
 		 * Check user password
 		 */
 		/*checkPassword: {
@@ -440,7 +460,7 @@ module.exports = {
 				// Get user
 				const user = await this.adapter.findOne(query);
 				if (!user)
-					throw new MoleculerClientError("User is not exist!", 400, "ERR_USER_NOT_FOUND");
+					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
 
 				// Check verified
 				if (!user.verified) {

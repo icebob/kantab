@@ -70,9 +70,10 @@ export default new class Authenticator {
 	}
 
 	async login(email, password) {
-		const res = await axios.post("/auth/local", { email, password });
-		store.commit("LOGIN", res);
-		return res;
+		await axios.post("/auth/local", { email, password });
+		const user = await axios.post("/api/v1/accounts/me");
+		store.commit("LOGIN", user);
+		return user;
 	}
 
 	async logout() {
