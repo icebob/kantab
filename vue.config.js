@@ -59,9 +59,9 @@ module.exports = {
 	assetsDir: undefined,
 	productionSourceMap: false,
 
-	pwa: {
+	/*pwa: {
 		name: "KanTab"
-	},
+	},*/
 
 	lintOnSave: false
 };

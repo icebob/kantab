@@ -10,7 +10,7 @@
 			<i class="fa fa-user"></i>
 		</fieldset>
 		<fieldset class="password">
-			<input type="text" :model="password" placeholder="Password" />
+			<input type="password" :model="password" placeholder="Password" />
 			<i class="fa fa-lock"></i>
 			<div class="remember">
 				<input type="checkbox" id="remember" :model="remember" />
@@ -61,7 +61,13 @@ export default {
 
 	methods: {
 		async login() {
-			const res = await axios.post("/api/v1/accounts/login", { email: this.email, password: this.password });
+			this.error = null;
+			try {
+				const res = await axios.post("/api/v1/accounts/login", { email: this.email, password: this.password });
+			} catch(err) {
+				//console.log(JSON.stringify(err, null, 2));
+				this.error = err.response ? err.response.data.message : err.message;
+			}
 
 		}
 	}
@@ -69,17 +75,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "../styles/variables";
+
 $w: 250px;
-$bg1: #1D2124;
-$bg2: #454F56;
-$hoverBG: #454F56;
-$textColor: #FFFFFF;
-$textColor2: #BBBBBB;
-$selected: #A1C72C;
-$greenBG: desaturate($selected, 10);
-$textColor: #A0A0A0;
-$linkTextColor: white;
-$placeholderColor: #a7b9c4;
 
 .content {
 	position: absolute;
@@ -134,6 +132,7 @@ a {
 	text-align: center;
 	color: rgb(255,128,128);
 	text-shadow: 0 0 10px rgb(255,0,0);
+	font-size: 0.9em;
 }
 
 fieldset.email input, fieldset.password input {
@@ -173,6 +172,7 @@ fieldset i {
 	color: $textColor;
 
 	label {
+		cursor: pointer;
 		&:hover {
 			color: $linkTextColor;
 		}

@@ -2,6 +2,7 @@ import Vue from "vue";
 import Router from "vue-router";
 import Home from "./views/Home.vue";
 import Login from "./views/Login.vue";
+import Protected from "./views/Protected.vue";
 
 Vue.use(Router);
 
@@ -16,12 +17,22 @@ export default new Router({
 		},
 		{
 			path: "/login",
-			name: "signin",
+			name: "login",
 			//component: () => import("Components/Route/SignIn"),
 			component: Login,
 			meta: {
 				redirectAuth: { name: "teams" },
 				title: "Sign In",
+			},
+		},
+		{
+			path: "/protected",
+			name: "protected",
+			//component: () => import("Components/Route/SignIn"),
+			component: Protected,
+			meta: {
+				requiresAuth: true,
+				title: "Protected page",
 			},
 		},
 		/*{

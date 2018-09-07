@@ -1,0 +1,24 @@
+@import "./variables";
+
+@import url(https://fonts.googleapis.com/css?family=Lato:300,400,600,700|Roboto+Condensed:300,700|Open+Sans:300,400,600,700);
+@import url('https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css');
+
+html, body {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+
+/*	background-image: url("./assets/bg7.jpg");
+
+	background-size: cover;
+	background-position: center center;
+	color: white;
+*/
+
+	font-family: "Open Sans", Arial, sans-serif;
+	font-size: 16px;
+
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
