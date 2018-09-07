@@ -27,14 +27,11 @@ html, body {
 
 	font-family: "Open Sans", Arial, sans-serif;
 	font-size: 16px;
+
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-}
 #nav {
   padding: 30px;
   a {

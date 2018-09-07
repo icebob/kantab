@@ -12,15 +12,17 @@
 		<fieldset class="password">
 			<input type="text" :model="password" placeholder="Password" />
 			<i class="fa fa-lock"></i>
+			<div class="remember">
+				<input type="checkbox" id="remember" :model="remember" />
+				<label for="remember">Remember me</label>
+			</div>
 			<div class="forgot">
 				<a href="#">Forgot password?</a>
 			</div>
 		</fieldset>
-		<fieldset class="remember-me">
-			<input type="checkbox" id="remember" :model="remember" />
-        	<label for="remember">Remember me</label>
+		<fieldset>
+			<input type="submit" value="Login" />
 		</fieldset>
-		<input type="submit" value="Login" />
 		<fieldset>
 			<span>Don't have an account?</span>
 			<a href="#"> Sign Up</a>
@@ -29,7 +31,7 @@
 	<hr/>
 	<div class="social-icons">
 		<a class="google" href="/auth/google" title="Google">
-			<svg aria-labelledby="simpleicons-google-icon" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title id="simpleicons-google-icon">Google icon</title><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
+			<svg aria-labelledby="simpleicons-google-icon" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title id="simpleicons-google-icon">Sign In with Google</title><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
 		</a>
 		<a class="facebook" href="/auth/facebook" title="Facebook">
 			<svg aria-labelledby="simpleicons-facebook-icon" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title id="simpleicons-facebook-icon">Facebook icon</title><path d="M22.676 0H1.324C.593 0 0 .593 0 1.324v21.352C0 23.408.593 24 1.324 24h11.494v-9.294H9.689v-3.621h3.129V8.41c0-3.099 1.894-4.785 4.659-4.785 1.325 0 2.464.097 2.796.141v3.24h-1.921c-1.5 0-1.792.721-1.792 1.771v2.311h3.584l-.465 3.63H16.56V24h6.115c.733 0 1.325-.592 1.325-1.324V1.324C24 .593 23.408 0 22.676 0"/></svg>
@@ -79,8 +81,6 @@ $textColor: #A0A0A0;
 $linkTextColor: white;
 $placeholderColor: #a7b9c4;
 
-
-
 .content {
 	position: absolute;
 	left: 0; right: 0; top: 0; bottom: 0;
@@ -122,6 +122,7 @@ fieldset {
 	padding: 0;
 	position: relative;
 	margin: 1.0em 0;
+	text-align: center;
 }
 
 a {
@@ -143,7 +144,7 @@ fieldset.email input, fieldset.password input {
 	box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
 	color: #fff;
 	font-size: 1.2em;
-	font-family:"Open Sans", Arial, sans-serif;
+	font-family: "Open Sans", Arial, sans-serif;
 	font-weight: 200;
 	padding: 10px 40px 10px 10px;
 	width: 100%;
@@ -151,7 +152,6 @@ fieldset.email input, fieldset.password input {
 
 fieldset i {
 	content: '\f007';
-	font-family: 'font-awesome';
 	font-size: 26px;
 	color: lighten($bg2, 20);
 	position: absolute;
@@ -162,7 +162,38 @@ fieldset i {
 	//color: White;
 }
 
+.remember {
+	display: inline-block;
+	width: 50%;
+
+	text-align: left;
+	margin-top: 0.2em;
+	font-size: 0.8em;
+
+	color: $textColor;
+
+	label {
+		&:hover {
+			color: $linkTextColor;
+		}
+	}
+
+	input[type=checkbox] {
+		background: #10548C;
+		box-sizing: border-box;
+		border-radius: 5px;
+		border: 1px solid lighten($bg1, 10);
+		box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+		color: #fff;
+		width: 1.0em;
+		height: 1.0em;
+	}
+}
+
 .forgot {
+	display: inline-block;
+	width: 50%;
+
 	text-align: right;
 	margin-top: 0.2em;
 	font-size: 0.8em;
@@ -209,24 +240,6 @@ input {
 	}
 }
 
-label {
-	font-size: 1.1em;
-	font-family:"Open Sans", Arial, sans-serif;
-	color: #fff;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, .4);
-}
-
-input[type=checkbox] {
-	background: #10548C;
-	box-sizing: border-box;
-	border-radius: 5px;
-	border: 1px solid lighten($bg1, 10);
-	box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
-	color: #fff;
-	width: 1.5em;
-	height: 1.5em;
-}
-
 input:focus {
 	border: 1px solid rgba($selected, 0.6);
 	box-shadow:0 0 5px rgba($selected, 0.6);
@@ -243,6 +256,7 @@ hr {
 
 .social-icons {
 	margin: 2em 0;
+	text-align: center;
 
 	a {
 		margin: 0 1em;
