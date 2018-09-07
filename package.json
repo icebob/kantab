@@ -46,11 +46,11 @@
     "vuex": "3.0.1",
     "webpack-bundle-analyzer": "2.13.1",
     "webpack-dev-middleware": "3.2.0",
-    "webpack-hot-middleware": "2.23.0"
+    "webpack-hot-middleware": "2.23.1"
   },
   "dependencies": {
     "bcrypt": "3.0.0",
-    "bluebird": "3.5.1",
+    "bluebird": "3.5.2",
     "cookie": "0.3.1",
     "cross-env": "5.2.0",
     "dotenv": "6.0.0",
