@@ -13,12 +13,15 @@ import router from "./router";
 // --- VUEX STORE ---
 import store from "./store";
 
+// --- VUE-ROUTER-SYNC ---
+import { sync } from "vuex-router-sync";
+sync(store, router);
+
 // --- SERVICE WORKER ---
 import "./registerServiceWorker";
 
 // Authenticator
 import authenticator from "./authenticator";
-authenticator.protectRoutes();
 Vue.prototype.$authenticator = authenticator;
 
 Vue.config.productionTip = false;

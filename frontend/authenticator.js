@@ -4,20 +4,35 @@ import bus from "./bus";
 import router from "./router";
 import store from "./store";
 import axios from "axios";
+import * as Cookie from "js-cookie";
 
 import { isFunction } from "lodash";
+
+const COOKIE_TOKEN_NAME = "jwt-token";
 
 export default new class Authenticator {
 
 	constructor() {
 		bus.$on("expiredToken", () => this.logout());
 
-
+		this.protectRouter();
+		// Trigger a login
+		//this.isAuthenticated();
 	}
 
-	protectRoutes() {
+	protectRouter() {
 		// Authentication protection
-		router.beforeEach((to, from, next) => {
+		router.beforeEach(async (to, from, next) => {
+			// First restricted page (try to authenticate with token)
+			if (!from.name && to.meta.requiresAuth) {
+				const token = Cookie.get(COOKIE_TOKEN_NAME);
+				if (token) {
+					const user = await this.getMe();
+					if (user)
+						next();
+				}
+			}
+
 			// check authenticated
 			if (to.matched.some(route => route.meta.requiresAuth)) {
 				if (this.isAuthenticated()) {
@@ -49,7 +64,7 @@ export default new class Authenticator {
 		});
 
 		// Authorization protection
-		router.beforeEach((to, from, next) => {
+		router.beforeEach(async (to, from, next) => {
 			const authorized = to.matched.every(route => {
 				if (isFunction(route.meta.authorize)) {
 					return !!route.meta.authorize(to);
@@ -70,14 +85,27 @@ export default new class Authenticator {
 	}
 
 	async login(email, password) {
-		await axios.post("/auth/local", { email, password });
+		const { token } = await axios.post("/auth/local", { email, password });
+		Cookie.set(COOKIE_TOKEN_NAME, token, { expires: 90 });
+
+		const user = await this.getMe();
+
+		const { redirect } = store.state.route.query;
+		router.push(redirect ? redirect : { name: "home" });
+
+		return user;
+	}
+
+	async getMe() {
 		const user = await axios.post("/api/v1/accounts/me");
-		store.commit("LOGIN", user);
+		store.commit("SET_LOGGED_IN_USER", user);
+
 		return user;
 	}
 
 	async logout() {
 		store.commit("LOGOUT");
+		Cookie.remove(COOKIE_TOKEN_NAME);
 		router.push({ name: "login" });
 	}
 };

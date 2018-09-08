@@ -34,7 +34,7 @@ module.exports = function(mixinOptions) {
 
 					if (mixinOptions.cookieName !== false) {
 						res.setHeader("Set-Cookie", cookie.serialize(mixinOptions.cookieName || "jwt-token", req.user.token, Object.assign({
-							httpOnly: true,
+							//httpOnly: true,
 							path: "/",
 							maxAge: 60 * 60 * 24 * 90 // 90 days
 						}, mixinOptions.cookieOptions || {})));

@@ -33,13 +33,47 @@ export default new Vuex.Store({
 		user: null
 	},
 
-	mutations: {
-		LOGIN(state, user) {
-			state.user = user;
+	getters: {
+
+	},
+
+	actions: {
+		async init({ state, commit, dispatch }) {
+			try {
+				await dispatch("getMe");
+				//await dispatch("getMyBooks");
+				//await dispatch("getHomeInfo");
+			} catch (err) {
+				console.log("Error", err);
+				//Raven.captureException(err);
+			}
+			//commit("READY");
+
+			/*if (state.profile && state.profile._id) {
+				this._vm.$ga.set("userId", state.profile._id);
+			}*/
 		},
 
-		SET_LOGGED_IN_USER(state, profile) {
-			state.profile = profile;
+		async getMe({ commit }) {
+			const user = await axios.get("/api/v1/accounts/me");
+			commit("SET_LOGGED_IN_USER", user);
+
+			/*if (process.env.NODE_ENV == "production") {
+				Raven.setUserContext(user);
+				LogRocket.identify(user._id, user);
+			}*/
+
+			return user;
+		},
+
+		logout({ commit }) {
+			commit("LOGOUT");
+		},
+	},
+
+	mutations: {
+		SET_LOGGED_IN_USER(state, user) {
+			state.user = user;
 		},
 
 		LOGOUT(state) {
@@ -48,7 +82,4 @@ export default new Vuex.Store({
 		}
 	},
 
-	actions: {
-
-	},
 });

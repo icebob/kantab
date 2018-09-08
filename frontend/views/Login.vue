@@ -60,8 +60,7 @@ export default {
 			this.error = null;
 			try {
 				const res = await this.$authenticator.login(this.email, this.password);
-				console.log(res);
-				this.$router.push({ name: "home" });
+				console.log("Me:", res);
 			} catch(err) {
 				//console.log(JSON.stringify(err, null, 2));
 				this.error = err.message;

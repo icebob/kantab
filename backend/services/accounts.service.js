@@ -160,9 +160,12 @@ module.exports = {
 				keys: ["#user._id"]
 			},
 			async handler(ctx) {
+				if (!ctx.meta.user)
+					throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
+
 				const user = await this.getById(ctx.meta.user._id);
 				if (!user)
-					return this.Promise.reject(new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND"));
+					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
 				return await this.transformDocuments(ctx, {}, user);
 			}
