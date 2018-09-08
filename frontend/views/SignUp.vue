@@ -5,26 +5,24 @@
 		<form @submit.prevent="submit">
 			<div class="alert error">{{ error }}</div>
 			<fieldset class="email">
-				<input type="text" v-model="email" placeholder="E-mail or username" />
+				<input type="email" v-model="email" placeholder="E-mail" required />
+				<i class="fa fa-envelope"></i>
+			</fieldset>
+			<fieldset class="username">
+				<input type="text" v-model="username" placeholder="Username" required />
 				<i class="fa fa-user"></i>
 			</fieldset>
 			<fieldset class="password">
 				<input type="password" v-model="password" placeholder="Password" />
 				<i class="fa fa-lock"></i>
-				<!-- div class="remember">
-					<input type="checkbox" id="remember" v-model="remember" />
-					<label for="remember">Remember me</label>
-				</div -->
-				<div class="forgot">
-					<a href="#">Forgot password?</a>
-				</div>
+				<span class="hint">Leave empty for passwordless account</span>
 			</fieldset>
 			<fieldset>
-				<input type="submit" value="Login" />
+				<input type="submit" value="Sign Up" />
 			</fieldset>
 			<fieldset>
-				<span>Don't have an account?</span>
-				<router-link to="/signup"> Sign Up</router-link>
+				<span>Do you have an account?</span>
+				<router-link to="/login"> Sign In</router-link>
 			</fieldset>
 		</form>
 		<hr/>
@@ -49,9 +47,8 @@ export default {
 	data() {
 		return {
 			email: "",
-			password: "",
-			remember: true,
-			error: null
+			username: "",
+			password: ""
 		};
 	},
 
@@ -59,13 +56,12 @@ export default {
 		async submit() {
 			this.error = null;
 			try {
-				const res = await this.$authenticator.login(this.email, this.password);
+				const res = await this.$authenticator.register(this.email, this.username, this.password);
 				console.log("Me:", res);
 			} catch(err) {
 				//console.log(JSON.stringify(err, null, 2));
 				this.error = err.message;
 			}
-
 		}
 	}
 };

@@ -16,9 +16,12 @@ html, body {
 	color: white;
 */
 
-	font-family: "Open Sans", Arial, sans-serif;
+	font-family: $fontFamily;
 	font-size: 16px;
 
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+
+	background-image: -webkit-radial-gradient(center center, $bg2, $bg1);
+	color: $textColor;
 }

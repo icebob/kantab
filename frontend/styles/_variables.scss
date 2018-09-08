@@ -2,9 +2,11 @@ $bg1: #1D2124;
 $bg2: #454F56;
 $hoverBG: #454F56;
 $textColor: #FFFFFF;
-$textColor2: #BBBBBB;
-$selected: #A1C72C;
-$greenBG: desaturate($selected, 10);
-$textColor: #A0A0A0;
-$linkTextColor: white;
+$textColor2: #A0A0A0;
+$primary: #A1C72C;
+$greenBG: desaturate($primary, 10);
+$linkTextColor: $textColor;
 $placeholderColor: #a7b9c4;
+
+$fontFamily: "Open Sans", Arial, sans-serif;
+$headerFontFamily: "Roboto Condensed", Arial, sans-serif;

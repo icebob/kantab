@@ -2,15 +2,15 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">Home</router-link> |
+      <router-link to="/protected">Protected</router-link> |
+      <router-link to="/about">About</router-link> |
 	  <template v-if="!$authenticator.isAuthenticated()">
 		<router-link to="/login">Login</router-link> |
 		<router-link to="/signup">Sign Up</router-link> |
 	  </template>
 	  <template v-else>
-		<a @click="$authenticator.logout()">Logout</a> |
+		<a href="#" @click="$authenticator.logout()">Logout</a> |
 	  </template>
-      <router-link to="/protected">Protected</router-link> |
-      <router-link to="/about">About</router-link> |
     </div>
     <router-view/>
   </div>
@@ -39,7 +39,7 @@ export default {
   padding: 30px;
   a {
     font-weight: bold;
-    color: #2c3e50;
+    color: #e4eaf1;
     &.router-link-exact-active {
       color: #42b983;
     }

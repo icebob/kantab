@@ -26,6 +26,16 @@ export default new Router({
 			},
 		},
 		{
+			path: "/signup",
+			name: "signup",
+			component: () => import(/* webpackChunkName: "login" */ "./views/SignUp.vue"),
+			//component: Login,
+			meta: {
+				redirectAuth: "home",
+				title: "Sign Up",
+			},
+		},
+		{
 			path: "/protected",
 			name: "protected",
 			//component: () => import("Components/Route/SignIn"),
