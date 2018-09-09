@@ -57,6 +57,14 @@ export default new Router({
 			},
 		},
 		{
+			path: "/passwordless",
+			name: "passwordless",
+			component: () => import(/* webpackChunkName: "account" */ "./views/Passwordless.vue"),
+			meta: {
+				redirectAuth: "home"
+			},
+		},
+		{
 			path: "/protected",
 			name: "protected",
 			//component: () => import("Components/Route/SignIn"),

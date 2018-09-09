@@ -343,7 +343,9 @@ module.exports = {
 				if (user.passwordlessTokenExpires < Date.now())
 					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
 
-				return this.transformDocuments(ctx, {}, user);
+				return {
+					token: await this.getToken(user)
+				};
 			}
 		},
 

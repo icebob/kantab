@@ -15,7 +15,7 @@
 <style lang="scss" scoped>
 
 .social-icons {
-	margin: 2em 0;
+	margin: 1em 0;
 	text-align: center;
 
 	a {

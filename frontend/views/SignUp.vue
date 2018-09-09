@@ -27,13 +27,14 @@
 				<fieldset>
 					<input type="submit" value="Sign Up" />
 				</fieldset>
+				<hr/>
+				<social-auth />
+				<hr/>
 				<fieldset class="already">
 					<span>Already have an account?</span>
 					<router-link to="/login">Sign In</router-link>
 				</fieldset>
 			</form>
-			<hr/>
-			<social-auth />
 		</div>
 	</page-center>
 </page-content>

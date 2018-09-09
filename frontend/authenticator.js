@@ -145,6 +145,13 @@ export default new class Authenticator {
 		return user;
 	}
 
+	async passwordless(passwordlessToken) {
+		const { token } = await axios.post("/api/v1/accounts/passwordless", { token: passwordlessToken });
+		const user = await this.applyToken(token);
+		router.push({ name: "home" });
+		return user;
+	}
+
 	async applyToken(token) {
 		Cookie.set(COOKIE_TOKEN_NAME, token, { expires: 90 });
 

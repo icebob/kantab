@@ -138,7 +138,7 @@ module.exports = {
 				// Verify JWT token
 				let user = await ctx.call("v1.accounts.resolveToken", { token });
 				if (user) {
-					this.logger.info("Authenticated via JWT: ", user.username);
+					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, _id: user._id });
 					// Reduce user fields (it will be transferred to other nodes)
 					ctx.meta.user = _.pick(user, ["_id", "email", "username", "firstName", "lastName", "avatar"]);
 					ctx.meta.token = token;

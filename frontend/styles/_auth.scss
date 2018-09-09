@@ -166,6 +166,10 @@ button, input[type=submit] {
 	}
 }
 
+input[type=submit] {
+	width: 100%;
+}
+
 input {
 	&::-webkit-input-placeholder {
 		color: $placeholderColor;
@@ -187,7 +191,7 @@ input:focus {
 hr {
 	width: $w;
 	min-width: 200px;
-	margin-top: 2em;
+	margin: 1em 0;
 	border: 0;
 	border-top: 1px solid rgba(white, 0.3);
 }
