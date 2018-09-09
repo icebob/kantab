@@ -85,11 +85,13 @@ export default new class Authenticator {
 	}
 
 	async register(params) {
+		// Handle passwordless
+		if (params.password == "")
+			params.password = null;
+
 		const res = await axios.post("/api/v1/accounts/register", params);
 		if (res.verified) {
-			Cookie.set(COOKIE_TOKEN_NAME, res.token, { expires: 90 });
-
-			const user = await this.getMe();
+			const user = await this.applyToken(res.token);
 
 			const { redirect } = store.state.route.query;
 			router.push(redirect ? redirect : { name: "home" });
@@ -101,15 +103,17 @@ export default new class Authenticator {
 	}
 
 	async login(email, password) {
-		const { token } = await axios.post("/api/v1/login", { email, password });
-		Cookie.set(COOKIE_TOKEN_NAME, token, { expires: 90 });
+		const res = await axios.post("/api/v1/accounts/login", { email, password });
+		if (res.token) {
+			const user = await this.applyToken(res.token);
 
-		const user = await this.getMe();
+			const { redirect } = store.state.route.query;
+			router.push(redirect ? redirect : { name: "home" });
 
-		const { redirect } = store.state.route.query;
-		router.push(redirect ? redirect : { name: "home" });
+			return user;
+		}
 
-		return user;
+		return res;
 	}
 
 	async getMe() {
@@ -131,11 +135,20 @@ export default new class Authenticator {
 
 	async resetPassword(resetToken, password) {
 		const { token } = await axios.post("/api/v1/accounts/reset-password", { token: resetToken, password });
+		return await this.applyToken(token);
+	}
+
+	async verifyAccount(verifyToken) {
+		const { token } = await axios.post("/api/v1/accounts/verify", { token: verifyToken });
+		const user = await this.applyToken(token);
+		router.push({ name: "home" });
+		return user;
+	}
+
+	async applyToken(token) {
 		Cookie.set(COOKIE_TOKEN_NAME, token, { expires: 90 });
 
-		const user = await this.getMe();
-
-		return user;
+		return await this.getMe();
 	}
 };
 

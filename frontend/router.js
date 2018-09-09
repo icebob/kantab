@@ -21,8 +21,7 @@ export default new Router({
 			name: "login",
 			component: () => import(/* webpackChunkName: "account" */ "./views/Login.vue"),
 			meta: {
-				redirectAuth: "home",
-				title: "Sign In",
+				redirectAuth: "home"
 			},
 		},
 		{
@@ -30,26 +29,31 @@ export default new Router({
 			name: "signup",
 			component: () => import(/* webpackChunkName: "account" */ "./views/SignUp.vue"),
 			meta: {
-				redirectAuth: "home",
-				title: "Sign Up",
+				redirectAuth: "home"
 			},
 		},
 		{
-			path: "/forgotpassword",
-			name: "forgotpassword",
+			path: "/forgot-password",
+			name: "forgot-password",
 			component: () => import(/* webpackChunkName: "account" */ "./views/ForgotPassword.vue"),
 			meta: {
-				redirectAuth: "home",
-				title: "Forgot Password",
+				redirectAuth: "home"
 			},
 		},
 		{
-			path: "/resetpassword",
-			name: "resetpassword",
+			path: "/reset-password",
+			name: "reset-password",
 			component: () => import(/* webpackChunkName: "account" */ "./views/ResetPassword.vue"),
 			meta: {
-				redirectAuth: "home",
-				title: "Reset Password",
+				redirectAuth: "home"
+			},
+		},
+		{
+			path: "/verify-account",
+			name: "verify-account",
+			component: () => import(/* webpackChunkName: "account" */ "./views/VerifyAccount.vue"),
+			meta: {
+				redirectAuth: "home"
 			},
 		},
 		{
@@ -58,8 +62,7 @@ export default new Router({
 			//component: () => import("Components/Route/SignIn"),
 			component: Protected,
 			meta: {
-				requiresAuth: true,
-				title: "Protected page",
+				requiresAuth: true
 			},
 		},
 		{

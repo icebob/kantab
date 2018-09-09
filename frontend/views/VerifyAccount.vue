@@ -3,17 +3,10 @@
 	<page-center>
 		<div class="auth-panel">
 			<logo />
-			<h4>Reset Password</h4>
+			<h4>Verify Account</h4>
 			<form @submit.prevent="submit">
 				<div v-if="error" class="alert error">{{ error }}</div>
 				<div v-if="success" class="alert success">{{ success }}</div>
-				<fieldset class="password">
-					<input type="password" v-model="password" placeholder="New Password" />
-					<i class="fa fa-lock"></i>
-				</fieldset>
-				<fieldset>
-					<input type="submit" value="Reset Password" />
-				</fieldset>
 			</form>
 		</div>
 	</page-center>
@@ -33,7 +26,6 @@ export default {
 	},
 	data() {
 		return {
-			password: "",
 			error: null,
 			success: null,
 		};
@@ -42,12 +34,13 @@ export default {
 	methods: {
 		async submit() {
 			this.error = null;
-			this.success = null;
+			this.success = "Verifying account...";
 			try {
-				await this.$authenticator.resetPassword(this.$route.query.token, this.password);
-				this.success = "Password changed. Logging in...";
+				await this.$authenticator.verifyAccount(this.$route.query.token);
+				this.success = "Account verified. Logging in...";
 				setTimeout(() => this.$router.push({ name: "home" }), 1000);
 			} catch(err) {
+				this.success = null;
 				this.error = err.message;
 			}
 		}
@@ -56,6 +49,8 @@ export default {
 	mounted() {
 		if (!this.$route.query.token)
 			this.error = "Missing token.";
+		else
+			this.submit();
 	}
 };
 </script>

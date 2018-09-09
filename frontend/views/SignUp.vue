@@ -21,7 +21,7 @@
 				</fieldset>
 				<fieldset>
 					<input type="password" v-model="password" placeholder="Password" />
-					<i class="fa fa-lock"></i>
+					<i class="fa fa-key"></i>
 					<span class="hint">Leave empty for passwordless account</span>
 				</fieldset>
 				<fieldset>
@@ -88,25 +88,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/variables";
-
-.content {
-	position: absolute;
-	left: 0; right: 0; top: 0; bottom: 0;
-
-	height: 100%;
-	min-height: 100%;
-}
-
-.wrap-outer {
-	display: flex;
-    align-items: center;
-    justify-content: center;
-
-	width: 100%;
-	height: 100%;
-}
-
 @import "../styles/auth";
-
 </style>

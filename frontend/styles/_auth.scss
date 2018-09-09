@@ -1,3 +1,5 @@
+@import "_variables";
+
 $w: 250px;
 
 .auth-panel {
@@ -73,10 +75,10 @@ fieldset input[type="text"], fieldset input[type="password"], fieldset input[typ
 
 fieldset i {
 	content: '\f007';
-	font-size: 1.7em;
+	font-size: 1.6em;
 	color: lighten($bg2, 20);
 	position: absolute;
-	right: 0.4em;
+	right: 0.5em;
 	top: 0.5em;
 	width: 1em;
 	height: 1em;

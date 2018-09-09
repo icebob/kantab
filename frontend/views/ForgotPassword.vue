@@ -60,27 +60,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/variables";
-
-$w: 250px;
-
-.content {
-	position: absolute;
-	left: 0; right: 0; top: 0; bottom: 0;
-
-	height: 100%;
-	min-height: 100%;
-}
-
-.wrap-outer {
-	display: flex;
-    align-items: center;
-    justify-content: center;
-
-	width: 100%;
-	height: 100%;
-}
-
 @import "../styles/auth";
-
 </style>

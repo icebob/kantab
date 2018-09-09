@@ -41,7 +41,7 @@ module.exports = {
 		enablePasswordless: true,
 		enableUsername: true,
 		sendMail: true,
-		verification: false,
+		verification: true,
 		socialProviders: {},
 
 		defaultRoles: ["user"],
@@ -165,9 +165,22 @@ module.exports = {
 					//throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
 
 				const user = await this.getById(ctx.meta.user._id);
-				if (!user)
+				if (!user) {
 					return null;
 					//throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+				}
+
+				// Check verified
+				if (!user.verified) {
+					return null;
+					//throw new MoleculerClientError("Please activate your account!", 400, "ERR_ACCOUNT_NOT_VERIFIED");
+				}
+
+				// Check status
+				if (user.status !== 1) {
+					return null;
+					//throw new MoleculerClientError("Account is disabled!", 400, "ERR_ACCOUNT_DISABLED");
+				}
 
 				return await this.transformDocuments(ctx, {}, user);
 			}
@@ -248,7 +261,7 @@ module.exports = {
 				if (!entity.avatar) {
 					// Default avatar as Gravatar
 					const md5 = crypto.createHash("md5").update(entity.email).digest("hex");
-					entity.avatar = `https://gravatar.com/avatar/${md5}?s=64&d=wavatar`;
+					entity.avatar = `https://gravatar.com/avatar/${md5}?s=64&d=robohash`;
 				}
 
 				// Generate passwordless token or hash password
@@ -262,7 +275,7 @@ module.exports = {
 				}
 
 				// Generate verification token
-				if (this.settings.verification && !entity.passwordless) {
+				if (this.settings.verification) {
 					entity.verified = false;
 					entity.verificationToken = this.generateToken();
 				}
@@ -292,11 +305,11 @@ module.exports = {
 				token: { type: "string" }
 			},
 			async handler(ctx) {
-				let user = await this.adapter.findOne({ verificationToken: ctx.params.token });
+				const user = await this.adapter.findOne({ verificationToken: ctx.params.token });
 				if (!user)
-					throw new MoleculerClientError("Invalid verification token or expired!", 400, "INVALID_TOKEN");
+					throw new MoleculerClientError("Invalid verification token!", 400, "INVALID_TOKEN");
 
-				user = await this.adapter.updateById(user._id, {
+				await this.adapter.updateById(user._id, {
 					"$set": {
 						verified: true,
 						verificationToken: null
@@ -306,7 +319,9 @@ module.exports = {
 				// Send welcome email
 				this.sendMail(ctx, user, "welcome");
 
-				return this.transformDocuments(ctx, {}, user);
+				return {
+					token: await this.getToken(user)
+				};
 			}
 		},
 
@@ -346,6 +361,16 @@ module.exports = {
 				// Check email is exist
 				if (!user)
 					throw new MoleculerClientError("Email is not registered.", 400, "ERR_EMAIL_NOT_FOUND");
+
+				// Check verified
+				if (!user.verified) {
+					throw new MoleculerClientError("Please activate your account!", 400, "ERR_ACCOUNT_NOT_VERIFIED");
+				}
+
+				// Check status
+				if (user.status !== 1) {
+					throw new MoleculerClientError("Account is disabled!", 400, "ERR_ACCOUNT_DISABLED");
+				}
 
 				// Save the token to user
 				await ctx.call(`${this.fullName}.update`, {
@@ -474,7 +499,7 @@ module.exports = {
 
 				// Check passwordless login
 				if (user.passwordless == true && ctx.params.password)
-					throw new MoleculerClientError("This is a passwordless account! Please login without password", 400, "ERR_PASSWORDLESS_WITH_PASSWORD");
+					throw new MoleculerClientError("This is a passwordless account! Please login without password.", 400, "ERR_PASSWORDLESS_WITH_PASSWORD");
 
 				// Authenticate
 				if (ctx.params.password) {
@@ -486,8 +511,10 @@ module.exports = {
 					// Send magic link
 					await this.sendMagicLink(ctx, user);
 
-					// TODO: send back with ctx.meta
-					throw new MoleculerClientError(`An email has been sent to ${user.email} with magic link. Please check your spam folder if it does not arrive.`, 400, "MAGIC_LINK_SENT");
+					return {
+						passwordless: true,
+						email: user.email
+					};
 
 				} else {
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");

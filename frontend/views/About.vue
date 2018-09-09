@@ -1,13 +1,16 @@
 <template>
   <div class="about">
     <h1>This is an about page</h1>
-	<pre v-if="user"><code>{{ user }}</code></pre>
+	<template v-if="user">
+		<img :src="user.avatar" />
+		<pre><code>{{ user }}</code></pre>
+	</template>
 	<p v-else>No logged in user</p>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState } from "vuex";
 
 export default {
 	computed: {
