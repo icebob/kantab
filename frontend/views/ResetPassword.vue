@@ -2,46 +2,29 @@
 <page-content>
 	<page-center>
 		<logo />
-		<h4>Sign Up</h4>
+		<h4>Reset Password</h4>
 		<form @submit.prevent="submit">
 			<div class="alert error">{{ error }}</div>
-			<fieldset class="email">
-				<input type="email" v-model="email" placeholder="E-mail" required />
-				<i class="fa fa-envelope"></i>
-			</fieldset>
-			<fieldset class="username">
-				<input type="text" v-model="username" placeholder="Username" required />
-				<i class="fa fa-user"></i>
-			</fieldset>
 			<fieldset class="password">
-				<input type="password" v-model="password" placeholder="Password" />
+				<input type="password" v-model="password" placeholder="New Password" />
 				<i class="fa fa-lock"></i>
-				<span class="hint">Leave empty for passwordless account</span>
 			</fieldset>
 			<fieldset>
-				<input type="submit" value="Sign Up" />
-			</fieldset>
-			<fieldset class="already">
-				<span>Already have an account?</span>
-				<router-link to="/login">Sign In</router-link>
+				<input type="submit" value="Reset Password" />
 			</fieldset>
 		</form>
-		<hr/>
-		<social-auth />
 	</page-center>
 </page-content>
 </template>
 
 <script>
 import Logo from "../components/Logo";
-import SocialAuth from "../components/SocialAuth";
 import PageCenter from "../components/PageCenter";
 import PageContent from "../components/PageContent";
 
 export default {
 	components: {
 		Logo,
-		SocialAuth,
 		PageContent,
 		PageCenter
 	},

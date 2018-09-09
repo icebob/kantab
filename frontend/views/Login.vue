@@ -2,6 +2,7 @@
 <page-content>
 	<page-center>
 		<logo />
+		<h4>Sign In</h4>
 		<form @submit.prevent="submit">
 			<div class="alert error">{{ error }}</div>
 			<fieldset class="email">
@@ -16,15 +17,15 @@
 					<label for="remember">Remember me</label>
 				</div -->
 				<div class="forgot">
-					<a href="#">Forgot password?</a>
+					<router-link to="/forgotpassword">Forgot password?</router-link>
 				</div>
 			</fieldset>
 			<fieldset>
 				<input type="submit" value="Login" />
 			</fieldset>
-			<fieldset>
+			<fieldset class="already">
 				<span>Don't have an account?</span>
-				<router-link to="/signup"> Sign Up</router-link>
+				<router-link to="/signup">Sign Up</router-link>
 			</fieldset>
 		</form>
 		<hr/>

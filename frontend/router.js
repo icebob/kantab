@@ -18,8 +18,7 @@ export default new Router({
 		{
 			path: "/login",
 			name: "login",
-			component: () => import(/* webpackChunkName: "login" */ "./views/Login.vue"),
-			//component: Login,
+			component: () => import(/* webpackChunkName: "account" */ "./views/Login.vue"),
 			meta: {
 				redirectAuth: "home",
 				title: "Sign In",
@@ -28,11 +27,28 @@ export default new Router({
 		{
 			path: "/signup",
 			name: "signup",
-			component: () => import(/* webpackChunkName: "login" */ "./views/SignUp.vue"),
-			//component: Login,
+			component: () => import(/* webpackChunkName: "account" */ "./views/SignUp.vue"),
 			meta: {
 				redirectAuth: "home",
 				title: "Sign Up",
+			},
+		},
+		{
+			path: "/forgotpassword",
+			name: "forgotpassword",
+			component: () => import(/* webpackChunkName: "account" */ "./views/ForgotPassword.vue"),
+			meta: {
+				redirectAuth: "home",
+				title: "Forgot Password",
+			},
+		},
+		{
+			path: "/resetpassword",
+			name: "resetpassword",
+			component: () => import(/* webpackChunkName: "account" */ "./views/ResetPassword.vue"),
+			meta: {
+				redirectAuth: "home",
+				title: "Reset Password",
 			},
 		},
 		{

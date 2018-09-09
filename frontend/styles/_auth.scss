@@ -1,7 +1,16 @@
+h4 {
+	font-family: $headerFontFamily;
+	font-weight: 300;
+	font-size: 1.5em;
+	text-align: center;
+	margin: 0.5em;
+	color: $textColor;
+}
+
 form {
 	width: $w;
 	margin: 0 auto;
-	margin-top: 1.5em;
+	margin-top: 0em;
 	color: $textColor2;
 }
 
@@ -101,6 +110,13 @@ fieldset i {
 		&:hover {
 			color: $textColor;
 		}
+	}
+}
+
+.already {
+	font-size: 0.9em;
+	a {
+		margin-left: 0.5em;
 	}
 }
 
