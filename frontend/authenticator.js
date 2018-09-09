@@ -84,8 +84,24 @@ export default new class Authenticator {
 		return !!store.state.user;
 	}
 
+	async register(params) {
+		const res = await axios.post("/api/v1/accounts/register", params);
+		if (res.verified) {
+			Cookie.set(COOKIE_TOKEN_NAME, res.token, { expires: 90 });
+
+			const user = await this.getMe();
+
+			const { redirect } = store.state.route.query;
+			router.push(redirect ? redirect : { name: "home" });
+
+			return user;
+		}
+
+		return null;
+	}
+
 	async login(email, password) {
-		const { token } = await axios.post("/auth/local", { email, password });
+		const { token } = await axios.post("/api/v1/login", { email, password });
 		Cookie.set(COOKIE_TOKEN_NAME, token, { expires: 90 });
 
 		const user = await this.getMe();
@@ -107,6 +123,19 @@ export default new class Authenticator {
 		store.commit("LOGOUT");
 		Cookie.remove(COOKIE_TOKEN_NAME);
 		router.push({ name: "login" });
+	}
+
+	async forgotPassword(email) {
+		return await axios.post("/api/v1/accounts/forgot-password", { email });
+	}
+
+	async resetPassword(resetToken, password) {
+		const { token } = await axios.post("/api/v1/accounts/reset-password", { token: resetToken, password });
+		Cookie.set(COOKIE_TOKEN_NAME, token, { expires: 90 });
+
+		const user = await this.getMe();
+
+		return user;
 	}
 };
 

@@ -1,14 +1,21 @@
 <template>
-	<div class="wrap-outer">
-		<div class="wrap-inner">
-			<slot />
-		</div>
+	<div class="wrapper">
+		<slot />
 	</div>
 </template>
 
+<script>
+export default {
+	props: [
+		"innerClass"
+	]
+};
+</script>
+
+
 <style lang="scss" scoped>
 @import "../styles/variables";
-.wrap-outer {
+.wrapper {
 	display: flex;
     align-items: center;
     justify-content: center;

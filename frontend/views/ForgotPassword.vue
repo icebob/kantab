@@ -1,22 +1,25 @@
 <template>
 <page-content>
 	<page-center>
-		<logo />
-		<h4>Forgot Password</h4>
-		<form @submit.prevent="submit">
-			<div class="alert error">{{ error }}</div>
-			<fieldset class="email">
-				<input type="email" v-model="email" placeholder="E-mail" required />
-				<i class="fa fa-envelope"></i>
-			</fieldset>
-			<fieldset>
-				<input type="submit" value="Send reset e-mail" />
-			</fieldset>
-			<fieldset class="already">
-				<span>Already have an account?</span>
-				<router-link to="/login">Sign In</router-link>
-			</fieldset>
-		</form>
+		<div class="auth-panel">
+			<logo />
+			<h4>Forgot Password</h4>
+			<form @submit.prevent="submit">
+				<div v-if="error" class="alert error">{{ error }}</div>
+				<div v-if="success" class="alert success">{{ success }}</div>
+				<fieldset class="email">
+					<input type="email" v-model="email" placeholder="E-mail" required />
+					<i class="fa fa-envelope"></i>
+				</fieldset>
+				<fieldset>
+					<input type="submit" value="Send reset e-mail" />
+				</fieldset>
+				<fieldset class="already">
+					<span>Already have an account?</span>
+					<router-link to="/login">Sign In</router-link>
+				</fieldset>
+			</form>
+		</div>
 	</page-center>
 </page-content>
 </template>
@@ -35,20 +38,20 @@ export default {
 	data() {
 		return {
 			email: "",
-			username: "",
-			password: "",
-			error: "",
+			error: null,
+			success: null,
 		};
 	},
 
 	methods: {
 		async submit() {
 			this.error = null;
+			this.success = null;
 			try {
-				const res = await this.$authenticator.register(this.email, this.username, this.password);
-				console.log("Me:", res);
+				await this.$authenticator.forgotPassword(this.email);
+				this.success = "E-mail sent.";
+				this.email = "";
 			} catch(err) {
-				//console.log(JSON.stringify(err, null, 2));
 				this.error = err.message;
 			}
 		}

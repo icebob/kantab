@@ -1,18 +1,21 @@
 <template>
 <page-content>
 	<page-center>
-		<logo />
-		<h4>Reset Password</h4>
-		<form @submit.prevent="submit">
-			<div class="alert error">{{ error }}</div>
-			<fieldset class="password">
-				<input type="password" v-model="password" placeholder="New Password" />
-				<i class="fa fa-lock"></i>
-			</fieldset>
-			<fieldset>
-				<input type="submit" value="Reset Password" />
-			</fieldset>
-		</form>
+		<div class="auth-panel">
+			<logo />
+			<h4>Reset Password</h4>
+			<form @submit.prevent="submit">
+				<div v-if="error" class="alert error">{{ error }}</div>
+				<div v-if="success" class="alert success">{{ success }}</div>
+				<fieldset class="password">
+					<input type="password" v-model="password" placeholder="New Password" />
+					<i class="fa fa-lock"></i>
+				</fieldset>
+				<fieldset>
+					<input type="submit" value="Reset Password" />
+				</fieldset>
+			</form>
+		</div>
 	</page-center>
 </page-content>
 </template>
@@ -30,24 +33,29 @@ export default {
 	},
 	data() {
 		return {
-			email: "",
-			username: "",
 			password: "",
 			error: null,
+			success: null,
 		};
 	},
 
 	methods: {
 		async submit() {
 			this.error = null;
+			this.success = null;
 			try {
-				const res = await this.$authenticator.register(this.email, this.username, this.password);
-				console.log("Me:", res);
+				await this.$authenticator.resetPassword(this.$route.query.token, this.password);
+				this.success = "Password changed. Logging in...";
+				setTimeout(() => this.$router.push({ name: "home" }), 1000);
 			} catch(err) {
-				//console.log(JSON.stringify(err, null, 2));
 				this.error = err.message;
 			}
 		}
+	},
+
+	mounted() {
+		if (!this.$route.query.token)
+			this.error = "Missing token.";
 	}
 };
 </script>

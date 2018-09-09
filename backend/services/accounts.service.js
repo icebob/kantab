@@ -41,7 +41,7 @@ module.exports = {
 		enablePasswordless: true,
 		enableUsername: true,
 		sendMail: true,
-		verification: true,
+		verification: false,
 		socialProviders: {},
 
 		defaultRoles: ["user"],
@@ -161,11 +161,13 @@ module.exports = {
 			},
 			async handler(ctx) {
 				if (!ctx.meta.user)
-					throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
+					return null;
+					//throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
 
 				const user = await this.getById(ctx.meta.user._id);
 				if (!user)
-					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+					return null;
+					//throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
 				return await this.transformDocuments(ctx, {}, user);
 			}
@@ -201,8 +203,8 @@ module.exports = {
 		 */
 		register: {
 			params: {
-				username: { type: "string", /*min: 3, */optional: true },
-				password: { type: "string", /*min: 6, */optional: true },
+				username: { type: "string", min: 3, optional: true },
+				password: { type: "string", min: 8, optional: true },
 				email: { type: "email" },
 				firstName: { type: "string", min: 2 },
 				lastName: { type: "string", min: 2 },
@@ -243,6 +245,12 @@ module.exports = {
 				entity.verified = true;
 				entity.status = 1;
 
+				if (!entity.avatar) {
+					// Default avatar as Gravatar
+					const md5 = crypto.createHash("md5").update(entity.email).digest("hex");
+					entity.avatar = `https://gravatar.com/avatar/${md5}?s=64&d=wavatar`;
+				}
+
 				// Generate passwordless token or hash password
 				if (params.password) {
 					entity.password = await bcrypt.hash(params.password, 10);
@@ -266,6 +274,7 @@ module.exports = {
 				if (user.verified) {
 					// Send welcome email
 					this.sendMail(ctx, user, "welcome");
+					user.token = await this.getToken(user);
 				} else {
 					// Send verification email
 					this.sendMail(ctx, user, "activate", { token: entity.verificationToken });
@@ -333,13 +342,13 @@ module.exports = {
 			async handler(ctx) {
 				const token = this.generateToken();
 
-				let user = await this.getUserByEmail(ctx, ctx.params.email);
+				const user = await this.getUserByEmail(ctx, ctx.params.email);
 				// Check email is exist
 				if (!user)
 					throw new MoleculerClientError("Email is not registered.", 400, "ERR_EMAIL_NOT_FOUND");
 
 				// Save the token to user
-				user = await ctx.call(`${this.fullName}.update`, {
+				await ctx.call(`${this.fullName}.update`, {
 					id: user._id,
 					resetToken: token,
 					resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
@@ -348,26 +357,7 @@ module.exports = {
 				// Send a passwordReset email
 				this.sendMail(ctx, user, "reset-password", { token });
 
-				return this.transformDocuments(ctx, {}, user);
-			}
-		},
-
-		/**
-		 * Check the reset password token
-		 */
-		checkResetToken: {
-			params: {
-				token: { type: "string" }
-			},
-			async handler(ctx) {
-				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
-				if (!user)
-					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
-
-				if (user.resetTokenExpires < Date.now())
-					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
-
-				return this.transformDocuments(ctx, {}, user);
+				return true;
 			}
 		},
 
@@ -377,14 +367,19 @@ module.exports = {
 		resetPassword: {
 			params: {
 				token: { type: "string" },
-				password: { type: "string", min: 6 }
+				password: { type: "string", min: 8 }
 			},
 			async handler(ctx) {
 				// Check the token & expires
-				let user = await ctx.call(`${this.fullName}.checkResetToken`, { token: ctx.params.token });
+				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
+				if (!user)
+					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
+
+				if (user.resetTokenExpires < Date.now())
+					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
 
 				// Change the password
-				user = await ctx.call(`${this.fullName}.update`, {
+				await ctx.call(`${this.fullName}.update`, {
 					id: user._id,
 					password: await bcrypt.hash(ctx.params.password, 10),
 					passwordless: false,
@@ -395,7 +390,9 @@ module.exports = {
 				// Send password-changed email
 				this.sendMail(ctx, user, "password-changed");
 
-				return this.transformDocuments(ctx, {}, user);
+				return {
+					token: await this.getToken(user)
+				};
 			}
 		},
 
@@ -496,11 +493,8 @@ module.exports = {
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
 				}
 
-				//return this.transformDocuments(ctx, {}, user);
-				const payload = { id: user._id.toString() };
-
 				return {
-					token: await this.generateJWT(payload)
+					token: await this.getToken(user)
 				};
 			}
 		},
@@ -587,7 +581,7 @@ module.exports = {
 					if (!foundBySocialID)
 						user = await ctx.call(`${this.fullName}.link`, { user, provider, profile });
 
-					user.token = await this.generateJWT({ id: user._id });
+					user.token = await this.getToken(user);
 
 					return user;
 				}
@@ -608,6 +602,11 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
+
+		async getToken(user) {
+			return await this.generateJWT({ id: user._id.toString() });
+		},
+
 		/**
 		 * Generate a JWT token from user entity.
 		 *

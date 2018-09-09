@@ -3,6 +3,7 @@ import Router from "vue-router";
 import Home from "./views/Home.vue";
 //import Login from "./views/Login.vue";
 import Protected from "./views/Protected.vue";
+import NotFound from "./views/NotFound.vue";
 
 Vue.use(Router);
 
@@ -61,33 +62,6 @@ export default new Router({
 				title: "Protected page",
 			},
 		},
-		/*{
-			path: "/signup",
-			name: "signup",
-			component: () => import("Components/Route/SignUp"),
-			meta: {
-				redirectAuth: "home",
-				title: "Sign Up",
-			},
-		},
-		{
-			path: "/forgotpassword",
-			name: "forgotpassword",
-			component: () => import("Components/Route/ForgotPassword"),
-			meta: {
-				redirectAuth: "home",
-				title: "Forgot Password",
-			},
-		},
-		{
-			path: "/resetpassword",
-			name: "resetpassword",
-			component: () => import("Components/Route/ResetPassword"),
-			meta: {
-				redirectAuth: "home",
-				title: "Reset Password",
-			},
-		},*/
 		{
 			path: "/about",
 			name: "about",
@@ -96,13 +70,10 @@ export default new Router({
 			// which is lazy-loaded when the route is visited.
 			component: () => import(/* webpackChunkName: "about" */ "./views/About.vue"),
 		},
-		/*{
+		{
 			path: "*",
 			name: "404",
-			component: () => import("Components/Route/404"),
-			meta: {
-				title: "Page Not Found",
-			},
-		},*/
+			component: NotFound,
+		},
 	],
 });

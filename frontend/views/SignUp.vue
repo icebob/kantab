@@ -1,33 +1,40 @@
 <template>
 <page-content>
 	<page-center>
-		<logo />
-		<h4>Sign Up</h4>
-		<form @submit.prevent="submit">
-			<div class="alert error">{{ error }}</div>
-			<fieldset class="email">
-				<input type="email" v-model="email" placeholder="E-mail" required />
-				<i class="fa fa-envelope"></i>
-			</fieldset>
-			<fieldset class="username">
-				<input type="text" v-model="username" placeholder="Username" required />
-				<i class="fa fa-user"></i>
-			</fieldset>
-			<fieldset class="password">
-				<input type="password" v-model="password" placeholder="Password" />
-				<i class="fa fa-lock"></i>
-				<span class="hint">Leave empty for passwordless account</span>
-			</fieldset>
-			<fieldset>
-				<input type="submit" value="Sign Up" />
-			</fieldset>
-			<fieldset class="already">
-				<span>Already have an account?</span>
-				<router-link to="/login">Sign In</router-link>
-			</fieldset>
-		</form>
-		<hr/>
-		<social-auth />
+		<div class="auth-panel">
+			<logo />
+			<h4>Sign Up</h4>
+			<form @submit.prevent="submit">
+				<div class="alert success">{{ success }}</div>
+				<div class="alert error">{{ error }}</div>
+				<fieldset class="two-fields">
+					<input type="text" v-model="firstName" placeholder="First name" required />
+					<input type="text" v-model="lastName" placeholder="Last name" required />
+				</fieldset>
+				<fieldset>
+					<input type="email" v-model="email" placeholder="E-mail" required />
+					<i class="fa fa-envelope"></i>
+				</fieldset>
+				<fieldset>
+					<input type="text" v-model="username" placeholder="Username" required />
+					<i class="fa fa-user"></i>
+				</fieldset>
+				<fieldset>
+					<input type="password" v-model="password" placeholder="Password" />
+					<i class="fa fa-lock"></i>
+					<span class="hint">Leave empty for passwordless account</span>
+				</fieldset>
+				<fieldset>
+					<input type="submit" value="Sign Up" />
+				</fieldset>
+				<fieldset class="already">
+					<span>Already have an account?</span>
+					<router-link to="/login">Sign In</router-link>
+				</fieldset>
+			</form>
+			<hr/>
+			<social-auth />
+		</div>
 	</page-center>
 </page-content>
 </template>
@@ -47,19 +54,30 @@ export default {
 	},
 	data() {
 		return {
+			firstName: "",
+			lastName: "",
 			email: "",
 			username: "",
 			password: "",
 			error: null,
+			success: null,
 		};
 	},
 
 	methods: {
 		async submit() {
+			this.success = null;
 			this.error = null;
 			try {
-				const res = await this.$authenticator.register(this.email, this.username, this.password);
-				console.log("Me:", res);
+				const res = await this.$authenticator.register({
+					firstName: this.firstName,
+					lastName: this.lastName,
+					email: this.email,
+					username: this.username,
+					password: this.password
+				});
+				if (!res)
+					this.success = "Account created. Please activate now.";
 			} catch(err) {
 				//console.log(JSON.stringify(err, null, 2));
 				this.error = err.message;
@@ -71,8 +89,6 @@ export default {
 
 <style lang="scss" scoped>
 @import "../styles/variables";
-
-$w: 250px;
 
 .content {
 	position: absolute;
