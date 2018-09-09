@@ -12,14 +12,15 @@ h3 {
 	text-align: center;
 	font-size: 2em;
 	font-weight: 700;
-	color: $textColor;
+	color: $textColor2;
 	text-shadow: 0px 0px 20px rgba(0,0,0, 0.4);
 
-	font-family: $headerFontFamily;
+	font-family: $fontFamilyHeader;
 
 	span:first-child {
 		color: $primary;
 	}
+
 }
 
 </style>

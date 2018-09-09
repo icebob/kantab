@@ -15,6 +15,6 @@ main {
 	height: 100%;
 	min-height: 100%;
 
-	background-image: -webkit-radial-gradient(center center, $bg2, $bg1);
+	background-image: -webkit-radial-gradient(center center, $backgroundColor2, $backgroundColor);
 }
 </style>

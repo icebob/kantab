@@ -27,14 +27,10 @@ export default {
 </script>
 
 
-<style lang="scss">
-@import "./styles/common";
+<style lang="scss" src="./styles/style.scss">
 </style>
 
 <style lang="scss" scoped>
-
-@import "./styles/variables";
-
 #nav {
   padding: 30px;
   a {
