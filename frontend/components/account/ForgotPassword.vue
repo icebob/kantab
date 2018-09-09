@@ -12,7 +12,7 @@
 					<i class="fa fa-envelope"></i>
 				</fieldset>
 				<fieldset>
-					<input type="submit" value="Send reset e-mail" />
+					<submit-button :loading="processing" size="large" color="primary" caption="Send reset e-mail" />
 				</fieldset>
 				<fieldset class="already">
 					<span>Already have an account?</span>
@@ -25,40 +25,19 @@
 </template>
 
 <script>
-import Logo from "../components/Logo";
-import PageCenter from "../components/PageCenter";
-import PageContent from "../components/PageContent";
+import AuthPanel from "./mixins/AuthPanel";
 
 export default {
-	components: {
-		Logo,
-		PageContent,
-		PageCenter
-	},
-	data() {
-		return {
-			email: "",
-			error: null,
-			success: null,
-		};
-	},
+	mixins: [
+		AuthPanel
+	],
 
 	methods: {
-		async submit() {
-			this.error = null;
-			this.success = null;
-			try {
-				await this.$authenticator.forgotPassword(this.email);
-				this.success = "E-mail sent.";
-				this.email = "";
-			} catch(err) {
-				this.error = err.message;
-			}
+		async process() {
+			await this.$authenticator.forgotPassword(this.email);
+			this.success = "E-mail sent.";
+			this.email = "";
 		}
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-@import "../styles/auth";
-</style>

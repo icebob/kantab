@@ -14,7 +14,7 @@ export default {
 
 
 <style lang="scss" scoped>
-@import "../styles/variables";
+@import "../../../styles/variables";
 .wrapper {
 	display: flex;
     align-items: center;

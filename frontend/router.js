@@ -1,9 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
-import Home from "./views/Home.vue";
-//import Login from "./views/Login.vue";
-import Protected from "./views/Protected.vue";
-import NotFound from "./views/NotFound.vue";
+import Home from "./components/Home.vue";
+import Protected from "./components/Protected.vue";
 
 Vue.use(Router);
 
@@ -19,7 +17,7 @@ export default new Router({
 		{
 			path: "/login",
 			name: "login",
-			component: () => import(/* webpackChunkName: "account" */ "./views/Login.vue"),
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/Login.vue"),
 			meta: {
 				redirectAuth: "home"
 			},
@@ -27,7 +25,7 @@ export default new Router({
 		{
 			path: "/signup",
 			name: "signup",
-			component: () => import(/* webpackChunkName: "account" */ "./views/SignUp.vue"),
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/SignUp.vue"),
 			meta: {
 				redirectAuth: "home"
 			},
@@ -35,7 +33,7 @@ export default new Router({
 		{
 			path: "/forgot-password",
 			name: "forgot-password",
-			component: () => import(/* webpackChunkName: "account" */ "./views/ForgotPassword.vue"),
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/ForgotPassword.vue"),
 			meta: {
 				redirectAuth: "home"
 			},
@@ -43,7 +41,7 @@ export default new Router({
 		{
 			path: "/reset-password",
 			name: "reset-password",
-			component: () => import(/* webpackChunkName: "account" */ "./views/ResetPassword.vue"),
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/ResetPassword.vue"),
 			meta: {
 				redirectAuth: "home"
 			},
@@ -51,7 +49,7 @@ export default new Router({
 		{
 			path: "/verify-account",
 			name: "verify-account",
-			component: () => import(/* webpackChunkName: "account" */ "./views/VerifyAccount.vue"),
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/VerifyAccount.vue"),
 			meta: {
 				redirectAuth: "home"
 			},
@@ -59,7 +57,7 @@ export default new Router({
 		{
 			path: "/passwordless",
 			name: "passwordless",
-			component: () => import(/* webpackChunkName: "account" */ "./views/Passwordless.vue"),
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/Passwordless.vue"),
 			meta: {
 				redirectAuth: "home"
 			},
@@ -67,7 +65,6 @@ export default new Router({
 		{
 			path: "/protected",
 			name: "protected",
-			//component: () => import("Components/Route/SignIn"),
 			component: Protected,
 			meta: {
 				requiresAuth: true
@@ -76,15 +73,12 @@ export default new Router({
 		{
 			path: "/about",
 			name: "about",
-			// route level code-splitting
-			// this generates a separate chunk (about.[hash].js) for this route
-			// which is lazy-loaded when the route is visited.
-			component: () => import(/* webpackChunkName: "about" */ "./views/About.vue"),
+			component: () => import(/* webpackChunkName: "about" */ "./components/About.vue"),
 		},
 		{
 			path: "*",
 			name: "404",
-			component: NotFound,
+			component: () => import(/* webpackChunkName: "account" */ "./components/account/NotFound.vue"),
 		},
 	],
 });

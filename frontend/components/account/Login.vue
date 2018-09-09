@@ -23,7 +23,7 @@
 					</div>
 				</fieldset>
 				<fieldset>
-					<input type="submit" value="Login" />
+					<submit-button :loading="processing" size="large" color="primary" caption="Login" />
 				</fieldset>
 				<hr/>
 				<social-auth />
@@ -39,48 +39,20 @@
 </template>
 
 <script>
-import Logo from "../components/Logo";
-import SocialAuth from "../components/SocialAuth";
-import PageCenter from "../components/PageCenter";
-import PageContent from "../components/PageContent";
+import AuthPanel from "./mixins/AuthPanel";
 
 export default {
-	components: {
-		Logo,
-		SocialAuth,
-		PageContent,
-		PageCenter
-	},
-	data() {
-		return {
-			email: "",
-			password: "",
-			remember: true,
-			error: null,
-			success: null,
-		};
-	},
+	mixins: [
+		AuthPanel
+	],
 
 	methods: {
-		async submit() {
-			this.error = null;
-			this.success = null;
-			try {
-				const res = await this.$authenticator.login(this.email, this.password);
-				if (res.passwordless) {
-					this.success = `Magic link has been sent to '${res.email}'. Use it to sign in.`;
-				}
-			} catch(err) {
-				//console.log(JSON.stringify(err, null, 2));
-				this.error = err.message;
-				this.success = null;
+		async process() {
+			const res = await this.$authenticator.login(this.email, this.password);
+			if (res.passwordless) {
+				this.success = `Magic link has been sent to '${res.email}'. Use it to sign in.`;
 			}
-
 		}
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-@import "../styles/auth";
-</style>

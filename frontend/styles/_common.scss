@@ -1,7 +1,10 @@
-@import "./variables";
+@import "variables";
+@import "animations";
+@import "mixins";
+@import "buttons";
 
 @import url(https://fonts.googleapis.com/css?family=Lato:300,400,600,700|Roboto+Condensed:300,700|Open+Sans:300,400,600,700);
-@import url('https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css');
+@import url(https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css);
 
 html, body {
 	margin: 0;
@@ -18,6 +21,7 @@ html, body {
 
 	font-family: $fontFamily;
 	font-size: 16px;
+	//font: 16px/18px $fontFamily;
 
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
@@ -25,3 +29,5 @@ html, body {
 	background-image: -webkit-radial-gradient(center center, $bg2, $bg1);
 	color: $textColor;
 }
+
+@import "auth-panels";

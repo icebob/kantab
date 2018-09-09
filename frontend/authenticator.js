@@ -16,20 +16,16 @@ export default new class Authenticator {
 		bus.$on("expiredToken", () => this.logout());
 
 		this.protectRouter();
-		// Trigger a login
-		//this.isAuthenticated();
 	}
 
 	protectRouter() {
 		// Authentication protection
 		router.beforeEach(async (to, from, next) => {
 			// First restricted page (try to authenticate with token)
-			if (!from.name && to.meta.requiresAuth) {
+			if (!from.name) {
 				const token = Cookie.get(COOKIE_TOKEN_NAME);
 				if (token) {
-					const user = await this.getMe();
-					if (user)
-						next();
+					await this.getMe();
 				}
 			}
 

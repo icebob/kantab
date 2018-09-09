@@ -4,9 +4,17 @@ $hoverBG: #454F56;
 $textColor: #FFFFFF;
 $textColor2: #A0A0A0;
 $primary: #A1C72C;
-//$greenBG: desaturate($primary, 10);
+
 $linkTextColor: $textColor;
-$placeholderColor: #95a6b1;
+
+$buttonColor: #95a6b1;
+$buttonTextColor: $bg1;
 
 $fontFamily: "Open Sans", Arial, sans-serif;
 $headerFontFamily: "Roboto Condensed", Arial, sans-serif;
+
+$successColor: #39b957;
+$warningColor: #b38118;
+$dangerColor: #b43d3d;
+
+$placeholderColor: $buttonColor;
