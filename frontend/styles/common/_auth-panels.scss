@@ -19,7 +19,7 @@ $w: 250px;
 		width: $w;
 		margin: 0 auto;
 		margin-top: 0em;
-		color: $textColor2;
+		color: $textColor;
 	}
 
 	fieldset {
@@ -34,12 +34,12 @@ $w: 250px;
 		display: block;
 		text-align: left;
 		font-size: 0.75em;
-		color: $textColor2;
+		color: $textColor;
 		font-style: italic;
 	}
 
 	a {
-		color: $textColor;
+		color: $linkTextColor;
 		text-decoration: none;
 	}
 
@@ -78,7 +78,7 @@ $w: 250px;
 		color: lighten($backgroundColor2, 20);
 		position: absolute;
 		right: 0.5em;
-		top: 0.5em;
+		top: 0.4em;
 		width: 1em;
 		height: 1em;
 		//color: White;
@@ -99,12 +99,12 @@ $w: 250px;
 		margin-top: 0.2em;
 		font-size: 0.8em;
 
-		color: $textColor2;
+		color: $textColor;
 
 		label {
 			cursor: pointer;
 			&:hover {
-				color: $textColor;
+				color: $textColor2;
 			}
 		}
 
@@ -129,9 +129,9 @@ $w: 250px;
 		font-size: 0.8em;
 
 		a {
-			color: $textColor2;
+			color: $textColor;
 			&:hover {
-				color: $textColor;
+				color: $textColor2;
 			}
 		}
 	}

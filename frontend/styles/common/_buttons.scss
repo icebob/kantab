@@ -50,6 +50,10 @@
 		@include buttonColorize($primary, $buttonTextColor);
 	}
 
+	&.secondary {
+		@include buttonColorize($secondary, $buttonTextColor);
+	}
+
 	&.outline {
 		@include buttonColorize(transparent, $textColor);
 		border: 1px solid lighten($textColor2, 10%);

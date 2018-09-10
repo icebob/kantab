@@ -5,7 +5,7 @@
 
 	<section>
 		<h2><span class="number">1.</span><span class="text">Color palette</span></h2>
-		<div class="content flex align-center justify-space-around colors">
+		<div class="content flex wrap align-center justify-space-around colors">
 			<div class="box box1">
 				<div class="caption">Color #1</div>
 				<div class="main"></div>
@@ -75,6 +75,7 @@
 			<div class="buttons">
 				<button class="button">Normal</button>
 				<button class="button primary">Primary</button>
+				<button class="button secondary">Secondary</button>
 				<button class="button success"> <i class="icon fa fa-check"></i>Success</button>
 				<button class="button warning">Warning</button>
 				<button class="button danger">Danger</button>
@@ -87,6 +88,7 @@
 			<div class="buttons">
 				<button class="button large">Normal</button>
 				<button class="button large primary">Primary</button>
+				<button class="button large secondary">Secondary</button>
 				<button class="button large success"> <i class="icon fa fa-check"></i>Success</button>
 				<button class="button large warning">Warning</button>
 				<button class="button large danger">Danger</button>
@@ -99,6 +101,7 @@
 			<div class="buttons">
 				<button class="button small">Normal</button>
 				<button class="button small primary">Primary</button>
+				<button class="button small secondary">Secondary</button>
 				<button class="button small success"><i class="icon fa fa-check"></i>Success</button>
 				<button class="button small warning">Warning</button>
 				<button class="button small danger">Danger</button>
@@ -111,6 +114,7 @@
 			<div class="buttons">
 				<button disabled="disabled" class="button">Normal</button>
 				<button disabled="disabled" class="button primary">Primary</button>
+				<button disabled="disabled" class="button secondary">Secondary</button>
 				<button disabled="disabled" class="button success"><i class="icon fa fa-check"></i>Success</button>
 				<button disabled="disabled" class="button warning">Warning</button>
 				<button disabled="disabled" class="button danger">Danger</button>
@@ -120,8 +124,8 @@
 		<fieldset>
 		<legend>Icon buttons</legend>
 			<div class="buttons">
-				<button class="button"><i class="fa fa-home"></i></button>
-				<button class="button primary"><i class="fa fa-tasks"></i></button>
+				<button class="button large"><i class="fa fa-home"></i></button>
+				<button class="button small primary"><i class="fa fa-tasks"></i></button>
 				<button class="button success"> <i class="fa fa-cogs"></i></button>
 				<button class="button warning"><i class="fa fa-comments"></i></button>
 				<button class="button danger"><i class="fa fa-trash"></i></button>
@@ -131,8 +135,8 @@
 		<fieldset>
 		<legend>Floating buttons</legend>
 			<div class="buttons">
-				<button class="button fab"><i class="icon fa fa-plus"></i>Normal</button>
-				<button class="button fab large primary"> <i class="icon fa fa-plus"></i>Primary</button>
+				<button class="button fab large"><i class="icon fa fa-plus"></i>Normal</button>
+				<button class="button fab small primary"> <i class="icon fa fa-plus"></i>Primary</button>
 				<button class="button fab success"><i class="icon fa fa-check"></i>Success</button>
 				<button disabled="disabled" class="button fab warning"><i class="icon fa fa-comments"></i>Warning</button>
 				<button class="button fab danger"><i class="icon fa fa-trash"></i>Danger</button>
@@ -228,12 +232,13 @@ section {
 
 	.box {
 		width: $boxSize;
+		min-width: $boxSize;
 		height: $boxSize + 20px;
 
 		border: 1px solid darken($backgroundColor, 10%);
 		border-radius: 6px;
 
-		margin: 5px 20px;
+		margin: 10px;
 		padding: 2px;
 
 		.caption {
@@ -267,7 +272,7 @@ section {
 		.light, .dark, .code {
 			&:after {
 				position: absolute;
-				top: 5px; bottom: 0;
+				top: 7px; bottom: 0;
 				left: 0; right: 0;
 				margin: auto;
 				width: 100%;
@@ -275,7 +280,7 @@ section {
 				text-align: center;
 				font-family: "Consolas";
 				color: White;
-				text-shadow: 2px 2px 4px rgba(black, 0.7);
+				text-shadow: 0px 0px 6px rgba(black, 0.7);
 			}
 		}
 
