@@ -29,7 +29,7 @@ $secondary: $color5;
 $textColor: $color4;
 $textColor2: #FFFFFF;
 
-$buttonColor: #95a6b1;
+$buttonColor: lighten($color2, 30%);
 $buttonTextColor: $backgroundColor;
 
 $linkTextColor: $textColor2;
