@@ -6,6 +6,12 @@
 	"configurations": [
 		{
 			"type": "node",
+			"request": "attach",
+			"name": "Attach to Process",
+			"processId": "${command:PickProcess}"
+		},
+		{
+			"type": "node",
 			"request": "launch",
 			"name": "Debug",
 			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",

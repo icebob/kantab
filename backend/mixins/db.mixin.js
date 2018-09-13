@@ -4,8 +4,8 @@ const _ 			= require("lodash");
 const DbService		= require("moleculer-db");
 const MongoAdapter 	= require("moleculer-db-adapter-mongo");
 
-module.exports = function(collection) {
-	return {
+module.exports = function(collection, opts = {}) {
+	const schema = {
 		mixins: [DbService],
 		adapter: new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab"),
 		collection,
@@ -19,7 +19,7 @@ module.exports = function(collection) {
 			},
 
 			encodeID(id) {
-				return id.toString();
+				return id != null ? id.toString() : null;
 			},
 
 			decodeID(id) {
@@ -36,6 +36,21 @@ module.exports = function(collection) {
 				this.logger.info(`Seed '${collection}' collection...`);
 				this.seedDB();
 			}
-		}		
+		}
 	};
+
+	if (opts.disableActions) {
+		schema.actions = {
+			create: false,
+			insert: false,
+			count: false,
+			list: false,
+			find: false,
+			get: false,
+			update: false,
+			remove: false
+		};
+	}
+
+	return schema;
 };

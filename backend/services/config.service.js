@@ -3,6 +3,7 @@
 const _ 		= require("lodash");
 const DbService = require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
+const { match } = require("moleculer").Utils;
 
 /**
  * config service
@@ -12,7 +13,7 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("configurations"),
+		DbService("configurations", { disableActions: true }),
 		CacheCleaner([
 			"cache.clean.config"
 		])
@@ -40,6 +41,7 @@ module.exports = {
 		fields: [
 			"key",
 			"value",
+			"isDefault",
 			"createdAt",
 			"updatedAt"
 		]
@@ -61,19 +63,59 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
-		create: false,
-		list: false,
-		find: false,
-		get: false,
-		update: false,
-		remove: false,		
+		get: {
+			params: {
+				key: "string"
+			},
+			async handler(ctx) {
+				return await this.transformDocuments(ctx, {}, await this.get(ctx.params.key));
+			}
+		},
+
+		mget: {
+			params: {
+				key: { type: "array", items: "string" }
+			},
+			async handler(ctx) {
+				return await this.transformDocuments(ctx, {}, await this.get(ctx.params.key));
+			}
+		},
+
+		set: {
+			params: {
+				key: { type: "string" },
+				value: { type: "any" }
+			},
+			async handler(ctx) {
+				const res = await this.transformDocuments(ctx, {}, await this.set(ctx.params.key, ctx.params.value));
+				this.broker.broadcast(`${this.name}.${ctx.params.key}.changed`, res);
+				return res;
+			}
+		},
+
+		mset: {
+			params: { type: "array", items: {
+				type: "object", props: {
+					key: "string",
+					value: "any"
+				}
+			}},
+			async handler(ctx) {
+				const res = await this.transformDocuments(ctx, {}, await this.Promise.all(ctx.params.map(item => this.set(item.key, item.value))));
+				res.forEach(item => this.broker.broadcast(`${this.name}.${item.key}.changed`, item));
+				return res;
+			}
+		}
+
 	},
 
 	/**
 	 * Events
 	 */
 	events: {
-
+		"config.**.changed"(payload) {
+			this.logger.warn("Config changed event!", payload);
+		}
 	},
 
 	/**
@@ -81,26 +123,49 @@ module.exports = {
 	 */
 	methods: {
 
+		async get(key) {
+			if (Array.isArray(key)) {
+				const res = await this.Promise.all(key.map(k => this.getByMask(k)));
+				return _.uniqBy(_.flattenDeep(res), item => item.key);
+			} else {
+				if (key.indexOf("*") == -1 && key.indexOf("?") == -1)
+					return await this.adapter.findOne({ key });
+
+				return await this.getByMask(key);
+			}
+		},
+
+		async getByMask(mask) {
+			const allItems = await this.adapter.find({});
+			if (!allItems)
+				return [];
+
+			return allItems.filter(item => match(item.key, mask));
+		},
+
 		async has(key) {
 			const res = await this.adapter.findOne({ key });
 			return res != null;
 		},
 
-		async set(key, value) {
+		async set(key, value, isDefault = false) {
 			const res = await this.adapter.findOne({ key });
 			if (res != null)
-				return await this.adapter.update({ key }, { $set: {	value } });
+				return await this.adapter.updateById(res._id, { $set: {	value, isDefault, updatedAt: Date.now() } });
 			else
-				return await this.adapter.insert({ key, value });
-		},	
+				return await this.adapter.insert({ key, value, isDefault, createdAt: Date.now() });
+		},
 
 		migrateConfig() {
 			return this.Promise.all(Object.keys(this.settings.defaultConfig).map(async key => {
 				const value = this.settings.defaultConfig[key];
-				const has = await this.has(key);
-				if (!has) {
+				const item = await this.get(key);
+				if (!item) {
 					this.logger.info(`Save new config: "${key}" =`, value);
-					return this.adapter.insert({ key, value });
+					return this.set(key, value, true);
+				} else if (item.isDefault && !_.isEqual(item.value, value)) {
+					this.logger.info(`Update default config: "${key}" =`, value);
+					return this.set(key, value, true);
 				}
 			}));
 		}
