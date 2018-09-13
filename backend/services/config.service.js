@@ -74,10 +74,10 @@ module.exports = {
 
 		mget: {
 			params: {
-				key: { type: "array", items: "string" }
+				keys: { type: "array", items: "string" }
 			},
 			async handler(ctx) {
-				return await this.transformDocuments(ctx, {}, await this.get(ctx.params.key));
+				return await this.transformDocuments(ctx, {}, await this.get(ctx.params.keys));
 			}
 		},
 
@@ -87,9 +87,7 @@ module.exports = {
 				value: { type: "any" }
 			},
 			async handler(ctx) {
-				const res = await this.transformDocuments(ctx, {}, await this.set(ctx.params.key, ctx.params.value));
-				this.broker.broadcast(`${this.name}.${ctx.params.key}.changed`, res);
-				return res;
+				return await this.transformDocuments(ctx, {}, await this.set(ctx.params.key, ctx.params.value));
 			}
 		},
 
@@ -101,9 +99,7 @@ module.exports = {
 				}
 			}},
 			async handler(ctx) {
-				const res = await this.transformDocuments(ctx, {}, await this.Promise.all(ctx.params.map(item => this.set(item.key, item.value))));
-				res.forEach(item => this.broker.broadcast(`${this.name}.${item.key}.changed`, item));
-				return res;
+				return await this.transformDocuments(ctx, {}, await this.Promise.all(ctx.params.map(item => this.set(item.key, item.value))));
 			}
 		}
 
@@ -113,9 +109,6 @@ module.exports = {
 	 * Events
 	 */
 	events: {
-		"config.**.changed"(payload) {
-			this.logger.warn("Config changed event!", payload);
-		}
 	},
 
 	/**
@@ -148,12 +141,22 @@ module.exports = {
 			return res != null;
 		},
 
-		async set(key, value, isDefault = false) {
-			const res = await this.adapter.findOne({ key });
-			if (res != null)
-				return await this.adapter.updateById(res._id, { $set: {	value, isDefault, updatedAt: Date.now() } });
-			else
-				return await this.adapter.insert({ key, value, isDefault, createdAt: Date.now() });
+		async set(key, value, isDefault = false, broadcast = true) {
+			const item = await this.adapter.findOne({ key });
+			if (item != null) {
+				if (!_.isEqual(item.value, value)) {
+					const res = await this.adapter.updateById(item._id, { $set: { value, isDefault, updatedAt: Date.now() } });
+					if (broadcast)
+						this.broker.broadcast(`${this.name}.${key}.changed`, res);
+					return res;
+				}
+				return item;
+			} else {
+				const res = await this.adapter.insert({ key, value, isDefault, createdAt: Date.now() });
+				if (broadcast)
+					this.broker.broadcast(`${this.name}.${key}.changed`, res);
+				return res;
+			}
 		},
 
 		migrateConfig() {
@@ -162,10 +165,10 @@ module.exports = {
 				const item = await this.get(key);
 				if (!item) {
 					this.logger.info(`Save new config: "${key}" =`, value);
-					return this.set(key, value, true);
+					return this.set(key, value, true, false);
 				} else if (item.isDefault && !_.isEqual(item.value, value)) {
 					this.logger.info(`Update default config: "${key}" =`, value);
-					return this.set(key, value, true);
+					return this.set(key, value, true, false);
 				}
 			}));
 		}

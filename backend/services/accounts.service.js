@@ -8,6 +8,7 @@ const jwt 			= require("jsonwebtoken");
 
 const DbService = require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
+const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 const HASH_SALT_ROUND = 10;
@@ -22,6 +23,10 @@ module.exports = {
 		DbService("accounts"),
 		CacheCleaner([
 			"cache.clean.accounts"
+		]),
+		ConfigLoader([
+			"site.**",
+			"accounts.**"
 		])
 	],
 
@@ -29,7 +34,6 @@ module.exports = {
 	 * Service dependencies
 	 */
 	dependencies: [
-		{ name: "config", version: 1 }
 	],
 
 	/**
