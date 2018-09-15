@@ -1,15 +1,17 @@
 {
   "name": "kantab",
   "version": "0.0.0",
-  "description": "Kanban board application with microservices",
+  "description": "Kanban board application with Moleculer microservices & Vue.js",
   "scripts": {
     "dev": "moleculer-runner --env --repl --hot backend/services",
     "start": "moleculer-runner --env",
     "build": "vue-cli-service build",
     "ci": "jest -c jest.backend.config.js --watch",
-    "test": "jest -c jest.backend.config.js --coverage",
+    "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "test": "jest -c jest.backend.config.js --coverage --no-cache",
     "lint": "eslint backend && vue-cli-service lint",
     "deps": "npm-check -u",
+    "postdeps": "npm test",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e"
   },
@@ -17,6 +19,10 @@
     "microservices",
     "moleculer"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icebob/kantab.git"
+  },
   "author": "Icebob",
   "devDependencies": {
     "@vue/cli-plugin-babel": "3.0.1",
@@ -30,6 +36,7 @@
     "axios": "0.18.0",
     "babel-core": "7.0.0-bridge.0",
     "babel-jest": "23.4.2",
+    "coveralls": "3.0.2",
     "es6-promise": "4.2.4",
     "eslint": "5.5.0",
     "eslint-plugin-vue": "5.0.0-beta.3",
