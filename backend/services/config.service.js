@@ -40,12 +40,18 @@ module.exports = {
 			"accounts.jwt.expiresIn": "30d"
 		},
 
+		// Fields in responses
 		fields: [
 			"key",
 			"value",
 			"isDefault",
 			"createdAt",
 			"updatedAt"
+		],
+
+		// Indexes on collection
+		indexes: [
+			{ key: 1 }
 		]
 	},
 
@@ -261,10 +267,6 @@ module.exports = {
 	 * Service started lifecycle event handler
 	 */
 	started() {
-		/* istanbul ignore next */
-		if (process.env.NODE_ENV !== "test")
-			this.adapter.collection.createIndex({ key: 1 });
-
 		return this.migrateConfig();
 	},
 

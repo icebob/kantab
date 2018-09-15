@@ -1,4 +1,6 @@
 [![Moleculer](https://img.shields.io/badge/Powered%20by-Moleculer-green.svg?colorB=0e83cd)](https://moleculer.services)
+[![Build Status](https://travis-ci.org/icebob/kantab.svg?branch=master)](https://travis-ci.org/icebob/kantab)
+[![Coverage Status](https://coveralls.io/repos/github/icebob/kantab/badge.svg?branch=master)](https://coveralls.io/github/icebob/kantab?branch=master)
 
 # KanTab
 KanTab is a kanban board application. Powered by Moleculer &amp; Vue.

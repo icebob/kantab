@@ -4,10 +4,14 @@ const _ 			= require("lodash");
 const DbService		= require("moleculer-db");
 const MongoAdapter 	= require("moleculer-db-adapter-mongo");
 
+const TESTING = process.env.NODE_ENV === "test";
+
 module.exports = function(collection, opts = {}) {
+	const adapter = TESTING ? new DbService.MemoryAdapter() : new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab");
+
 	const schema = {
 		mixins: [DbService],
-		adapter: new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab"),
+		adapter,
 		collection,
 
 		methods: {
@@ -31,6 +35,15 @@ module.exports = function(collection, opts = {}) {
 		},
 
 		async afterConnected() {
+			/* istanbul ignore next */
+			if (TESTING) {
+				// Create indexes
+				if (this.settings.indexes) {
+					await this.Promise.all(this.settings.indexes.map(idx => this.adapter.collection.createIndex(idx)));
+				}
+			}
+
+			// Seeding if the DB is empty
 			const count = await this.adapter.count();
 			if (count == 0 && _.isFunction(this.seedDB)) {
 				this.logger.info(`Seed '${collection}' collection...`);
