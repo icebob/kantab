@@ -1,6 +1,6 @@
 module.exports = {
 	"testEnvironment": "node",
-	"coverageDirectory": "./coverage",
+	"coverageDirectory": "../coverage",
 	"rootDir": "./backend",
 	"roots": [
 		"./tests"
