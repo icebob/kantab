@@ -36,10 +36,14 @@ module.exports = function(collection, opts = {}) {
 
 		async afterConnected() {
 			/* istanbul ignore next */
-			if (TESTING) {
+			if (!TESTING) {
 				// Create indexes
 				if (this.settings.indexes) {
-					await this.Promise.all(this.settings.indexes.map(idx => this.adapter.collection.createIndex(idx)));
+					try {
+						await this.Promise.all(this.settings.indexes.map(idx => this.adapter.collection.createIndex(idx)));
+					} catch(err) {
+						this.logger.error("Unable to create indexes.", err);
+					}
 				}
 			}
 
