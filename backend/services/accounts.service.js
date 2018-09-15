@@ -41,16 +41,6 @@ module.exports = {
 	 */
 	settings: {
 		// TODO: Move to `config` service
-		enableSignUp: true,
-		enablePasswordless: true,
-		enableUsername: true,
-		sendMail: true,
-		verification: true,
-		socialProviders: {},
-
-		defaultRoles: ["user"],
-		defaultPlan: "free",
-		JWTTokenExpiresIn: "30d",
 
 		actions: {
 			sendMail: "mail.send"
@@ -105,27 +95,6 @@ module.exports = {
 		 * @actions
 		 * @param {String} token - JWT token
 		 *
-		 * @returns {Object} Resolved payload
-		 */
-		/*verifyJWT: {
-			cache: {
-				keys: ["token"],
-				ttl: 60 * 60 // 1 hour
-			},
-			params: {
-				token: "string"
-			},
-			handler(ctx) {
-				return this.verifyJWT(ctx.params.token);
-			}
-		},*/
-
-		/**
-		 * Get user by JWT token (for API GW authentication)
-		 *
-		 * @actions
-		 * @param {String} token - JWT token
-		 *
 		 * @returns {Object} Resolved user
 		 */
 		resolveToken: {
@@ -164,9 +133,10 @@ module.exports = {
 				keys: ["#user._id"]
 			},
 			async handler(ctx) {
-				if (!ctx.meta.user)
+				if (!ctx.meta.user) {
 					return null;
 					//throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
+				}
 
 				const user = await this.getById(ctx.meta.user._id);
 				if (!user) {
@@ -191,32 +161,8 @@ module.exports = {
 		},
 
 		/**
-		 * Check user password
-		 */
-		/*checkPassword: {
-			visibility: "protected",
-			params: {
-				id: "any",
-				password: "string"
-			},
-			async handler(ctx) {
-				const user = await this.adapter.findById(this.adapter.stringToObjectID(ctx.params.id));
-				if (!user)
-					throw new MoleculerClientError("User is not exist!", 400, "ERR_USER_NOT_FOUND");
-
-				const res = await bcrypt.compare(ctx.params.password, user.password);
-				if (!res)
-					throw new MoleculerClientError("Wrong password!", 400, "ERR_WRONG_PASSWORD");
-
-				// Transform user entity (remove password and all protected fields)
-				return user;
-			}
-		},*/
-
-		/**
 		 * Register a new user account
 		 *
-		 * TODO: move to method, because socialLogin must call it without verification
 		 */
 		register: {
 			params: {
@@ -228,13 +174,11 @@ module.exports = {
 				avatar: { type: "string", optional: true },
 			},
 			async handler(ctx) {
-				if (!this.settings.enableSignUp)
+				if (!this.config["accounts.signup.enabled"])
 					throw new MoleculerClientError("Sign up is not available.", 400, "ERR_SIGNUP_DISABLED");
 
 				const params = Object.assign({}, ctx.params);
 				const entity = {};
-
-				// TODO validate params by settings (username, password...)
 
 				// Verify email
 				let found = await this.getUserByEmail(ctx, params.email);
@@ -242,20 +186,24 @@ module.exports = {
 					throw new MoleculerClientError("Email has already been registered.", 400, "ERR_EMAIL_EXISTS");
 
 				// Verify username
-				if (this.settings.enableUsername) {
+				if (this.config["accounts.username.enabled"]) {
+					if (!ctx.params.username) {
+						throw new MoleculerClientError("Username can't be empty.", 400, "ERR_USERNAME_EMPTY");
+					}
+
 					let found = await this.getUserByUsername(ctx, params.username);
 					if (found)
 						throw new MoleculerClientError("Username has already been registered.", 400, "ERR_USERNAME_EXISTS");
+
+					entity.username = params.username;
 				}
 
 				// Set basic data
-				if (this.settings.enableUsername)
-					entity.username = params.username;
 				entity.email = params.email;
 				entity.firstName = params.firstName;
 				entity.lastName = params.lastName;
-				entity.roles = this.settings.defaultRoles;
-				entity.plan = this.settings.defaultPlan;
+				entity.roles = this.config["accounts.defaultRoles"];
+				entity.plan = this.config["accounts.defaultPlan"];
 				entity.avatar = params.avatar;
 				entity.socialLinks = {};
 				entity.createdAt = Date.now();
@@ -271,15 +219,15 @@ module.exports = {
 				// Generate passwordless token or hash password
 				if (params.password) {
 					entity.password = await bcrypt.hash(params.password, 10);
-				} else if (this.settings.enablePasswordless) {
+				} else if (this.config["accounts.passwordless.enabled"]) {
 					entity.passwordless = true;
 					entity.password = this.generateToken();
 				} else {
-					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
+					throw new MoleculerClientError("Password can't be empty.", 400, "ERR_PASSWORD_EMPTY");
 				}
 
 				// Generate verification token
-				if (this.settings.verification) {
+				if (this.config["accounts.verification.enabled"]) {
 					entity.verified = false;
 					entity.verificationToken = this.generateToken();
 				}
@@ -337,7 +285,7 @@ module.exports = {
 				token: { type: "string" }
 			},
 			async handler(ctx) {
-				if (!this.settings.enablePasswordless)
+				if (!this.config["accounts.passwordless.enabled"])
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
 
 				const user = await this.adapter.findOne({ passwordlessToken: ctx.params.token });
@@ -477,7 +425,7 @@ module.exports = {
 			async handler(ctx) {
 				let query;
 
-				if (this.settings.enableUsername) {
+				if (this.config["accounts.username.enabled"]) {
 					query = {
 						"$or": [
 							{ email: ctx.params.email },
@@ -513,7 +461,7 @@ module.exports = {
 					if (!(await bcrypt.compare(ctx.params.password, user.password)))
 						throw new MoleculerClientError("Wrong password!", 400, "ERR_WRONG_PASSWORD");
 
-				} else if (this.settings.enablePasswordless) {
+				} else if (this.config["accounts.passwordless.enabled"]) {
 					// Send magic link
 					await this.sendMagicLink(ctx, user);
 
@@ -598,7 +546,7 @@ module.exports = {
 						return user;
 					}
 
-					if (!this.settings.enableSignUp)
+					if (!this.config["accounts.signup.enabled"])
 						throw new MoleculerClientError("Sign up is not available", 400, "ERR_SIGNUP_DISABLED");
 
 					// Create a new user and link
@@ -648,7 +596,7 @@ module.exports = {
 		 */
 		generateJWT(payload, expiresIn) {
 			return new this.Promise((resolve, reject) => {
-				return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: expiresIn || this.settings.JWTTokenExpiresIn }, (err, token) => {
+				return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: expiresIn || this.config["accounts.jwt.expiresIn"] }, (err, token) => {
 					if (err) {
 						this.logger.warn("JWT token generation error:", err);
 						return reject(new MoleculerRetryableError("Unable to generate token", 500, "UNABLE_GENERATE_TOKEN"));
@@ -704,14 +652,17 @@ module.exports = {
 		 * @param {Object?} data
 		 */
 		async sendMail(ctx, user, template, data) {
-			if (!this.settings.sendMail)
+			if (!this.config["mail.enabled"])
 				return this.Promise.resolve(false);
 
 			try {
 				return await ctx.call(this.settings.actions.sendMail, {
 					to: user.email,
 					template,
-					data: _.defaultsDeep(data, { user })
+					data: _.defaultsDeep(data, {
+						user,
+						site: this.config.site
+					})
 				}, { retries: 3, timeout: 5000 });
 
 			} catch(err) {
@@ -793,7 +744,11 @@ module.exports = {
 			]);
 
 			this.logger.info(`Generated ${res.length} users!`);
-		}
+		},
+
+		/*configChanged(key, value) {
+			this.logger.warn(`'${key}' is changed to ${value}!`);
+		}*/
 	},
 
 	/**

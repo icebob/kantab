@@ -1,7 +1,9 @@
 module.exports = {
 	root: true,
 	env: {
-		node: true
+		node: true,
+		jasmine: true,
+		jest: true,
 	},
 	"plugins": [
 		"vue"

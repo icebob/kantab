@@ -6,10 +6,12 @@ module.exports = function(keys) {
 	const events = {};
 
 	const eventHandler = function(payload) {
-		this.logger.info(`Config ${payload.key} value is changed. Updating...`, payload.value);
 		this.config[payload.key] = payload.value;
+		this.logger.debug("Configuration updated:", this.config);
 
-		this.logger.info("Configuration updated:", this.config);
+		if (_.isFunction(this.configChanged)) {
+			this.configChanged.call(this, payload.key, payload.value, payload);
+		}
 	};
 
 	keys.forEach(key => events[`config.${key}.changed`] = eventHandler);
@@ -24,12 +26,12 @@ module.exports = function(keys) {
 		async started() {
 			this.config = {};
 
-			const items = await this.broker.call("v1.config.mget", { keys });
+			const items = await this.broker.call("v1.config.get", { key: keys });
 			if (items) {
 				items.forEach(item => this.config[item.key] = item.value);
 			}
 
-			this.logger.info("Configuration loaded:", this.config);
+			this.logger.debug("Configuration loaded:", this.config);
 		}
 	};
 
