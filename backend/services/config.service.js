@@ -79,6 +79,9 @@ module.exports = {
 		 * @returns {Object|Array<String>}
 		 */
 		get: {
+			cache: {
+				keys: ["key"]
+			},
 			/*params: [
 				{
 					key: "string"
@@ -138,6 +141,13 @@ module.exports = {
 				}
 			}
 		},
+
+		all: {
+			cache: true,
+			handler() {
+				return this.adapter.find({});
+			}
+		}
 	},
 
 	/**
@@ -178,7 +188,7 @@ module.exports = {
 		 * @returns {Array<Object>}
 		 */
 		async getByMask(mask) {
-			const allItems = await this.adapter.find({});
+			const allItems = await this.broker.call(`${this.fullName}.all`);
 
 			/* istanbul ignore next */
 			if (!allItems)

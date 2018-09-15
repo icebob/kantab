@@ -68,6 +68,7 @@
     "helmet": "3.13.0",
     "jsonwebtoken": "8.3.0",
     "moleculer": "0.13.2",
+    "moleculer-console-tracer": "0.2.0",
     "moleculer-db": "0.7.5",
     "moleculer-db-adapter-mongo": "0.4.1",
     "moleculer-mail": "1.2.1",

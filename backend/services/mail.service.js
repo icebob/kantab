@@ -1,11 +1,18 @@
 "use strict";
 
 const MailService = require("moleculer-mail");
+const ConfigLoader = require("../mixins/config.mixin");
 
 module.exports = {
 	name: "mail",
 
-	mixins: [MailService],
+	mixins: [
+		MailService,
+		ConfigLoader([
+			"site.**",
+			"mail.**",
+		])
+	],
 
 	/**
 	 * Service dependencies
@@ -28,11 +35,5 @@ module.exports = {
 			}
 		},
 		templateFolder: "./backend/templates/mail",
-
-		// Common data
-		data: {
-			baseURL: "http://localhost:4000",
-			siteName: "KanTab"
-		}
 	}
 };

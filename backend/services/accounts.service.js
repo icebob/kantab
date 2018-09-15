@@ -26,6 +26,7 @@ module.exports = {
 		]),
 		ConfigLoader([
 			"site.**",
+			"mail.**",
 			"accounts.**"
 		])
 	],
@@ -462,6 +463,10 @@ module.exports = {
 						throw new MoleculerClientError("Wrong password!", 400, "ERR_WRONG_PASSWORD");
 
 				} else if (this.config["accounts.passwordless.enabled"]) {
+
+					if (!this.config["mail.enabled"])
+						throw new MoleculerClientError("Passwordless login is not available because mail transporter is not configured.", 400, "ERR_PASSWORDLESS_UNAVAILABLE");
+
 					// Send magic link
 					await this.sendMagicLink(ctx, user);
 
@@ -661,7 +666,7 @@ module.exports = {
 					template,
 					data: _.defaultsDeep(data, {
 						user,
-						site: this.config.site
+						site: this.configObj.site
 					})
 				}, { retries: 3, timeout: 5000 });
 
@@ -762,7 +767,6 @@ module.exports = {
 	 * Service started lifecycle event handler
 	 */
 	started() {
-
 	},
 
 	/**
