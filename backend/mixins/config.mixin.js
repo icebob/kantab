@@ -2,16 +2,24 @@
 
 const _ 			= require("lodash");
 
-module.exports = function(keys) {
+module.exports = function(keys, opts) {
 	const events = {};
 
-	const eventHandler = function(payload) {
-		this.config[payload.key] = payload.value;
-		_.set(this.configObj, payload.key, payload.value);
-		this.logger.debug("Configuration updated:", this.config);
+	opts = _.defaultsDeep(opts, {
+		propName: "config",
+		objPropName: "configObj",
+		configChanged: "configChanged",
+		serviceName: "config",
+		serviceVersion: 1
+	});
 
-		if (_.isFunction(this.configChanged)) {
-			this.configChanged.call(this, payload.key, payload.value, payload);
+	const eventHandler = function(payload) {
+		this[opts.propName][payload.key] = payload.value;
+		_.set(this[opts.objPropName], payload.key, payload.value);
+		this.logger.debug("Configuration updated:", this[opts.propName]);
+
+		if (_.isFunction(this[opts.configChanged])) {
+			this[opts.configChanged].call(this, payload.key, payload.value, payload);
 		}
 	};
 
@@ -19,25 +27,26 @@ module.exports = function(keys) {
 
 	const schema = {
 		dependencies: [
-			{ name: "config", version: 1 }
+			{ name: opts.serviceName, version: opts.serviceVersion }
 		],
 
 		events,
 
 		async started() {
-			this.config = {};
-			this.configObj = {};
+			if (!_.isObject(this[opts.propName]))
+				this[opts.propName] = {};
+			if (!_.isObject(this[opts.objPropName]))
+				this[opts.objPropName] = {};
 
 			const items = await this.broker.call("v1.config.get", { key: keys });
 			if (items) {
 				items.forEach(item => {
-					this.config[item.key] = item.value;
-					_.set(this.configObj, item.key, item.value);
+					this[opts.propName][item.key] = item.value;
+					_.set(this[opts.objPropName], item.key, item.value);
 				});
 			}
 
-			this.logger.debug("Configuration loaded:", this.config);
-			this.logger.info("Configuration loaded:", this.configObj);
+			this.logger.debug("Configuration loaded:", this[opts.propName]);
 		}
 	};
 
