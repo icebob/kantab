@@ -56,18 +56,6 @@ module.exports = {
 	},
 
 	/**
-	 * Service metadata
-	 */
-	metadata: {
-
-	},
-
-	/**
-	 * Service dependencies
-	 */
-	dependencies: [],
-
-	/**
 	 * Actions
 	 */
 	actions: {
@@ -148,12 +136,6 @@ module.exports = {
 				return this.adapter.find({});
 			}
 		}
-	},
-
-	/**
-	 * Events
-	 */
-	events: {
 	},
 
 	/**
@@ -267,23 +249,10 @@ module.exports = {
 	},
 
 	/**
-	 * Service created lifecycle event handler
-	 */
-	created() {
-
-	},
-
-	/**
 	 * Service started lifecycle event handler
 	 */
 	started() {
 		return this.migrateConfig();
 	},
 
-	/**
-	 * Service stopped lifecycle event handler
-	 */
-	stopped() {
-
-	}
 };
