@@ -3,12 +3,10 @@
 const { ServiceBroker } = require("moleculer");
 const TestService = require("../../../services/config.service");
 const E = require("moleculer").Errors;
-const MemoryAdapter = require("moleculer-db").MemoryAdapter;
 
 describe("Test Configuration service", () => {
 	let broker = new ServiceBroker({ logger: false });
 	const service = broker.createService(TestService, {
-		adapter: new MemoryAdapter(),
 		settings: {
 			defaultConfig: {
 				"foo.bar": "John",
