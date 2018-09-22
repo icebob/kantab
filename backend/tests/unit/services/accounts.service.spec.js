@@ -29,7 +29,61 @@ describe("Test Accounts service", () => {
 		expect(broker.findNextActionEndpoint("v1.accounts.remove").action.visibility).toBe("protected");
 	});
 
-	describe("Test 'register' action", () => {
+	describe("Test JWT methods", () => {
+		it("should generate & verify a JWT", async () => {
+			const payload = { id: 1, name: "John" };
+			const token = await service.generateJWT(payload);
+
+			expect(token).toEqual(expect.any(String));
+
+			const res = await service.verifyJWT(token);
+
+			expect(res).toEqual({
+				...payload,
+				exp: expect.any(Number),
+				iat: expect.any(Number),
+			});
+		});
+
+		it("should throw error if token is not valid", async () => {
+			expect.assertions(4);
+			try {
+				await service.verifyJWT("123456");
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(401);
+				expect(err.type).toBe("INVALID_TOKEN");
+			}
+		});
+
+		it("should throw error if payload is not valid", async () => {
+			expect.assertions(4);
+			try {
+				await service.generateJWT(null);
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerRetryableError);
+				expect(err.name).toBe("MoleculerRetryableError");
+				expect(err.code).toBe(500);
+				expect(err.type).toBe("UNABLE_GENERATE_TOKEN");
+			}
+		});
+
+		it("should generate JWT", async () => {
+			const oldGenerateJWT = service.generateJWT;
+			service.generateJWT = jest.fn();
+
+			const user = { _id: 1, name: "John", status: 1 };
+			await service.getToken(user);
+
+			expect(service.generateJWT).toHaveBeenCalledTimes(1);
+			expect(service.generateJWT).toHaveBeenCalledWith({ id: "1" });
+
+			service.generateJWT = oldGenerateJWT;
+		});
+	});
+
+	describe("Test 'register' & 'verify' action", () => {
 
 		const user1 = {
 			username: "user1",
@@ -176,9 +230,13 @@ describe("Test Accounts service", () => {
 			}
 		});
 
+		let user3VerificationToken;
+
 		it("should create new passwordless user", async () => {
 			service.sendMail.mockClear();
 			service.config["accounts.passwordless.enabled"] = true;
+			service.config["accounts.defaultRoles"] = ["admin", "visitor"];
+			service.config["accounts.defaultPlan"] = "premium";
 
 			const res = await broker.call("v1.accounts.register", user3);
 
@@ -189,8 +247,8 @@ describe("Test Accounts service", () => {
 				firstName: "User",
 				lastName: "Three",
 				passwordless: true,
-				roles: ["user"],
-				plan: "free",
+				roles: ["admin", "visitor"],
+				plan: "premium",
 				socialLinks: {},
 				createdAt: expect.any(Number),
 				verified: false,
@@ -200,6 +258,46 @@ describe("Test Accounts service", () => {
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
 			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), res, "activate", { token: expect.any(String) });
+
+			user3VerificationToken = service.sendMail.mock.calls[0][3].token;
+		});
+
+		it("should verify user3 with token", async () => {
+			service.sendMail.mockClear();
+
+			const res = await broker.call("v1.accounts.verify", { token: user3VerificationToken });
+			expect(res).toEqual({
+				token: expect.any(String)
+			});
+
+			expect(service.sendMail).toHaveBeenCalledTimes(1);
+			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, {
+				_id: expect.any(String),
+				email: "user3@kantab.io",
+				username: "user3",
+				firstName: "User",
+				lastName: "Three",
+				passwordless: true,
+				roles: ["admin", "visitor"],
+				plan: "premium",
+				socialLinks: {},
+				createdAt: expect.any(Number),
+				verified: true, // !
+				status: 1,
+				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
+			}), "welcome");
+		});
+
+		it("should throw error if verification token is not exist", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.verify", { token: "12345678" });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("INVALID_TOKEN");
+			}
 		});
 
 	});

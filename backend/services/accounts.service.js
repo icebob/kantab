@@ -260,18 +260,17 @@ module.exports = {
 				if (!user)
 					throw new MoleculerClientError("Invalid verification token!", 400, "INVALID_TOKEN");
 
-				await this.adapter.updateById(user._id, {
-					"$set": {
-						verified: true,
-						verificationToken: null
-					}
+				const res = await ctx.call(`${this.fullName}.update`, {
+					id: user._id,
+					verified: true,
+					verificationToken: null
 				});
 
 				// Send welcome email
-				this.sendMail(ctx, user, "welcome");
+				this.sendMail(ctx, res, "welcome");
 
 				return {
-					token: await this.getToken(user)
+					token: await this.getToken(res)
 				};
 			}
 		},

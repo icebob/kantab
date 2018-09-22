@@ -27,7 +27,7 @@ module.exports = function(collection, opts = {}) {
 			},
 
 			decodeID(id) {
-				if (typeof id === "string")
+				if (typeof id === "string" && this.adapter.stringToObjectID)
 					return this.adapter.stringToObjectID(id);
 
 				return id;
