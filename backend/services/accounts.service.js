@@ -276,6 +276,58 @@ module.exports = {
 		},
 
 		/**
+		 * Disable an account
+		 */
+		disable: {
+			params: {
+				id: { type: "string" }
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.params.id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
+
+				if (user.status == 0)
+					throw new MoleculerClientError("Account has already been disabled!", 400, "ERR_USER_ALREADY_DISABLED");
+
+				const res = await ctx.call(`${this.fullName}.update`, {
+					id: user._id,
+					status: 0
+				});
+
+				return {
+					status: res.status
+				};
+			}
+		},
+
+		/**
+		 * Enable an account
+		 */
+		enable: {
+			params: {
+				id: { type: "string" }
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.params.id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
+
+				if (user.status == 1)
+					throw new MoleculerClientError("Account has already been enabled!", 400, "ERR_USER_ALREADY_ENABLED");
+
+				const res = await ctx.call(`${this.fullName}.update`, {
+					id: user._id,
+					status: 1
+				});
+
+				return {
+					status: res.status
+				};
+			}
+		},
+
+		/**
 		 * Check passwordless token
 		 */
 		passwordless: {

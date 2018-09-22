@@ -13,9 +13,17 @@ describe("Test Accounts service", () => {
 	// Config service
 	broker.createService(ConfigService);
 
+	// Mail service
+	const mailSendMock = jest.fn(() => Promise.resolve(true));
+	broker.createService({
+		name: "mail",
+		actions: {
+			send: mailSendMock
+		}
+	});
+
 	// Accounts service
 	const service = broker.createService(TestService, {});
-	service.sendMail = jest.fn(() => Promise.resolve());
 
 	beforeAll(() => broker.start());
 	afterAll(() => broker.stop());
@@ -83,7 +91,49 @@ describe("Test Accounts service", () => {
 		});
 	});
 
+	describe("Test common methods", () => {
+		it.skip("should generate passwordless token & call sendMail", async () => {
+			const user = { _id: 1, name: "John" };
+		});
+
+		it("should not call mail.send service", async () => {
+			service.config["mail.enabled"] = false;
+
+			const ctx = new Context(broker);
+
+			const res = await service.sendMail(ctx, {}, "welcome", {});
+
+			expect(res).toBe(false);
+		});
+
+		it("should call mail.send service", async () => {
+			service.config["mail.enabled"] = true;
+
+			const ctx = new Context(broker);
+			const user = { id: 1, name: "John", email: "john@kantab.io" };
+			const data = { a: 5 };
+
+			const res = await service.sendMail(ctx, user, "welcome", data);
+			expect(res).toBe(true);
+			expect(mailSendMock).toHaveBeenCalledTimes(1);
+			const params = mailSendMock.mock.calls[0][0].params;
+			expect(params).toEqual({
+				data: {
+					a: 5,
+					site: { name: "KanBan", url: "http://localhost:4000" },
+					user: { id: 1, name: "John", email: "john@kantab.io" }
+				},
+				template: "welcome",
+				to: "john@kantab.io"
+			});
+		});
+	});
+
 	describe("Test 'register' & 'verify' action", () => {
+
+		beforeAll(() => {
+			service.sendMail = jest.fn(() => Promise.resolve());
+		});
 
 		const user1 = {
 			username: "user1",
@@ -302,4 +352,291 @@ describe("Test Accounts service", () => {
 
 	});
 
+	describe("Test 'login' action", () => {
+
+		beforeAll(() => {
+			service.sendMail = jest.fn(() => Promise.resolve());
+		});
+
+		describe("with password", () => {
+
+			const user = {
+				username: "user4",
+				password: "password4",
+				email: "user4@kantab.io",
+				firstName: "User",
+				lastName: "Four"
+			};
+
+			let savedUser, verificationToken;
+
+			beforeAll(async () => {
+				service.sendMail.mockClear();
+				service.config["accounts.verification.enabled"] = true;
+
+				const regged = await broker.call("v1.accounts.register", user);
+				savedUser = regged;
+				verificationToken = service.sendMail.mock.calls[0][3].token;
+			});
+
+			it("should not logged in with non-exist account", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "no-user@kantab.io", password: "pass" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_USER_NOT_FOUND");
+				}
+			});
+
+			it("should not logged in unverified account", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
+				}
+			});
+
+			it("verify account", async () => {
+				await broker.call("v1.accounts.verify", { token: verificationToken });
+			});
+
+			it("should not logged in with wrong password", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "wrong-password" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_WRONG_PASSWORD");
+				}
+			});
+
+			it("should logged with correct email & password", async () => {
+				const res = await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
+				expect(res).toEqual({
+					token: expect.any(String)
+				});
+			});
+
+			it("should not logged in with username if this feature is disabled", async () => {
+				expect.assertions(4);
+				service.config["accounts.username.enabled"] = false;
+
+				try {
+					await broker.call("v1.accounts.login", { email: "user4", password: "password4" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_USER_NOT_FOUND");
+				}
+			});
+
+			it("should logged with correct username & password", async () => {
+				service.config["accounts.username.enabled"] = true;
+				const res = await broker.call("v1.accounts.login", { email: "user4", password: "password4" });
+				expect(res).toEqual({
+					token: expect.any(String)
+				});
+			});
+
+			it("should not logged in disabled account", async () => {
+				expect.assertions(4);
+
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+				try {
+					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
+				}
+
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			});
+
+			it("should not send magic-link email if no password and feature is disabled", async () => {
+				service.config["accounts.passwordless.enabled"] = false;
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user4@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_PASSWORDLESS_DISABLED");
+				}
+			});
+
+			it("should send magic-link email if no password and feature is enabled", async () => {
+				service.config["accounts.passwordless.enabled"] = true;
+				service.sendMagicLink = jest.fn();
+				const res = await broker.call("v1.accounts.login", { email: "user4@kantab.io" });
+				expect(res).toEqual({
+					email: "user4@kantab.io",
+					passwordless: true
+				});
+
+				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
+				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
+					password: expect.any(String),
+					verified: true,
+					verificationToken: null,
+				}));
+			});
+
+		});
+
+		describe("with passwordless", () => {
+
+			const user = {
+				username: "user5",
+				email: "user5@kantab.io",
+				firstName: "User",
+				lastName: "Five"
+			};
+
+			let savedUser, verificationToken;
+
+			beforeAll(async () => {
+				service.sendMail.mockClear();
+				service.sendMagicLink = jest.fn();
+
+				service.config["accounts.passwordless.enabled"] = true;
+
+				const regged = await broker.call("v1.accounts.register", user);
+				savedUser = regged;
+				verificationToken = service.sendMail.mock.calls[0][3].token;
+			});
+
+			it("should not logged in unverified account", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
+				}
+			});
+
+			it("verify account", async () => {
+				await broker.call("v1.accounts.verify", { token: verificationToken });
+			});
+
+			it("should not logged in with password", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user5@kantab.io", password: "some-password" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_PASSWORDLESS_WITH_PASSWORD");
+				}
+			});
+
+			it("should not logged in if mail sending is disabled", async () => {
+				service.config["mail.enabled"] = false;
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_PASSWORDLESS_UNAVAILABLE");
+				}
+				service.config["mail.enabled"] = true;
+			});
+
+			it("should not logged in if passwordless feature is disabled", async () => {
+				service.config["accounts.passwordless.enabled"] = false;
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_PASSWORDLESS_DISABLED");
+				}
+				service.config["accounts.passwordless.enabled"] = true;
+			});
+
+			it("should send magic-link email if email is exist", async () => {
+				service.sendMagicLink.mockClear();
+				const res = await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
+				expect(res).toEqual({
+					email: "user5@kantab.io",
+					passwordless: true
+				});
+
+				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
+				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
+					password: expect.any(String),
+					verified: true,
+					verificationToken: null,
+				}));
+			});
+
+			it("should not logged in with username if this feature is disabled", async () => {
+				expect.assertions(4);
+				service.config["accounts.username.enabled"] = false;
+
+				try {
+					await broker.call("v1.accounts.login", { email: "user5", password: "password5" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_USER_NOT_FOUND");
+				}
+			});
+
+			it("should send magic-link email if username is exist", async () => {
+				service.config["accounts.username.enabled"] = true;
+				service.sendMagicLink.mockClear();
+				const res = await broker.call("v1.accounts.login", { email: "user5" });
+				expect(res).toEqual({
+					email: "user5@kantab.io",
+					passwordless: true
+				});
+
+				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
+				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
+					password: expect.any(String),
+					verified: true,
+					verificationToken: null,
+				}));
+			});
+
+			it("should not logged in disabled account", async () => {
+				expect.assertions(4);
+
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+				try {
+					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
+				}
+			});
+
+		});
+	});
 });
