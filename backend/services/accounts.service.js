@@ -41,8 +41,6 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
-		// TODO: Move to `config` service
-
 		actions: {
 			sendMail: "mail.send"
 		},
@@ -719,7 +717,7 @@ module.exports = {
 					password: await this.hashPassword("admin"),
 					firstName: "Administrator",
 					lastName: "",
-					email: "admin@kantab.moleculer.services",
+					email: "admin@kantab.io",
 					avatar: "http://romaniarising.com/wp-content/uploads/2014/02/avatar-admin-robot-150x150.jpg",
 					roles: ["admin"],
 					socialLinks: {},
@@ -736,7 +734,7 @@ module.exports = {
 					password: await this.hashPassword("test"),
 					firstName: "Test",
 					lastName: "User",
-					email: "test@kantab.moleculer.services",
+					email: "test@kantab.io",
 					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
 					roles: ["user"],
 					socialLinks: {},

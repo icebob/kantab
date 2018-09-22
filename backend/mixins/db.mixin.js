@@ -51,7 +51,7 @@ module.exports = function(collection, opts = {}) {
 			const count = await this.adapter.count();
 			if (count == 0 && _.isFunction(this.seedDB)) {
 				this.logger.info(`Seed '${collection}' collection...`);
-				this.seedDB();
+				await this.seedDB();
 			}
 		}
 	};
