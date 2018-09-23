@@ -57,6 +57,7 @@ module.exports = {
 			"status",
 			"plan",
 			"verified",
+			"token",
 			"passwordless",
 			"createdAt",
 			"updatedAt",
@@ -430,19 +431,19 @@ module.exports = {
 		 */
 		link: {
 			params: {
-				user: { type: "object" },
+				id: { type: "string" },
 				provider: { type: "string" },
 				profile: { type: "object" },
 			},
 			async handler(ctx) {
 				const user = await ctx.call(`${this.fullName}.update`, {
-					id: this.adapter.stringToObjectID(ctx.params.user._id),
+					id: this.decodeID(ctx.params.id),
 					[`socialLinks.${ctx.params.provider}`]: ctx.params.profile.socialID,
 					verified: true, // if not verified yet via email
 					verificationToken: null
 				});
 
-				return user;
+				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -451,12 +452,12 @@ module.exports = {
 		 */
 		unlink: {
 			params: {
-				user: { type: "object" },
+				id: { type: "string" },
 				provider: { type: "string" }
 			},
 			async handler(ctx) {
-				const user = ctx.call(`${this.fullName}.update`, {
-					id: ctx.params.user._id,
+				const user = await ctx.call(`${this.fullName}.update`, {
+					id: this.decodeID(ctx.params.id),
 					[`socialLinks.${ctx.params.provider}`]: null
 				});
 
@@ -557,14 +558,14 @@ module.exports = {
 
 						// Same user
 						user.token = await this.generateJWT({ id: user._id.toString() });
-						return user;
+						return this.transformDocuments(ctx, {}, user);
 
 					} else {
 						// Not found linked account. Create the link
-						user = await ctx.call(`${this.fullName}.link`, { user: ctx.meta.user, provider, profile });
+						user = await ctx.call(`${this.fullName}.link`, { id: ctx.meta.user._id, provider, profile });
 
 						user.token = await this.generateJWT({ id: user._id.toString() });
-						return user;
+						return this.transformDocuments(ctx, {}, user);
 					}
 
 				} else {
@@ -593,11 +594,12 @@ module.exports = {
 
 						if (!foundBySocialID) {
 							// Not found linked account. Create the link
-							user = await ctx.call(`${this.fullName}.link`, { user, provider, profile });
+							user = await ctx.call(`${this.fullName}.link`, { id: user._id, provider, profile });
 						}
 
 						user.token = await this.generateJWT({ id: user._id.toString() });
-						return user;
+
+						return this.transformDocuments(ctx, {}, user);
 					}
 
 					if (!this.config["accounts.signup.enabled"])
@@ -613,12 +615,11 @@ module.exports = {
 						avatar: profile.avatar
 					});
 
-					if (!foundBySocialID)
-						user = await ctx.call(`${this.fullName}.link`, { user, provider, profile });
+					user = await ctx.call(`${this.fullName}.link`, { id: user._id, provider, profile });
 
 					user.token = await this.getToken(user);
 
-					return user;
+					return this.transformDocuments(ctx, {}, user);
 				}
 			}
 		}

@@ -415,6 +415,9 @@ describe("Test Accounts service", () => {
 				status: 1,
 				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
 			}), "welcome");
+
+			service.config["accounts.defaultRoles"] = ["user"];
+			service.config["accounts.defaultPlan"] = "free";
 		});
 
 		it("should throw error if verification token is not exist", async () => {
@@ -559,6 +562,7 @@ describe("Test Accounts service", () => {
 
 			it("should send magic-link email if no password and feature is enabled", async () => {
 				service.config["accounts.passwordless.enabled"] = true;
+				const oldSendMagicLink = service.sendMagicLink;
 				service.sendMagicLink = jest.fn();
 				const res = await broker.call("v1.accounts.login", { email: "user4@kantab.io" });
 				expect(res).toEqual({
@@ -572,6 +576,8 @@ describe("Test Accounts service", () => {
 					verified: true,
 					verificationToken: null,
 				}));
+
+				service.sendMagicLink = oldSendMagicLink;
 			});
 
 		});
@@ -586,9 +592,12 @@ describe("Test Accounts service", () => {
 			};
 
 			let savedUser, verificationToken;
+			let oldSendMagicLink;
 
 			beforeAll(async () => {
 				service.sendMail.mockClear();
+
+				 oldSendMagicLink = service.sendMagicLink;
 				service.sendMagicLink = jest.fn();
 
 				service.config["accounts.passwordless.enabled"] = true;
@@ -596,6 +605,10 @@ describe("Test Accounts service", () => {
 				const regged = await broker.call("v1.accounts.register", user);
 				savedUser = regged;
 				verificationToken = service.sendMail.mock.calls[0][3].token;
+			});
+
+			afterAll(async () => {
+				service.sendMagicLink = oldSendMagicLink;
 			});
 
 			it("should not logged in unverified account", async () => {
@@ -718,4 +731,491 @@ describe("Test Accounts service", () => {
 
 		});
 	});
+
+
+	describe("Test 'socialLogin' action", () => {
+
+		beforeAll(() => {
+			service.sendMail = jest.fn(() => Promise.resolve());
+		});
+
+		describe("without logged in user", () => {
+
+			const user = {
+				username: "user6",
+				password: "password6",
+				email: "user6@kantab.io",
+				firstName: "User",
+				lastName: "Six"
+			};
+
+			let savedUser;
+
+			beforeAll(async () => {
+				service.sendMail.mockClear();
+				service.config["accounts.verification.enabled"] = true;
+
+				savedUser = await broker.call("v1.accounts.register", user);
+			});
+
+			it("should throw error if profile doesn't contain email", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.socialLogin", {
+						provider: "google",
+						profile: {
+							socialID: 1000
+						},
+						accessToken: "token-1"
+					});
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_NO_SOCIAL_EMAIL");
+				}
+			});
+
+			it("should throw error if account is disabled", async () => {
+				expect.assertions(4);
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				try {
+					await broker.call("v1.accounts.socialLogin", {
+						provider: "google",
+						profile: {
+							socialID: 1000,
+							email: "user6@kantab.io"
+						},
+						accessToken: "token-1"
+					});
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ACCOUNT_DISABLED");
+				}
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			});
+
+			it("should link the profile to an existing account", async () => {
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "google",
+					profile: {
+						socialID: 1000,
+						email: "user6@kantab.io"
+					},
+					accessToken: "token-1"
+				});
+
+				expect(res).toEqual({
+					...savedUser,
+					socialLinks: {
+						google: 1000
+					},
+					verified: true,
+					token: expect.any(String)
+				});
+			});
+
+			it("should not link again", async () => {
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "google",
+					profile: {
+						socialID: 1000,
+						email: "user6@kantab.io"
+					},
+					accessToken: "token-1"
+				});
+
+				expect(res).toEqual({
+					...savedUser,
+					socialLinks: {
+						google: 1000
+					},
+					verified: true,
+					token: expect.any(String)
+				});
+
+				// TODO: check that link action is not called.
+			});
+
+			it("should link new provider to an existing account", async () => {
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "facebook",
+					profile: {
+						socialID: 2000,
+						email: "user6@kantab.io"
+					},
+					accessToken: "token-1"
+				});
+
+				expect(res).toEqual({
+					...savedUser,
+					socialLinks: {
+						google: 1000,
+						facebook: 2000
+					},
+					verified: true,
+					token: expect.any(String)
+				});
+			});
+
+			it("should throw error if socialID not found & signup is disabled", async () => {
+				service.config["accounts.signup.enabled"] = false;
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.socialLogin", {
+						provider: "google",
+						profile: {
+							socialID: 3000,
+							email: "user7@kantab.io",
+							firstName: "User",
+							lastName: "Seven",
+							avatar: "social-avatar.jpg"
+						},
+						accessToken: "token-100"
+					});
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_SIGNUP_DISABLED");
+				}
+			});
+
+			it("should create new user by social profile & link", async () => {
+				service.config["accounts.signup.enabled"] = true;
+
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "google",
+					profile: {
+						socialID: 3000,
+						email: "user7@kantab.io",
+						firstName: "User",
+						lastName: "Seven",
+						avatar: "social-avatar.jpg"
+					},
+					accessToken: "token-100"
+				});
+
+				expect(res).toEqual({
+					_id: expect.any(String),
+					email: "user7@kantab.io",
+					username: "user7",
+					firstName: "User",
+					lastName: "Seven",
+					roles: ["user"],
+					plan: "free",
+					socialLinks: {
+						google: 3000
+					},
+					createdAt: expect.any(Number),
+					verified: true,
+					status: 1,
+					avatar: "social-avatar.jpg",
+					token: expect.any(String)
+				});
+			});
+
+		});
+
+		describe("with logged in user", () => {
+
+			const user = {
+				username: "user8",
+				password: "password8",
+				email: "user8@kantab.io",
+				firstName: "User",
+				lastName: "Eight"
+			};
+
+			let savedUser;
+			let meta;
+
+			beforeAll(async () => {
+				service.sendMail.mockClear();
+				service.config["accounts.verification.enabled"] = false;
+
+				savedUser = await broker.call("v1.accounts.register", user);
+				meta = { user: { _id: savedUser._id } };
+			});
+
+			it("should throw error if socialID is assigned to another account", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.socialLogin", {
+						provider: "google",
+						profile: {
+							socialID: 3000
+						},
+						accessToken: "token-8"
+					}, { meta });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_SOCIAL_ACCOUNT_MISMATCH");
+				}
+			});
+
+			it("should link & login with same user", async () => {
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "google",
+					profile: {
+						socialID: 4000
+					},
+					accessToken: "token-8"
+				}, { meta });
+
+				expect(res).toEqual({
+					...savedUser,
+					socialLinks: {
+						google: 4000
+					},
+					verified: true,
+					token: expect.any(String)
+				});
+			});
+
+			it("should not link but login with same user", async () => {
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "google",
+					profile: {
+						socialID: 4000
+					},
+					accessToken: "token-8"
+				}, { meta });
+
+				expect(res).toEqual({
+					...savedUser,
+					socialLinks: {
+						google: 4000
+					},
+					verified: true,
+					token: expect.any(String)
+				});
+			});
+
+			it("should add new link", async () => {
+				const res = await broker.call("v1.accounts.socialLogin", {
+					provider: "facebook",
+					profile: {
+						socialID: 5000
+					},
+					accessToken: "token-8"
+				}, { meta });
+
+				expect(res).toEqual({
+					...savedUser,
+					socialLinks: {
+						google: 4000,
+						facebook: 5000
+					},
+					verified: true,
+					token: expect.any(String)
+				});
+			});
+
+		});
+
+	});
+
+	describe("Test `link` & `unlink` actions", () => {
+
+		const user = {
+			username: "user9",
+			password: "password9",
+			email: "user9@kantab.io",
+			firstName: "User",
+			lastName: "Nine"
+		};
+
+		let savedUser;
+
+		beforeAll(async () => {
+			service.sendMail.mockClear();
+			service.config["accounts.verification.enabled"] = false;
+		});
+
+		it("should create user without links", async () => {
+			savedUser = await broker.call("v1.accounts.register", user);
+
+			expect(savedUser).toEqual({
+				_id: expect.any(String),
+				username: "user9",
+				email: "user9@kantab.io",
+				firstName: "User",
+				lastName: "Nine",
+				avatar: "https://gravatar.com/avatar/328e47ea15a902d25ef32f2a59cb9199?s=64&d=robohash",
+				plan: "free",
+				roles: ["user"],
+				socialLinks: {},
+				verified: true,
+				status: 1,
+				createdAt: expect.any(Number),
+				token: expect.any(String)
+			});
+
+			delete savedUser.token;
+		});
+
+		it("should link user to google", async () => {
+			const res = await broker.call("v1.accounts.link", {
+				id: savedUser._id,
+				provider: "google",
+				profile: {
+					socialID: 6000
+				}
+			});
+
+			expect(res).toEqual({
+				...savedUser,
+				socialLinks: {
+					google: 6000
+				}
+			});
+		});
+
+		it("should link user to facebook", async () => {
+			const res = await broker.call("v1.accounts.link", {
+				id: savedUser._id,
+				provider: "facebook",
+				profile: {
+					socialID: 7000
+				}
+			});
+
+			expect(res).toEqual({
+				...savedUser,
+				socialLinks: {
+					google: 6000,
+					facebook: 7000
+				}
+			});
+		});
+
+		it("should unlink user from google", async () => {
+			const res = await broker.call("v1.accounts.unlink", {
+				id: savedUser._id,
+				provider: "google"
+			});
+
+			expect(res).toEqual({
+				...savedUser,
+				socialLinks: {
+					google: null,
+					facebook: 7000
+				}
+			});
+		});
+
+		it("should unlink user from facebook", async () => {
+			const res = await broker.call("v1.accounts.unlink", {
+				id: savedUser._id,
+				provider: "facebook"
+			});
+
+			expect(res).toEqual({
+				...savedUser,
+				socialLinks: {
+					google: null,
+					facebook: null
+				}
+			});
+		});
+
+	});
+
+	describe.only("Test `passwordless` action", () => {
+
+		const user = {
+			username: "user10",
+			email: "user10@kantab.io",
+			firstName: "User",
+			lastName: "Ten"
+		};
+
+		let savedUser;
+		let passwordlessToken;
+
+		beforeAll(async () => {
+			service.sendMail = jest.fn();
+			service.config["accounts.verification.enabled"] = false;
+			service.config["accounts.passwordless.enabled"] = true;
+
+			savedUser = await broker.call("v1.accounts.register", user);
+		});
+
+		it("should generate passwordless token", async () => {
+			service.sendMail.mockClear();
+			await service.sendMagicLink(new Context(broker), savedUser);
+
+			passwordlessToken = service.sendMail.mock.calls[0][3].token;
+
+			expect(passwordlessToken).toBeDefined();
+		});
+
+		it("should throw error if passwordless is disabled", async () => {
+			service.config["accounts.passwordless.enabled"] = false;
+
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.passwordless", { token: "12345" });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("ERR_PASSWORDLESS_DISABLED");
+			}
+
+			service.config["accounts.passwordless.enabled"] = true;
+		});
+
+		it("should throw error if token is not exist", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.passwordless", { token: "12345" });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("INVALID_TOKEN");
+			}
+		});
+
+		it("should return token if token is valid and not expired", async () => {
+			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
+
+			expect(res).toEqual({
+				token: expect.any(String)
+			});
+		});
+
+		it("should return token multiple times while token is not expired", async () => {
+			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
+
+			expect(res).toEqual({
+				token: expect.any(String)
+			});
+		});
+
+		it("should throw error if token is expired", async () => {
+			await broker.call("v1.accounts.update", {
+				id: savedUser._id,
+				passwordlessTokenExpires: Date.now() - (3600 * 1000) - 5000
+			});
+
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("TOKEN_EXPIRED");
+			}
+		});
+
+	});
+
 });
