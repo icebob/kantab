@@ -11,7 +11,7 @@
     "postdeps": "npm test",
     "ci": "jest -c jest.backend.config.js --watch",
     "ci:e2e": "cross-env TEST_E2E=open MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
-    "test": "npm run test:backend",
+    "test": "npm run test:backend && npm run test:e2e",
     "test:backend": "jest -c jest.backend.config.js --coverage --no-cache",
     "test:frontend": "vue-cli-service test:unit",
     "test:e2e": "cross-env TEST_E2E=run MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
