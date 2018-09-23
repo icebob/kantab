@@ -10,10 +10,11 @@
     "deps": "npm-check -u",
     "postdeps": "npm test",
     "ci": "jest -c jest.backend.config.js --watch",
+    "ci:e2e": "cross-env TEST_E2E=open MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "test": "npm run test:backend",
     "test:backend": "jest -c jest.backend.config.js --coverage --no-cache",
     "test:frontend": "vue-cli-service test:unit",
-    "test:e2e": "cross-env TEST_E2E=true MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
+    "test:e2e": "cross-env TEST_E2E=run MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "keywords": [
@@ -34,7 +35,6 @@
     "@vue/cli-service": "3.0.1",
     "@vue/eslint-config-airbnb": "3.0.1",
     "@vue/test-utils": "1.0.0-beta.20",
-    "axios": "0.18.0",
     "babel-core": "7.0.0-bridge.0",
     "babel-jest": "23.4.2",
     "coveralls": "3.0.2",
@@ -60,6 +60,7 @@
     "webpack-hot-middleware": "2.23.1"
   },
   "dependencies": {
+    "axios": "0.18.0",
     "bcrypt": "3.0.0",
     "bluebird": "3.5.2",
     "cookie": "0.3.1",
