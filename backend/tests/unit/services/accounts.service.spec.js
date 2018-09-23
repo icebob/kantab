@@ -744,8 +744,168 @@ describe("Test Accounts service", () => {
 			});
 
 		});
-	});
 
+		describe("Test resolveToken", () => {
+			let savedUser, token;
+
+			beforeAll(async () => {
+				savedUser = await service.getUserByUsername(new Context(broker), "test");
+			});
+
+			it("should generate a token after login", async () => {
+				const res = await broker.call("v1.accounts.login", { email: "test", password: "test" });
+				expect(res.token).toBeDefined();
+				token = res.token;
+			});
+
+			it("should throw error if token is invalid", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resolveToken", { token: "12345" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(401);
+					expect(err.type).toBe("INVALID_TOKEN");
+				}
+			});
+
+			it("should throw error if token is invalid", async () => {
+				const wrongToken = await service.generateJWT({});
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resolveToken", { token: wrongToken });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(401);
+					expect(err.type).toBe("INVALID_TOKEN");
+				}
+			});
+
+			it("should throw error if user is not found", async () => {
+				const wrongToken = await service.generateJWT({ id: 1 });
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resolveToken", { token: wrongToken });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(401);
+					expect(err.type).toBe("USER_NOT_FOUND");
+				}
+			});
+
+			it("should throw error if account is not verified", async () => {
+				await unverifiedAccount(savedUser._id);
+
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resolveToken", { token });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(401);
+					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
+				}
+
+				await verifiedAccount(savedUser._id);
+			});
+
+			it("should throw error if account is disabled", async () => {
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resolveToken", { token });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(401);
+					expect(err.type).toBe("USER_DISABLED");
+				}
+
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			});
+
+			it("should return resolved user if token is valid", async () => {
+				const res = await broker.call("v1.accounts.resolveToken", { token });
+
+				expect(res).toEqual({
+					_id: expect.any(String),
+					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+					email: "test@kantab.io",
+					username: "test",
+					firstName: "Test",
+					lastName: "User",
+					passwordless: false,
+					plan: "free",
+					roles: ["user"],
+					createdAt: expect.any(Number),
+					socialLinks: {},
+					status: 1,
+					verified: true
+				});
+			});
+
+		});
+
+		describe("Test resolveToken", () => {
+			let savedUser;
+
+			beforeAll(async () => {
+				savedUser = await service.getUserByUsername(new Context(broker), "test");
+			});
+
+			it("should throw error if no user in meta", async () => {
+				const res = await broker.call("v1.accounts.me");
+				expect(res).toBeNull();
+			});
+
+			it("should throw error if user is not found", async () => {
+				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: 1 }}});
+				expect(res).toBeNull();
+			});
+
+			it("should throw error if account is not activated", async () => {
+				await unverifiedAccount(savedUser._id);
+
+				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: savedUser._id }}});
+				expect(res).toBeNull();
+
+				await verifiedAccount(savedUser._id);
+			});
+
+			it("should throw error if account is disabled", async () => {
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: savedUser._id }}});
+				expect(res).toBeNull();
+
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			});
+
+			it("should throw error if user is not found", async () => {
+				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: savedUser._id }}});
+				expect(res).toEqual({
+					_id: expect.any(String),
+					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+					email: "test@kantab.io",
+					username: "test",
+					firstName: "Test",
+					lastName: "User",
+					passwordless: false,
+					plan: "free",
+					roles: ["user"],
+					createdAt: expect.any(Number),
+					socialLinks: {},
+					status: 1,
+					verified: true
+				});
+			});
+		});
+
+	});
 
 	describe("Test 'socialLogin' action", () => {
 
@@ -1229,6 +1389,19 @@ describe("Test Accounts service", () => {
 			});
 		});
 
+		it("should verify account if it is not verified yet", async () => {
+			await unverifiedAccount(savedUser._id);
+
+			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
+
+			expect(res).toEqual({
+				token: expect.any(String)
+			});
+
+			const user = await service.getUserByUsername(new Context(broker), "user10");
+			expect(user.verified).toBe(true);
+		});
+
 		it("should throw error if token is expired", async () => {
 			await broker.call("v1.accounts.update", {
 				id: savedUser._id,
@@ -1352,6 +1525,21 @@ describe("Test Accounts service", () => {
 				}
 			});
 
+			it("should throw error if account is disabled", async () => {
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
+				}
+
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			});
 
 			it("should throw error if token is expired", async () => {
 				await broker.call("v1.accounts.update", {
@@ -1421,6 +1609,93 @@ describe("Test Accounts service", () => {
 
 		});
 
+	});
+
+	describe("Test `disable` & `enable` actions", () => {
+
+		const user = {
+			//username: "user12",
+			password: "password12",
+			email: "user12@kantab.io",
+			firstName: "User",
+			lastName: "Twelve"
+		};
+
+		let savedUser;
+
+		beforeAll(async () => {
+			service.config["accounts.username.enabled"] = false;
+			service.config["accounts.verification.enabled"] = false;
+			savedUser = await broker.call("v1.accounts.register", user);
+		});
+
+		it("should not contain username if this feature is disabled", async () => {
+			expect(savedUser.username).toBeUndefined();
+		});
+
+		it("should throw error if user not found", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.disable", { id: "1234" });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("ERR_USER_NOT_FOUND");
+			}
+		});
+
+		it("should disable account", async () => {
+			const res = await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+			expect(res).toEqual({
+				status: 0
+			});
+		});
+
+		it("should throw error if account has been already disabled", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("ERR_USER_ALREADY_DISABLED");
+			}
+		});
+
+		it("should throw error if user not found", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.enable", { id: "1234" });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("ERR_USER_NOT_FOUND");
+			}
+		});
+
+		it("should enable account", async () => {
+			const res = await broker.call("v1.accounts.enable", { id: savedUser._id });
+
+			expect(res).toEqual({
+				status: 1
+			});
+		});
+
+		it("should throw error if account has been already enabled", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("ERR_USER_ALREADY_ENABLED");
+			}
+		});
 	});
 
 });

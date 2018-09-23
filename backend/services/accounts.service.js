@@ -114,6 +114,9 @@ module.exports = {
 				if (!user)
 					throw new MoleculerClientError("User is not registered", 401, "USER_NOT_FOUND");
 
+				if (!user.verified)
+					throw new MoleculerClientError("Please activate your account!", 401, "ERR_ACCOUNT_NOT_VERIFIED");
+
 				if (user.status !== 1)
 					throw new MoleculerClientError("User is disabled", 401, "USER_DISABLED");
 
@@ -737,7 +740,9 @@ module.exports = {
 				}, { retries: 3, timeout: 5000 });
 
 			} catch(err) {
+				/* istanbul ignore next */
 				this.logger.error("Send mail error!", err);
+				/* istanbul ignore next */
 				throw err;
 			}
 		},
