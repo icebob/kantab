@@ -343,8 +343,21 @@ module.exports = {
 				if (!user)
 					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
 
+				// Check status
+				if (user.status !== 1)
+					throw new MoleculerClientError("Account is disabled!", 400, "ERR_ACCOUNT_DISABLED");
+
+				// Check token expiration
 				if (user.passwordlessTokenExpires < Date.now())
 					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
+
+				// Verified account if not
+				if (!user.verified) {
+					await ctx.call(`${this.fullName}.update`, {
+						id: user._id,
+						verified: true
+					});
+				}
 
 				return {
 					token: await this.getToken(user)
@@ -368,14 +381,12 @@ module.exports = {
 					throw new MoleculerClientError("Email is not registered.", 400, "ERR_EMAIL_NOT_FOUND");
 
 				// Check verified
-				if (!user.verified) {
+				if (!user.verified)
 					throw new MoleculerClientError("Please activate your account!", 400, "ERR_ACCOUNT_NOT_VERIFIED");
-				}
 
 				// Check status
-				if (user.status !== 1) {
+				if (user.status !== 1)
 					throw new MoleculerClientError("Account is disabled!", 400, "ERR_ACCOUNT_DISABLED");
-				}
 
 				// Save the token to user
 				await ctx.call(`${this.fullName}.update`, {
@@ -405,6 +416,10 @@ module.exports = {
 				if (!user)
 					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
 
+				// Check status
+				if (user.status !== 1)
+					throw new MoleculerClientError("Account is disabled!", 400, "ERR_ACCOUNT_DISABLED");
+
 				if (user.resetTokenExpires < Date.now())
 					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
 
@@ -413,6 +428,7 @@ module.exports = {
 					id: user._id,
 					password: await bcrypt.hash(ctx.params.password, 10),
 					passwordless: false,
+					verified: true,
 					resetToken: null,
 					resetTokenExpires: null
 				});

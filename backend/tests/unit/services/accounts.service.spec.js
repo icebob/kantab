@@ -28,6 +28,20 @@ describe("Test Accounts service", () => {
 	beforeAll(() => broker.start());
 	afterAll(() => broker.stop());
 
+	async function unverifiedAccount(id) {
+		await broker.call("v1.accounts.update", {
+			id,
+			verified: false
+		});
+	}
+
+	async function verifiedAccount(id) {
+		await broker.call("v1.accounts.update", {
+			id,
+			verified: true
+		});
+	}
+
 	it("check action visibilities", async () => {
 		expect(broker.findNextActionEndpoint("v1.accounts.create").action.visibility).toBe("protected");
 		expect(broker.findNextActionEndpoint("v1.accounts.list").action.visibility).toBe("protected");
@@ -1126,7 +1140,7 @@ describe("Test Accounts service", () => {
 
 	});
 
-	describe.only("Test `passwordless` action", () => {
+	describe("Test `passwordless` action", () => {
 
 		const user = {
 			username: "user10",
@@ -1183,6 +1197,22 @@ describe("Test Accounts service", () => {
 			}
 		});
 
+		it("should throw error if account is disabled", async () => {
+			await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
+			} catch (err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
+			}
+
+			await broker.call("v1.accounts.enable", { id: savedUser._id });
+		});
+
 		it("should return token if token is valid and not expired", async () => {
 			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
 
@@ -1214,6 +1244,181 @@ describe("Test Accounts service", () => {
 				expect(err.code).toBe(400);
 				expect(err.type).toBe("TOKEN_EXPIRED");
 			}
+		});
+
+	});
+
+	describe("Test forgot password flow", () => {
+
+		const user = {
+			username: "user11",
+			password: "password11",
+			email: "user11@kantab.io",
+			firstName: "User",
+			lastName: "Eleven"
+		};
+
+		let savedUser;
+		let resetToken;
+
+		beforeAll(async () => {
+			service.sendMail = jest.fn();
+			service.config["accounts.verification.enabled"] = false;
+
+			savedUser = await broker.call("v1.accounts.register", user);
+		});
+
+		describe("Test `forgotPassword` action", () => {
+
+			it("should login with username & original password", async () => {
+				const res = await broker.call("v1.accounts.login", { email: user.email, password: user.password });
+
+				expect(res).toEqual({
+					token: expect.any(String)
+				});
+			});
+
+			it("should throw error if email is not found", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.forgotPassword", { email: "user12@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_EMAIL_NOT_FOUND");
+				}
+			});
+
+			it("should throw error if account is not verified", async () => {
+				await unverifiedAccount(savedUser._id);
+
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
+				}
+
+				await verifiedAccount(savedUser._id);
+			});
+
+			it("should throw error if account is disabled", async () => {
+				await broker.call("v1.accounts.disable", { id: savedUser._id });
+
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
+				}
+
+				await broker.call("v1.accounts.enable", { id: savedUser._id });
+			});
+
+			it("should generate token and call sendMail", async () => {
+				service.sendMail.mockClear();
+
+				const res = await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
+
+				expect(res).toBe(true);
+
+				expect(service.sendMail).toHaveBeenCalledTimes(1);
+				expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), expect.any(Object), "reset-password", {
+					token: expect.any(String)
+				});
+				resetToken = service.sendMail.mock.calls[0][3].token;
+			});
+
+		});
+
+		describe("Test `resetPassword` action", () => {
+
+			it("should throw error if token is not exist", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resetPassword", { token: "12345", password: "newpass1234" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("INVALID_TOKEN");
+				}
+			});
+
+
+			it("should throw error if token is expired", async () => {
+				await broker.call("v1.accounts.update", {
+					id: savedUser._id,
+					resetTokenExpires: Date.now() - (3600 * 1000) - 5000
+				});
+
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("TOKEN_EXPIRED");
+				}
+
+				await broker.call("v1.accounts.update", {
+					id: savedUser._id,
+					resetTokenExpires: Date.now() + (3600 * 1000)
+				});
+			});
+
+			it("should return token if token is valid and not expired", async () => {
+				service.sendMail.mockClear();
+				const res = await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+
+				expect(res).toEqual({
+					token: expect.any(String)
+				});
+
+				expect(service.sendMail).toHaveBeenCalledTimes(1);
+				expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), expect.any(Object), "password-changed");
+			});
+
+			it("should not accept token multiple times", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("INVALID_TOKEN");
+				}
+			});
+
+			it("should login with username & new password", async () => {
+				const res = await broker.call("v1.accounts.login", { email: user.email, password: "newpass1234" });
+
+				expect(res).toEqual({
+					token: expect.any(String)
+				});
+			});
+
+			it("should not login with username & original password", async () => {
+				expect.assertions(4);
+				try {
+					await broker.call("v1.accounts.login", { email: user.email, password: user.password });
+				} catch (err) {
+					expect(err).toBeInstanceOf(E.MoleculerClientError);
+					expect(err.name).toBe("MoleculerClientError");
+					expect(err.code).toBe(400);
+					expect(err.type).toBe("ERR_WRONG_PASSWORD");
+				}
+			});
+
 		});
 
 	});
