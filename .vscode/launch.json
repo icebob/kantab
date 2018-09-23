@@ -25,6 +25,20 @@
 		{
 			"type": "node",
 			"request": "launch",
+			"name": "E2E test",
+			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",
+			"cwd": "${workspaceRoot}",
+			"env": {
+				"TEST_E2E": "true"
+			},
+			"args": [
+				"--env",
+				"backend/services"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
 			"name": "Jest",
 			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
 			"args": [

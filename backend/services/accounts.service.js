@@ -12,8 +12,9 @@ const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 const HASH_SALT_ROUND = 10;
+
 /**
- * account service
+ * Account service
  */
 module.exports = {
 	name: "accounts",

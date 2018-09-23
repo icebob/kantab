@@ -74,7 +74,9 @@ module.exports = {
 
 	// Called after broker starte.
 	started(broker) {
-
+		if (process.env.TEST_E2E) {
+			require("./tests/e2e/bootstrap")(broker);
+		}
 	},
 
 	// Called after broker stopped.
