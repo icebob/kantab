@@ -13,7 +13,7 @@
     "test": "npm run test:backend",
     "test:backend": "jest -c jest.backend.config.js --coverage --no-cache",
     "test:frontend": "vue-cli-service test:unit",
-    "test:e2e": "cross-env TEST_E2E=true moleculer-runner --env backend/services",
+    "test:e2e": "cross-env TEST_E2E=true MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "keywords": [
