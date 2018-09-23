@@ -92,39 +92,118 @@ describe("Test Accounts service", () => {
 	});
 
 	describe("Test common methods", () => {
-		it.skip("should generate passwordless token & call sendMail", async () => {
-			const user = { _id: 1, name: "John" };
+
+		describe("Test sendMagicLink method", () => {
+
+			let oldSendMail;
+			beforeAll(() => oldSendMail = service.sendMail);
+			afterAll(() => service.sendMail = oldSendMail);
+
+			it("should generate passwordless token & call sendMail", async () => {
+				service.sendMail = jest.fn();
+
+				const ctx = new Context(broker);
+				const user = { _id: 1, name: "John", email: "john@kantab.io" };
+
+				ctx.call = jest.fn(async () => user);
+
+				await service.sendMagicLink(ctx, user);
+
+				expect(service.sendMail).toHaveBeenCalledTimes(1);
+				expect(service.sendMail).toHaveBeenCalledWith(ctx, user, "magic-link", { token: expect.any(String) });
+
+				expect(ctx.call).toHaveBeenCalledTimes(1);
+				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.update", {
+					id: 1,
+					passwordlessToken: expect.any(String),
+					passwordlessTokenExpires: expect.any(Number)
+				});
+			});
 		});
 
-		it("should not call mail.send service", async () => {
-			service.config["mail.enabled"] = false;
+		describe("Test sendMail method", () => {
+			it("should not call mail.send service", async () => {
+				service.config["mail.enabled"] = false;
 
-			const ctx = new Context(broker);
+				const ctx = new Context(broker);
 
-			const res = await service.sendMail(ctx, {}, "welcome", {});
+				const res = await service.sendMail(ctx, {}, "welcome", {});
 
-			expect(res).toBe(false);
+				expect(res).toBe(false);
+			});
+
+			it("should call mail.send service", async () => {
+				service.config["mail.enabled"] = true;
+
+				const ctx = new Context(broker);
+				const user = { _id: 1, name: "John", email: "john@kantab.io" };
+				const data = { a: 5 };
+
+				const res = await service.sendMail(ctx, user, "welcome", data);
+				expect(res).toBe(true);
+				expect(mailSendMock).toHaveBeenCalledTimes(1);
+				const params = mailSendMock.mock.calls[0][0].params;
+				expect(params).toEqual({
+					data: {
+						a: 5,
+						site: { name: "KanBan", url: "http://localhost:4000" },
+						user: { _id: 1, name: "John", email: "john@kantab.io" }
+					},
+					template: "welcome",
+					to: "john@kantab.io"
+				});
+			});
 		});
 
-		it("should call mail.send service", async () => {
-			service.config["mail.enabled"] = true;
+		describe("Test getUserByEmail method", () => {
+			it("should call find action but return null if not found by email", async () => {
+				const ctx = new Context(broker);
+				ctx.call = jest.fn(async () => []);
 
-			const ctx = new Context(broker);
-			const user = { id: 1, name: "John", email: "john@kantab.io" };
-			const data = { a: 5 };
+				const res = await service.getUserByEmail(ctx, "john.doe@kantab.io");
+				expect(res).toBeNull();
 
-			const res = await service.sendMail(ctx, user, "welcome", data);
-			expect(res).toBe(true);
-			expect(mailSendMock).toHaveBeenCalledTimes(1);
-			const params = mailSendMock.mock.calls[0][0].params;
-			expect(params).toEqual({
-				data: {
-					a: 5,
-					site: { name: "KanBan", url: "http://localhost:4000" },
-					user: { id: 1, name: "John", email: "john@kantab.io" }
-				},
-				template: "welcome",
-				to: "john@kantab.io"
+				expect(ctx.call).toHaveBeenCalledTimes(1);
+				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { email: "john.doe@kantab.io" }});
+			});
+
+			it("should call find action to find user by email", async () => {
+				const ctx = new Context(broker);
+				const user = { id: 1 };
+				ctx.call = jest.fn(async () => [user]);
+
+				const res = await service.getUserByEmail(ctx, "john.doe@kantab.io");
+
+				expect(res).toBe(user);
+
+				expect(ctx.call).toHaveBeenCalledTimes(1);
+				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { email: "john.doe@kantab.io" }});
+			});
+		});
+
+		describe("Test getUserByUsername method", () => {
+			it("should call find action but return null if not found by username", async () => {
+				const ctx = new Context(broker);
+				ctx.call = jest.fn(async () => []);
+
+				const res = await service.getUserByUsername(ctx, "john1981");
+				expect(res).toBeNull();
+
+				expect(ctx.call).toHaveBeenCalledTimes(1);
+				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { username: "john1981" }});
+			});
+
+			it("should call find action to find user by username", async () => {
+				const ctx = new Context(broker);
+				const user = { id: 1 };
+				ctx.call = jest.fn(async () => [user]);
+
+				const res = await service.getUserByUsername(ctx, "john1981");
+
+				expect(res).toBe(user);
+
+				expect(ctx.call).toHaveBeenCalledTimes(1);
+				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { username: "john1981" }});
 			});
 		});
 	});

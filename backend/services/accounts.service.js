@@ -756,10 +756,19 @@ module.exports = {
 			return crypto.randomBytes(len).toString("hex");
 		},
 
+		/**
+		 * Hashing a plaintext password
+		 *
+		 * @param {String} pass
+		 * @returns {Promise} hashed password
+		 */
 		async hashPassword(pass) {
 			return bcrypt.hash(pass, HASH_SALT_ROUND);
 		},
 
+		/**
+		 * Seed an empty collection with an `admin` and a `test` users.
+		 */
 		async seedDB() {
 			const res = await this.adapter.insertMany([
 				// Administrator
@@ -800,9 +809,6 @@ module.exports = {
 			this.logger.info(`Generated ${res.length} users!`);
 		},
 
-		/*configChanged(key, value) {
-			this.logger.warn(`'${key}' is changed to ${value}!`);
-		}*/
 	},
 
 	/**
