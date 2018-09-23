@@ -35,8 +35,10 @@ describe("Test login page with username & password", () => {
 	});
 });
 
-describe.only("Test login page with passwordless", () => {
+describe("Test login page with passwordless", () => {
 	//beforeEach(() => cy.visit("/login"));
+
+	console.log(Cypress.env());
 
 	const baseUrl = Cypress.config("baseUrl");
 	it("Check the login screen", () => {
@@ -51,20 +53,14 @@ describe.only("Test login page with passwordless", () => {
 
 		cy.get(".alert.success").then(() => {
 
-			const re = /passwordless\?token=(\w+)/g;
-			mailtrap.getTokenFromMessage("test@boilerplate-app.com", re, function(err, token, message) {
-				if (err)
-					throw new Error(err);
-
+			return mailtrap.getTokenFromMessage(null, "test@kantab.io", /passwordless\?token=(\w+)/g).then(({ token, messageID }) => {
 				// Delete message
-				mailtrap.deleteMessage(null, message.id);
-
-				//console.log("Open magic link: " + baseURL + "/passwordless/" + token);
-				browser.url(baseURL + "/passwordless/" + token);
-
-				return done();
+				return mailtrap.deleteMessage(null, messageID).then(() => {
+					cy.visit(`/passwordless?token=${token}`);
+					cy.url().should("equal", `${baseUrl}/`);
+					cy.contains("h4", "Style guide");
+				});
 			});
-
 		});
 	});
 
