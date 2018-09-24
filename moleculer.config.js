@@ -5,7 +5,7 @@ module.exports = {
 	namespace: "",
 	nodeID: null,
 
-	logger: true,
+	logger: process.env.TEST_E2E !== "run",
 	logLevel: "info",
 	logFormatter: "default",
 	logObjectPrinter: null,
