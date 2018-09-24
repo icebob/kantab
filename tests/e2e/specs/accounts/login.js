@@ -58,4 +58,5 @@ describe("Test login page with passwordless", () => {
 		});
 	});
 
+	after(() => mailtrap.cleanInbox());
 });

@@ -132,6 +132,7 @@ describe("Test signup page with passwordless account", () => {
 		cy.logout();
 	});
 
+	after(() => mailtrap.cleanInbox());
 
 });
 

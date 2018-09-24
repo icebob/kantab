@@ -54,4 +54,6 @@ describe("Test forgot password flow", () => {
 		cy.contains("h4", "Style guide");
 		cy.logout();
 	});
+
+	after(() => mailtrap.cleanInbox());
 });
