@@ -8,19 +8,19 @@
 				<div class="alert success">{{ success }}</div>
 				<div class="alert error">{{ error }}</div>
 				<fieldset class="two-fields">
-					<input type="text" v-model="firstName" placeholder="First name" required />
-					<input type="text" v-model="lastName" placeholder="Last name" required />
+					<input type="text" name="firstName" v-model="firstName" placeholder="First name" required />
+					<input type="text" name="lastName" v-model="lastName" placeholder="Last name" required />
 				</fieldset>
 				<fieldset>
-					<input type="email" v-model="email" placeholder="E-mail" required />
+					<input type="email" name="email" v-model="email" placeholder="E-mail" required />
 					<i class="fa fa-envelope"></i>
 				</fieldset>
 				<fieldset>
-					<input type="text" v-model="username" placeholder="Username" required />
+					<input type="text" name="username" v-model="username" placeholder="Username" required />
 					<i class="fa fa-user"></i>
 				</fieldset>
 				<fieldset>
-					<input type="password" v-model="password" placeholder="Password" />
+					<input type="password" name="password" v-model="password" placeholder="Password" />
 					<i class="fa fa-key"></i>
 					<span class="hint">Leave empty for passwordless account</span>
 				</fieldset>

@@ -1,12 +1,12 @@
 // https://docs.cypress.io/api/introduction/api.html
 
-const mailtrap = require("../util/mailtrap");
+const mailtrap = require("../../util/mailtrap");
 
 describe("Test login page with username & password", () => {
 	//beforeEach(() => cy.visit("/login"));
 
 	const baseUrl = Cypress.config("baseUrl");
-	it("Check the login screen", () => {
+	it("Check the login page", () => {
 		cy.visit("/login");
 		cy.contains("h4", "Sign In");
 	});
@@ -38,19 +38,13 @@ describe("Test login page with username & password", () => {
 describe("Test login page with passwordless", () => {
 	//beforeEach(() => cy.visit("/login"));
 
-	console.log(Cypress.env());
-
 	const baseUrl = Cypress.config("baseUrl");
-	it("Check the login screen", () => {
-		cy.visit("/login");
-		cy.contains("h4", "Sign In");
-	});
-
 	it("Login without password", () => {
 		cy.login("test");
 		cy.url().should("equal", `${baseUrl}/login`);
 		cy.get(".alert.success").should("contain", "Magic link has been sent to 'test@kantab.io'. Use it to sign in.");
 
+		cy.wait(2000);
 		cy.get(".alert.success").then(() => {
 
 			return mailtrap.getTokenFromMessage(null, "test@kantab.io", /passwordless\?token=(\w+)/g).then(({ token, messageID }) => {

@@ -8,11 +8,11 @@
 				<div class="alert error">{{ error }}</div>
 				<div class="alert success">{{ success }}</div>
 				<fieldset class="email">
-					<input type="text" v-model="email" placeholder="E-mail or username" />
+					<input type="text" name="email" v-model="email" placeholder="E-mail or username" />
 					<i class="fa fa-user"></i>
 				</fieldset>
 				<fieldset class="password">
-					<input type="password" v-model="password" placeholder="Password" />
+					<input type="password" name="password" v-model="password" placeholder="Password" />
 					<i class="fa fa-key"></i>
 					<!-- div class="remember">
 						<input type="checkbox" id="remember" v-model="remember" />

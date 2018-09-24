@@ -8,7 +8,7 @@
 				<div v-if="error" class="alert error">{{ error }}</div>
 				<div v-if="success" class="alert success">{{ success }}</div>
 				<fieldset class="password">
-					<input type="password" v-model="password" placeholder="New Password" />
+					<input type="password" name="password" v-model="password" placeholder="New Password" />
 					<i class="fa fa-lock"></i>
 				</fieldset>
 				<fieldset>

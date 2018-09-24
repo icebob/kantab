@@ -8,7 +8,7 @@
 				<div v-if="error" class="alert error">{{ error }}</div>
 				<div v-if="success" class="alert success">{{ success }}</div>
 				<fieldset class="email">
-					<input type="email" v-model="email" placeholder="E-mail" required />
+					<input type="email" name="email" v-model="email" placeholder="E-mail" required />
 					<i class="fa fa-envelope"></i>
 				</fieldset>
 				<fieldset>
