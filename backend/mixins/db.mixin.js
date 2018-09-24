@@ -47,6 +47,12 @@ module.exports = function(collection, opts = {}) {
 				}
 			}
 
+			if (process.env.TEST_E2E) {
+				// Clean collection
+				this.logger.info(`Clear '${collection}' collection before tests...`);
+				await this.adapter.clear();
+			}
+
 			// Seeding if the DB is empty
 			const count = await this.adapter.count();
 			if (count == 0 && _.isFunction(this.seedDB)) {
