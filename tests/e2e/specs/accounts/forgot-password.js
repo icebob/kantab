@@ -4,7 +4,7 @@ const mailtrap = require("../../util/mailtrap");
 
 const EMAIL_PAUSE = 3000;
 
-describe.only("Test forgot password flow", () => {
+describe("Test forgot password flow", () => {
 	//beforeEach(() => cy.visit("/login"));
 
 	const baseUrl = Cypress.config("baseUrl");
