@@ -8,6 +8,11 @@ module.exports = {
 			config.plugin("webpack-report").use(BundleAnalyzerPlugin, [{}]);
 		}
 
+		config.module.rule("js").use("babel-loader")
+			.tap(options => Object.assign(options || {}, {
+				configFile: "./frontend/babel.config.js"
+			}));
+
 		/*const copy = config.plugin("copy");
 		copy.tap(args => {
 			if (args.length > 0) {
@@ -42,7 +47,6 @@ module.exports = {
 		config.entry.app = [path.join(folder, "main.js")];
 		config.resolve.alias["@"] = folder;
 
-		//require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
 		/*
 		config.plugins.copy.args[0] = [{
 			from: path.resolve(__dirname, "./frontend/public"),
@@ -50,6 +54,9 @@ module.exports = {
 			//ignore: publicCopyIgnore
 		}];
 		*/
+
+		// DEBUG
+		//require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
 	},
 
 	// More info: https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/options.js
