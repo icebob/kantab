@@ -1,22 +1,51 @@
 "use strict";
 
 const _ 		= require("lodash");
+const fs 		= require("fs");
+const path 		= require("path");
 const passport 	= require("passport");
 const cookie    = require("cookie");
 
 module.exports = function(mixinOptions) {
-	mixinOptions = mixinOptions || {};
+	if (!mixinOptions || !mixinOptions.providers)
+		throw new Error("Missing 'providers' property in service mixin options");
 
-	const strategyMethods = {};
-	const strategies = require("./strategies")();
-	strategies.forEach(strategy => {
-		strategyMethods[`register${_.capitalize(strategy.name)}Strategy`] = strategy.register;
-		strategyMethods[`process${_.capitalize(strategy.name)}Profile`] = strategy.processProfile;
+	const strategyMixins = [];
+
+	const Providers = [];
+
+	_.forIn(mixinOptions.providers, (setting, name) => {
+		if (!setting) return;
+
+		const filename = path.resolve(__dirname, "strategies", `${name}.strategy.mixin.js`);
+		if (fs.existsSync(filename)) {
+			const strategy = require(filename);
+			strategyMixins.push(strategy);
+			Providers.push({ name, setting: _.isObject(setting) ? setting : {} });
+		}
 	});
+	/*
+	const strategies = require("./strategies")().filter(strategy => {
+		if (strategy.check()) {
+			strategyMethods[`register${_.capitalize(strategy.name)}Strategy`] = strategy.register;
+			strategyMethods[`process${_.capitalize(strategy.name)}Profile`] = strategy.processProfile;
+			return true;
+		}
+	});*/
 
 	return {
+		mixins: strategyMixins,
+
+		actions: {
+			/**
+			 * Return the supported Social Auth providers
+			 */
+			supportedSocialAuthProviders() {
+				return Providers.map(o => o.name);
+			}
+		},
+
 		methods: {
-			...strategyMethods,
 
 			async signInSocialUser(params, cb) {
 				const msg = `Missing 'signInSocialUser' method implementation in the '${this.name}' service.`;
@@ -48,8 +77,6 @@ module.exports = function(mixinOptions) {
 		},
 
 		created() {
-			if (!mixinOptions.providers)
-				throw new Error("Missing 'providers' property in service mixin options");
 
 			const route = {
 				path: mixinOptions.routePath || "/auth",
@@ -71,19 +98,17 @@ module.exports = function(mixinOptions) {
 			if (mixinOptions.localAuthAlias)
 				route.aliases["POST /local"] = mixinOptions.localAuthAlias;
 
-			_.forIn(mixinOptions.providers, (setting, provider) => {
-				if (setting === false) return;
-
-				const fnName = `register${_.capitalize(provider)}Strategy`;
-				if (!_.isObject(setting))
-					setting = {};
+			Providers.forEach(provider => {
+				const fnName = `register${_.capitalize(provider.name)}Strategy`;
 
 				if (_.isFunction(this[fnName])) {
-					this[fnName](setting, route);
+					this[fnName](provider.setting, route);
 				} else {
-					throw new Error(`Missing Passport strategy for '${provider}'`);
+					throw new Error(`Missing Passport strategy mixin for '${provider.name}'`);
 				}
 			});
+
+			route.aliases["GET /supported-social-auth-providers"] = `${this.fullName}.supportedSocialAuthProviders`;
 
 			// Add `/auth` route.
 			this.settings.routes.unshift(route);

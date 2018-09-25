@@ -49,9 +49,9 @@ module.exports = {
 		localAuthAlias: "v1.accounts.login",
 		successRedirect: "/",
 		providers: {
-			google: true,
-			facebook: true,
-			github: true,
+			google: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+			facebook: process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET,
+			github: process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET,
 			twitter: false
 		}
 	})],

@@ -30,7 +30,8 @@ axios.interceptors.response.use(response => {
 export default new Vuex.Store({
 	state: {
 		// Logged in user entity
-		user: null
+		user: null,
+		providers: []
 	},
 
 	getters: {
@@ -41,6 +42,7 @@ export default new Vuex.Store({
 		async init({ state, commit, dispatch }) {
 			try {
 				await dispatch("getMe");
+				await dispatch("getSupporterSocialAuthProviders");
 				//await dispatch("getMyBooks");
 				//await dispatch("getHomeInfo");
 			} catch (err) {
@@ -66,6 +68,13 @@ export default new Vuex.Store({
 			return user;
 		},
 
+		async getSupporterSocialAuthProviders({ commit }) {
+			const providers = await axios.get("/auth/supported-social-auth-providers");
+			commit("SET_AUTH_PROVIDERS", providers);
+
+			return providers;
+		},
+
 		logout({ commit }) {
 			commit("LOGOUT");
 		},
@@ -74,6 +83,10 @@ export default new Vuex.Store({
 	mutations: {
 		SET_LOGGED_IN_USER(state, user) {
 			state.user = user;
+		},
+
+		SET_AUTH_PROVIDERS(state, providers) {
+			state.providers = providers;
 		},
 
 		LOGOUT(state) {

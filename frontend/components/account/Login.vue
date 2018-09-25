@@ -25,9 +25,7 @@
 				<fieldset>
 					<submit-button :loading="processing" size="large" color="primary" caption="Login" />
 				</fieldset>
-				<hr/>
 				<social-auth />
-				<hr/>
 				<fieldset class="already">
 					<span>Don't have an account?</span>
 					<router-link to="/signup">Sign Up</router-link>
