@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<template v-if="this.providers.length > 0">
+		<template v-if="providers.length > 0">
 			<hr/>
 			<div class="social-icons">
 				<a v-if="isSupported('google')" class="google" href="/auth/google" title="Google">

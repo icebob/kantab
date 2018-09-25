@@ -75,6 +75,13 @@ export default new Vuex.Store({
 			return providers;
 		},
 
+		async unlinkSocial({ commit }, provider) {
+			const user = await axios.get(`/api/v1/accounts/unlink?provider=${provider}`);
+			commit("SET_LOGGED_IN_USER", user);
+
+			return user;
+		},
+
 		logout({ commit }) {
 			commit("LOGOUT");
 		},

@@ -261,7 +261,7 @@ module.exports = {
 				token: { type: "string" }
 			},
 			async handler(ctx) {
-				const user = await this.adapter.findOne({ verificationToken: ctx.params.token });
+				const user = await this.getUserByQuery(ctx, { verificationToken: ctx.params.token });
 				if (!user)
 					throw new MoleculerClientError("Invalid verification token!", 400, "INVALID_TOKEN");
 
@@ -288,7 +288,7 @@ module.exports = {
 				id: { type: "string" }
 			},
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.params.id);
+				const user = await this.getUserByQuery(ctx, { _id: ctx.params.id });
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
 
@@ -314,7 +314,7 @@ module.exports = {
 				id: { type: "string" }
 			},
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.params.id);
+				const user = await this.getUserByQuery(ctx, { _id: ctx.params.id });
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
 
@@ -343,7 +343,7 @@ module.exports = {
 				if (!this.config["accounts.passwordless.enabled"])
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
 
-				const user = await this.adapter.findOne({ passwordlessToken: ctx.params.token });
+				const user = await this.getUserByQuery(ctx, { passwordlessToken: ctx.params.token });
 				if (!user)
 					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
 
@@ -416,7 +416,7 @@ module.exports = {
 			},
 			async handler(ctx) {
 				// Check the token & expires
-				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
+				const user = await this.getUserByQuery(ctx, { resetToken: ctx.params.token });
 				if (!user)
 					throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
 
@@ -456,14 +456,12 @@ module.exports = {
 				profile: { type: "object" },
 			},
 			async handler(ctx) {
-				const user = await ctx.call(`${this.fullName}.update`, {
-					id: this.decodeID(ctx.params.id),
+				return await ctx.call(`${this.fullName}.update`, {
+					id: ctx.params.id,
 					[`socialLinks.${ctx.params.provider}`]: ctx.params.profile.socialID,
 					verified: true, // if not verified yet via email
 					verificationToken: null
 				});
-
-				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -472,16 +470,18 @@ module.exports = {
 		 */
 		unlink: {
 			params: {
-				id: { type: "string" },
+				id: { type: "string", optional: true },
 				provider: { type: "string" }
 			},
 			async handler(ctx) {
-				const user = await ctx.call(`${this.fullName}.update`, {
-					id: this.decodeID(ctx.params.id),
+				const id = ctx.params.id ? ctx.params.id : (ctx.meta.user ? ctx.meta.user._id : null);
+				if (!id)
+					throw MoleculerClientError("Missing user ID!", 400, "MISSING_USER_ID");
+
+				return await ctx.call(`${this.fullName}.update`, {
+					id,
 					[`socialLinks.${ctx.params.provider}`]: null
 				});
-
-				return this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -508,7 +508,7 @@ module.exports = {
 				}
 
 				// Get user
-				const user = await this.adapter.findOne(query);
+				const user = await this.getUserByQuery(ctx, query);
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
 
@@ -529,7 +529,7 @@ module.exports = {
 				// Authenticate
 				if (ctx.params.password) {
 					// Login with password
-					if (!(await bcrypt.compare(ctx.params.password, user.password)))
+					if (!(await ctx.call(`${this.fullName}.checkPassword`, { id: user._id.toString(), password: ctx.params.password })))
 						throw new MoleculerClientError("Wrong password!", 400, "ERR_WRONG_PASSWORD");
 
 				} else if (this.config["accounts.passwordless.enabled"]) {
@@ -556,6 +556,23 @@ module.exports = {
 		},
 
 		/**
+		 * Check user password
+		 */
+		checkPassword: {
+			params: {
+				id: { type: "string" },
+				password: { type: "string" }
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.params.id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
+
+				return !!(await bcrypt.compare(ctx.params.password, user.password));
+			}
+		},
+
+		/**
 		 * Handle social login.
 		 */
 		socialLogin: {
@@ -571,7 +588,7 @@ module.exports = {
 				const query = { [`socialLinks.${provider}`]: profile.socialID };
 				if (ctx.meta.user) {
 					// There is logged in user. Link to the logged in user
-					let user = await this.adapter.findOne(query);
+					let user = await this.getUserByQuery(ctx, query);
 					if (user) {
 						if (user._id != ctx.meta.user._id)
 							throw new MoleculerClientError("This social account has been linked to another account.", 400, "ERR_SOCIAL_ACCOUNT_MISMATCH");
@@ -595,7 +612,7 @@ module.exports = {
 
 					let foundBySocialID = false;
 
-					let user = await this.adapter.findOne(query);
+					let user = await this.getUserByQuery(ctx, query);
 					if (user) {
 						// User found.
 						foundBySocialID = true;
@@ -619,6 +636,9 @@ module.exports = {
 
 						user.token = await this.generateJWT({ id: user._id.toString() });
 
+						// TODO: Hack to handle wrong "entity._id.toHexString is not a function" error in mongo adapter
+						user._id = this.decodeID(user._id);
+
 						return this.transformDocuments(ctx, {}, user);
 					}
 
@@ -639,7 +659,7 @@ module.exports = {
 
 					user.token = await this.getToken(user);
 
-					return this.transformDocuments(ctx, {}, user);
+					return user;
 				}
 			}
 		}
@@ -746,6 +766,17 @@ module.exports = {
 				/* istanbul ignore next */
 				throw err;
 			}
+		},
+
+		/**
+		 * Get user by custom query
+		 *
+		 * @param {Context} ctx
+		 * @param {Object} query
+		 */
+		async getUserByQuery(ctx, query) {
+			const users = await ctx.call(`${this.fullName}.find`, { query });
+			return users.length > 0 ? users[0] : null;
 		},
 
 		/**
