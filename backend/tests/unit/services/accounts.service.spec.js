@@ -109,29 +109,34 @@ describe("Test Accounts service", () => {
 
 		describe("Test sendMagicLink method", () => {
 
-			let oldSendMail;
-			beforeAll(() => oldSendMail = service.sendMail);
-			afterAll(() => service.sendMail = oldSendMail);
+			let oldSendMail, oldUpdateById;
+			beforeAll(() => {
+				oldSendMail = service.sendMail;
+				oldUpdateById = service.adapter.updateById;
+			});
+			afterAll(() => {
+				service.sendMail = oldSendMail;
+				service.adapter.updateById = oldUpdateById;
+			});
 
 			it("should generate passwordless token & call sendMail", async () => {
 				service.sendMail = jest.fn();
 
 				const ctx = new Context(broker);
-				const user = { _id: 1, name: "John", email: "john@kantab.io" };
+				const user = { _id: 123, name: "John", email: "john@kantab.io" };
 
-				ctx.call = jest.fn(async () => user);
+				service.adapter.updateById = jest.fn(async () => user);
 
 				await service.sendMagicLink(ctx, user);
 
 				expect(service.sendMail).toHaveBeenCalledTimes(1);
 				expect(service.sendMail).toHaveBeenCalledWith(ctx, user, "magic-link", { token: expect.any(String) });
 
-				expect(ctx.call).toHaveBeenCalledTimes(1);
-				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.update", {
-					id: 1,
+				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
+				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $set: {
 					passwordlessToken: expect.any(String),
 					passwordlessTokenExpires: expect.any(Number)
-				});
+				}});
 			});
 		});
 
@@ -166,58 +171,6 @@ describe("Test Accounts service", () => {
 					template: "welcome",
 					to: "john@kantab.io"
 				});
-			});
-		});
-
-		describe("Test getUserByEmail method", () => {
-			it("should call find action but return null if not found by email", async () => {
-				const ctx = new Context(broker);
-				ctx.call = jest.fn(async () => []);
-
-				const res = await service.getUserByEmail(ctx, "john.doe@kantab.io");
-				expect(res).toBeNull();
-
-				expect(ctx.call).toHaveBeenCalledTimes(1);
-				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { email: "john.doe@kantab.io" }});
-			});
-
-			it("should call find action to find user by email", async () => {
-				const ctx = new Context(broker);
-				const user = { id: 1 };
-				ctx.call = jest.fn(async () => [user]);
-
-				const res = await service.getUserByEmail(ctx, "john.doe@kantab.io");
-
-				expect(res).toBe(user);
-
-				expect(ctx.call).toHaveBeenCalledTimes(1);
-				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { email: "john.doe@kantab.io" }});
-			});
-		});
-
-		describe("Test getUserByUsername method", () => {
-			it("should call find action but return null if not found by username", async () => {
-				const ctx = new Context(broker);
-				ctx.call = jest.fn(async () => []);
-
-				const res = await service.getUserByUsername(ctx, "john1981");
-				expect(res).toBeNull();
-
-				expect(ctx.call).toHaveBeenCalledTimes(1);
-				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { username: "john1981" }});
-			});
-
-			it("should call find action to find user by username", async () => {
-				const ctx = new Context(broker);
-				const user = { id: 1 };
-				ctx.call = jest.fn(async () => [user]);
-
-				const res = await service.getUserByUsername(ctx, "john1981");
-
-				expect(res).toBe(user);
-
-				expect(ctx.call).toHaveBeenCalledTimes(1);
-				expect(ctx.call).toHaveBeenCalledWith("v1.accounts.find", { query: { username: "john1981" }});
 			});
 		});
 	});
@@ -330,7 +283,7 @@ describe("Test Accounts service", () => {
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), res, "welcome");
+			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({ password: expect.any(String) }, res), "welcome");
 		});
 
 		it("should create new user without avatar with verification", async () => {
@@ -355,7 +308,10 @@ describe("Test Accounts service", () => {
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), res, "activate", { token: expect.any(String) });
+			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
+				password: expect.any(String),
+				verificationToken: expect.any(String),
+			}, res), "activate", { token: expect.any(String) });
 		});
 
 		it("should throw error if no password & passwordless is not enabled", async () => {
@@ -400,7 +356,10 @@ describe("Test Accounts service", () => {
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), res, "activate", { token: expect.any(String) });
+			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
+				password: expect.any(String),
+				verificationToken: expect.any(String),
+			}, res), "activate", { token: expect.any(String) });
 
 			user3VerificationToken = service.sendMail.mock.calls[0][3].token;
 		});
@@ -420,12 +379,14 @@ describe("Test Accounts service", () => {
 				username: "user3",
 				firstName: "User",
 				lastName: "Three",
+				password: expect.any(String),
 				passwordless: true,
 				roles: ["admin", "visitor"],
 				plan: "premium",
 				socialLinks: {},
 				createdAt: expect.any(Number),
 				verified: true, // !
+				verificationToken: null,
 				status: 1,
 				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
 			}), "welcome");
@@ -1268,11 +1229,24 @@ describe("Test Accounts service", () => {
 			});
 		});
 
-		it("should unlink user from google", async () => {
+		it("should not unlink if no user", async () => {
+			expect.assertions(4);
+			try {
+				await broker.call("v1.accounts.unlink", {
+					provider: "google"
+				});
+			} catch(err) {
+				expect(err).toBeInstanceOf(E.MoleculerClientError);
+				expect(err.name).toBe("MoleculerClientError");
+				expect(err.code).toBe(400);
+				expect(err.type).toBe("MISSING_USER_ID");
+			}
+		});
+
+		it("should unlink user from google via meta", async () => {
 			const res = await broker.call("v1.accounts.unlink", {
-				id: savedUser._id,
 				provider: "google"
-			});
+			}, { meta: { user: savedUser }});
 
 			expect(res).toEqual({
 				...savedUser,
