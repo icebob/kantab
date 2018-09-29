@@ -5,8 +5,8 @@
 			<logo />
 			<h4>Sign In</h4>
 			<form @submit.prevent="submit">
-				<div class="alert error">{{ error }}</div>
-				<div class="alert success">{{ success }}</div>
+				<div v-if="error" class="alert error">{{ error }}</div>
+				<div v-if="success" class="alert success">{{ success }}</div>
 				<fieldset class="email">
 					<input type="text" name="email" v-model="email" placeholder="E-mail or username" />
 					<i class="fa fa-user"></i>

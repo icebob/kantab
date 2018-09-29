@@ -43,21 +43,6 @@ $w: 250px;
 		text-decoration: none;
 	}
 
-	.alert {
-		text-align: center;
-		font-size: 0.9em;
-
-		&.error {
-			color: rgb(255,128,128);
-			text-shadow: 0 0 10px rgb(255,0,0);
-		}
-
-		&.success {
-			color: rgb(128, 255, 128);
-			text-shadow: 0 0 10px rgb(0, 255, 0);
-		}
-	}
-
 	fieldset input[type="text"], fieldset input[type="password"], fieldset input[type="email"] {
 		background: lighten($backgroundColor2, 10);
 		box-sizing: border-box;

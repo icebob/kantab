@@ -6,17 +6,17 @@
 
 @import "groups";
 @import "buttons";
-//@import "forms";
-//@import "dropdown";
-//@import "tables";
-//@import "lists";
-//@import "alerts";
-//@import "tags";
-//@import "progressbars";
-//@import "panels";
-//@import "cards";
-//@import "ribbons";
-//@import "medias";
+@import "forms";
+@import "dropdown";
+@import "tables";
+@import "lists";
+@import "alerts";
+@import "tags";
+@import "progressbars";
+@import "panels";
+@import "cards";
+@import "ribbons";
+@import "medias";
 @import "animations";
 
 .left {		float: left; }
@@ -30,7 +30,8 @@
 .text-right {	text-align: right !important; }
 .text-justify {	text-align: justify !important; }
 
-.text-muted { 		color: mix($textColor, $backgroundColor, 40%) !important; }
+//.text-muted { 		color: mix($textColor, $backgroundColor, 60%) !important; }
+.text-muted { 		color: darken($color4, 20%) !important; }
 .text-nowrap {		white-space: nowrap !important; }
 .text-uppercase { 	text-transform: uppercase !important; }
 

@@ -1,0 +1,136 @@
+
+.media {
+	background-color: $color2-dark;
+	@if $glassTheme {
+		@include bgTranslucentDark(0.2);
+	}
+
+	border: 1px solid $color2-light;
+	border-radius: $defaultRadius;
+	position: relative;
+	box-shadow: 0 5px 5px 0 rgba(0,0,0,.25);
+
+	display: flex;
+	align-items: flex-start;
+	text-align: left;
+
+	padding: 1.0em;
+
+	.avatar {
+		width: 64px;
+		height: 64px;
+		border-radius: $avatarRadius;
+	}
+
+	.media-left {
+		margin-right: 1em;
+	}
+
+	.media-right {
+		margin-left: 1em;
+
+		.close {
+			border: 0;
+			text-decoration: none;
+			color: rgba($textColor, 0.3);
+			font-size: 1.6em;
+			transition: color .2s ease;
+
+			&:before {
+				font-family: FontAwesome;
+				content: "\f057";
+			}
+
+			&:hover {
+				color: $textColor;
+			}
+		}
+	}
+
+	.media-content {
+		flex-grow: 1;
+		text-align: justify;
+
+		.title {
+			margin-bottom: 0.2em;
+			font-weight: $fontUltraBold;
+
+			small {
+				margin-left: 0.5em;
+			}
+		}
+
+		p {
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+
+		.functions {
+			> * {
+				&:not(:last-child) {
+					margin-right: 1.0em;
+				}
+			}
+
+			> a {
+				color: rgba($primary, 0.7);
+				transition: color .2s ease;
+
+				&:hover {
+					color: $textColor;
+				}
+			}
+		}
+	}
+
+	&.primary {
+		$c: darken($primary, 10%);
+		background-color: $c;
+		@if $glassTheme {
+			background-color: rgba($c, 0.8);
+		}
+
+		a, .functions > a {
+			color: $color1;
+		}
+	}
+
+	&.success {
+		$c: darken($successColor, 10%);
+		background-color: $c;
+		@if $glassTheme {
+			background-color: rgba($c, 0.8);
+		}
+		a, .functions > a {
+			color: $color1;
+		}
+	}
+
+	&.warning {
+		$c: darken($warningColor, 10%);
+		background-color: $c;
+		@if $glassTheme {
+			background-color: rgba($c, 0.8);
+		}
+		a, .functions > a {
+			color: $color1;
+		}
+	}
+
+	&.danger {
+		$c: darken($dangerColor, 10%);
+		background-color: $c;
+		@if $glassTheme {
+			background-color: rgba($c, 0.8);
+		}
+		a, .functions > a {
+			color: $color1;
+		}
+	}
+
+	&.outline {
+		background-color: transparent;
+	}
+
+} // .panel

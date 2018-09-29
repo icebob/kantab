@@ -58,7 +58,7 @@
 
 @mixin setFocusHighLight($color) {
 	&:focus {
-		box-shadow: 0 0 8px rgba($color, 0.6);
+		box-shadow: 0 0 10px rgba($color, 0.8);
 	}
 }
 

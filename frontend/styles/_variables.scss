@@ -4,9 +4,10 @@
 $color1: #1D2124;
 $color2: #454F56;
 $color3: #A1C72C;
-$color4: #dcdcdc;
+$color4: #dedede;
 $color5: #c96b2c;
 
+$glassTheme: false;
 $colorAlt: 10%;
 
 $color1-light: lighten($color1, $colorAlt);
@@ -23,7 +24,7 @@ $color5-dark: darken($color5, $colorAlt);
 
 $backgroundColor: $color1;
 $backgroundColor2: $color2;
-$primary: $color3;
+$primary: $color3-dark;
 $secondary: $color5;
 
 $textColor: $color4;
@@ -32,13 +33,25 @@ $textColor2: #FFFFFF;
 $buttonColor: lighten($color2, 30%);
 $buttonTextColor: $backgroundColor;
 
+$textShadow: 0 0 4px rgba(#000, 0.6);
+
+
 $linkTextColor: $textColor2;
 
 $fontFamily: "Open Sans", Arial, sans-serif;
 $fontFamilyHeader: "Roboto Condensed", Arial, sans-serif;
 
-$successColor: #39b957;
+$fontThin: 100;
+$fontLight: 300;
+$fontNormal: 400;
+$fontBold: 600;
+$fontUltraBold: 700;
+
+$successColor: #38b73a;
 $warningColor: #b38118;
 $dangerColor: #b43d3d;
 
 $placeholderColor: $buttonColor;
+
+$avatarRadius: 15%;
+$defaultRadius: 5px;

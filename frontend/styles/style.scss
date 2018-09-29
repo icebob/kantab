@@ -20,6 +20,7 @@ html, body {
 	-moz-osx-font-smoothing: grayscale;
 
 	background-image: -webkit-radial-gradient(center center, $backgroundColor2, $backgroundColor);
+	background-attachment: fixed;
 	color: $textColor;
 }
 

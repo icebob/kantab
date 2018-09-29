@@ -1,4 +1,3 @@
-@import "variables";
 
 @mixin buttonColorize($c, $text) {
 	$border: $c;
@@ -118,9 +117,15 @@
 		}
 	}
 
-	//@include setFocusHighLight($secondColor);
+	//@include setFocusHighLight($secondary);
 
 } // .button
+
+.buttons {
+	> .button:not(:last-child) {
+		margin-right: 1em;
+	}
+}
 
 .button-group {
 	position: relative;
