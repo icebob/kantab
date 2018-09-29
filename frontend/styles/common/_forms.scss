@@ -19,15 +19,16 @@
 		width: 100%;
 		padding: 6px 12px;
 
-		color: $textColor;
-		border: 1px solid $color2-light;
+		color: $textColor2;
+		border: 1px solid $color2;
 		border-radius: 5px;
 		outline: 0;
 
-		background-color: $color2-dark;
+		background-color: $color1;
 		@if $glassTheme {
 			background-color: rgba(0,0,0,.15);
 		}
+		box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
 
 		font-size: 1.0em;
 		font-family: $fontFamily;
@@ -174,7 +175,7 @@
 		width: 10px;
 		height: 10px;
 		position: absolute;
-		top: 1.25em;
+		top: 1.2em;
 		left: 1em;
 		border-radius: 1px;
 		transform: scale(0);
@@ -192,7 +193,7 @@
 
 	input[type="radio"]:checked + label:after {
 		border-radius: 6px;
-		top: 1.2em;
+		top: 1.25em;
 	}
 
 } // .form-option

@@ -6,6 +6,8 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Lato:300,400,600,700|Roboto+Condensed:300,700|);
 @import url(https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css);
 
+@include scrollbars(0.7em, $buttonColor, $color2-dark);
+
 html, body {
 	margin: 0;
 	padding: 0;
@@ -25,3 +27,4 @@ html, body {
 }
 
 @import "common/auth-panels";
+

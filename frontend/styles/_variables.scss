@@ -7,8 +7,8 @@ $color3: #A1C72C !default;
 $color4: #dedede !default;
 $color5: #c96b2c !default;
 
-$glassTheme: false;
-$colorAlt: 10%;
+$glassTheme: false !default;
+$colorAlt: 10% !default;
 
 $color1-light: lighten($color1, $colorAlt);
 $color1-dark: darken($color1, $colorAlt);

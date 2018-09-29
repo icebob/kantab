@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Router from "vue-router";
 import Home from "./components/Home.vue";
+import StyleGuide from "./components/style-guide/Page.vue";
 import Protected from "./components/Protected.vue";
 
 Vue.use(Router);
@@ -13,6 +14,11 @@ export default new Router({
 			path: "/",
 			name: "home",
 			component: Home,
+		},
+		{
+			path: "/style-guide",
+			name: "style-guide",
+			component: StyleGuide,
 		},
 		{
 			path: "/login",
