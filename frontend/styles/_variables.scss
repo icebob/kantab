@@ -1,11 +1,11 @@
 /* Coolors Exported Palette - https://coolors.co/1d2124-454f56-a1c72c-dcdcdc-dd7d3d */
 /* Complementer color - http://colorschemedesigner.com/csd-3.5/#3o21Ttqx7w0w0 */
 
-$color1: #1D2124;
-$color2: #454F56;
-$color3: #A1C72C;
-$color4: #dedede;
-$color5: #c96b2c;
+$color1: #1D2124 !default;
+$color2: #454F56 !default;
+$color3: #A1C72C !default;
+$color4: #dedede !default;
+$color5: #c96b2c !default;
 
 $glassTheme: false;
 $colorAlt: 10%;
@@ -22,24 +22,24 @@ $color5-light: lighten($color5, $colorAlt);
 $color5-dark: darken($color5, $colorAlt);
 
 
-$backgroundColor: $color1;
-$backgroundColor2: $color2;
-$primary: $color3-dark;
-$secondary: $color5;
+$backgroundColor: $color1 !default;
+$backgroundColor2: $color2 !default;
+$primary: $color3-dark !default;
+$secondary: $color5 !default;
 
-$textColor: $color4;
-$textColor2: #FFFFFF;
+$textColor: $color4 !default;
+$textColor2: #FFFFFF !default;
 
-$buttonColor: lighten($color2, 30%);
-$buttonTextColor: $backgroundColor;
+$buttonColor: lighten($color2, 30%) !default;
+$buttonTextColor: $backgroundColor !default;
 
-$textShadow: 0 0 4px rgba(#000, 0.6);
+$textShadow: 0 0 4px rgba(#000, 0.6) !default;
 
 
-$linkTextColor: $textColor2;
+$linkTextColor: $textColor2 !default;
 
-$fontFamily: "Open Sans", Arial, sans-serif;
-$fontFamilyHeader: "Roboto Condensed", Arial, sans-serif;
+$fontFamily: "Open Sans", Arial, sans-serif !default;
+$fontFamilyHeader: "Roboto Condensed", Arial, sans-serif !default;
 
 $fontThin: 100;
 $fontLight: 300;
@@ -47,11 +47,11 @@ $fontNormal: 400;
 $fontBold: 600;
 $fontUltraBold: 700;
 
-$successColor: #38b73a;
-$warningColor: #b38118;
-$dangerColor: #b43d3d;
+$successColor: #38b73a !default;
+$warningColor: #b38118 !default;
+$dangerColor: #b43d3d !default;
 
-$placeholderColor: $buttonColor;
+$placeholderColor: $buttonColor !default;
 
-$avatarRadius: 15%;
-$defaultRadius: 5px;
+$avatarRadius: 15% !default;
+$defaultRadius: 5px !default;

@@ -167,7 +167,7 @@
 
 	} // label
 
-	input:checked + label:after {
+	input + label:after {
 		background-color: $secondary;
 		content: '';
 		display: block;
@@ -177,7 +177,14 @@
 		top: 1.25em;
 		left: 1em;
 		border-radius: 1px;
+		transform: scale(0);
+		transition: all .1s ease;
 	} // input:checked + label:after
+
+	input:checked + label:after {
+
+		transform: scale(1);
+	}
 
 	input[type="radio"] + label:before {
 		border-radius: 9px;
@@ -185,6 +192,7 @@
 
 	input[type="radio"]:checked + label:after {
 		border-radius: 6px;
+		top: 1.2em;
 	}
 
 } // .form-option

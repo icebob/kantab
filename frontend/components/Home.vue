@@ -76,7 +76,7 @@
 				<button class="button">Normal</button>
 				<button class="button primary">Primary</button>
 				<button class="button secondary">Secondary</button>
-				<button class="button success"> <i class="icon fa fa-check"></i>Success</button>
+				<button class="button success icon"><i class="fa fa-check"></i>Success</button>
 				<button class="button warning">Warning</button>
 				<button class="button danger">Danger</button>
 				<button class="button outline">Outline</button>
@@ -89,7 +89,7 @@
 				<button class="button large">Normal</button>
 				<button class="button large primary">Primary</button>
 				<button class="button large secondary">Secondary</button>
-				<button class="button large success"> <i class="icon fa fa-check"></i>Success</button>
+				<button class="button large success icon"><i class="fa fa-check"></i>Success</button>
 				<button class="button large warning">Warning</button>
 				<button class="button large danger">Danger</button>
 				<button class="button large outline">Outline</button>
@@ -102,7 +102,7 @@
 				<button class="button small">Normal</button>
 				<button class="button small primary">Primary</button>
 				<button class="button small secondary">Secondary</button>
-				<button class="button small success"><i class="icon fa fa-check"></i>Success</button>
+				<button class="button small success icon"><i class="fa fa-check"></i>Success</button>
 				<button class="button small warning">Warning</button>
 				<button class="button small danger">Danger</button>
 				<button class="button small outline">Outline</button>
@@ -115,7 +115,7 @@
 				<button disabled="disabled" class="button">Normal</button>
 				<button disabled="disabled" class="button primary">Primary</button>
 				<button disabled="disabled" class="button secondary">Secondary</button>
-				<button disabled="disabled" class="button success"><i class="icon fa fa-check"></i>Success</button>
+				<button disabled="disabled" class="button success icon"><i class="fa fa-check"></i>Success</button>
 				<button disabled="disabled" class="button warning">Warning</button>
 				<button disabled="disabled" class="button danger">Danger</button>
 				<button disabled="disabled" class="button outline">Outline</button>
@@ -135,21 +135,21 @@
 		<fieldset>
 		<legend>Floating buttons</legend>
 			<div class="content flex align-center justify-space-around wrap buttons">
-				<button class="button fab large"><i class="icon fa fa-plus"></i>Normal</button>
-				<button class="button fab small primary"> <i class="icon fa fa-plus"></i>Primary</button>
-				<button class="button fab success"><i class="icon fa fa-check"></i>Success</button>
-				<button disabled="disabled" class="button fab warning"><i class="icon fa fa-comments"></i>Warning</button>
-				<button class="button fab danger"><i class="icon fa fa-trash"></i>Danger</button>
-				<button class="button fab outline"><i class="icon fa fa-bars"></i>Outline</button>
+				<button class="button fab large icon"><i class="fa fa-plus"></i>Normal</button>
+				<button class="button fab small primary icon"> <i class="fa fa-plus"></i>Primary</button>
+				<button class="button fab success icon"><i class="fa fa-check"></i>Success</button>
+				<button disabled="disabled" class="button fab warning icon"><i class="fa fa-comments"></i>Warning</button>
+				<button class="button fab danger icon"><i class="fa fa-trash"></i>Danger</button>
+				<button class="button fab outline icon"><i class="fa fa-bars"></i>Outline</button>
 			</div>
 		</fieldset>
 		<fieldset>
 			<legend>Button group</legend>
 			<div class="content flex align-center justify-space-around buttons">
 				<div class="button-group">
-					<button class="button"> <i class="icon fa fa-align-left"></i>Left</button>
-					<button class="button"><i class="icon fa fa-align-center"></i>Middle</button>
-					<button class="button"><i class="icon fa fa-align-right"></i>Right</button>
+					<button class="button icon"> <i class="fa fa-align-left"></i>Left</button>
+					<button class="button icon"><i class="fa fa-align-center"></i>Middle</button>
+					<button class="button icon"><i class="fa fa-align-right"></i>Right</button>
 				</div>
 			</div>
 		</fieldset>
@@ -657,9 +657,15 @@ export default {
 	components: {
 		Logo
 	},
+	data() {
+		return {
+			loaded: false
+		};
+	},
+
 	methods: {
 		getTypographyInfo(elType) {
-			if (this.$el) {
+			if (this.loaded && this.$el) {
 				let element = this.$el.querySelector(elType);
 				if (element) {
 					let style = window.getComputedStyle(element, null);
@@ -673,6 +679,10 @@ export default {
 				}
 			}
 		}
+	},
+
+	mounted() {
+		this.$nextTick(() => this.loaded = true);
 	}
 };
 </script>
