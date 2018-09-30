@@ -4,7 +4,7 @@ const DbService 	= require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
 
 /**
- * Roles service 
+ * Roles service
  */
 module.exports = {
 	name: "roles",
@@ -28,8 +28,7 @@ module.exports = {
 			"inherits",
 			"status",
 			"createdAt",
-			"updatedAt",
-			"lastLoginAt"
+			"updatedAt"
 		]
 	},
 
@@ -63,7 +62,34 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
+		/**
+		 * Seed an empty collection with an `admin` and a `user` roles.
+		 */
+		async seedDB() {
+			const res = await this.adapter.insertMany([
+				// Administrator
+				{
+					name: "admin",
+					permissions: [
+						"*"
+					],
+					status: 1,
+					createdAt: Date.now(),
+				},
 
+				// User
+				{
+					name: "user",
+					permissions: [
+						"*"
+					],
+					status: 1,
+					createdAt: Date.now(),
+				}
+			]);
+
+			this.logger.info(`Generated ${res.length} roles!`);
+		},
 	},
 
 	/**

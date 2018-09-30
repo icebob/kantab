@@ -8,17 +8,17 @@ const ConfigLoader 		= require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
- * Card checklist service
+ * Card attachment service
  */
 module.exports = {
-	name: "card-checklists",
+	name: "card.attachments",
 	version: 1,
 
 	mixins: [
-		DbService("card-checklists"),
+		DbService("card-attachments"),
 		CacheCleaner([
 			"cache.clean.cards",
-			"cache.clean.card-checklists",
+			"cache.clean.card.attachments",
 			"cache.clean.accounts"
 		]),
 		ConfigLoader([
@@ -41,9 +41,11 @@ module.exports = {
 			"card",
 			"createdBy",
 
+			"type",
 			"title",
 			"description",
-			"position",
+			"url",
+			"size",
 
 			"options",
 			"createdAt",

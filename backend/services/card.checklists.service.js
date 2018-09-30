@@ -8,17 +8,17 @@ const ConfigLoader 		= require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
- * Card actions service
+ * Card checklist service
  */
 module.exports = {
-	name: "card-actions",
+	name: "card.checklists",
 	version: 1,
 
 	mixins: [
-		DbService("card-actions"),
+		DbService("card-checklists"),
 		CacheCleaner([
 			"cache.clean.cards",
-			"cache.clean.card-actions",
+			"cache.clean.card.checklists",
 			"cache.clean.accounts"
 		]),
 		ConfigLoader([
@@ -41,11 +41,11 @@ module.exports = {
 			"card",
 			"createdBy",
 
-			"type", // Similar to https://developers.trello.com/reference#action-types
-			"params",
-			"text",
+			"title",
+			"description",
+			"position",
 
-			"isSystem",
+			"options",
 			"createdAt",
 			"updatedAt",
 		]
