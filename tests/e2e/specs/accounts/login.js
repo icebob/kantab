@@ -29,7 +29,7 @@ describe("Test login page with username & password", () => {
 	});
 
 	it("Logout", () => {
-		cy.get("#nav a:nth-child(4)").click();
+		cy.get("#nav a:nth-child(5)").click();
 
 		cy.url().should("contain", `${baseUrl}/login`);
 	});
@@ -52,7 +52,7 @@ describe("Test login page with passwordless", () => {
 				return mailtrap.deleteMessage(null, messageID).then(() => {
 					cy.visit(`/passwordless?token=${token}`);
 					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Style guide");
+					cy.contains("h4", "Home");
 				});
 			});
 		});

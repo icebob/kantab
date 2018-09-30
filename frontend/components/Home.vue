@@ -1,5 +1,8 @@
 <template>
-	<Logo/>
+	<dir>
+		<Logo/>
+		<h4>Home</h4>
+	</dir>
 </template>
 
 <script>

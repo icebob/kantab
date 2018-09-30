@@ -5,8 +5,8 @@
 			<logo />
 			<h4>Sign Up</h4>
 			<form @submit.prevent="submit">
-				<div v-if="error" class="alert success">{{ success }}</div>
-				<div v-if="success" class="alert error">{{ error }}</div>
+				<div v-if="success" class="alert success">{{ success }}</div>
+				<div v-if="error" class="alert error">{{ error }}</div>
 				<fieldset class="two-fields">
 					<input type="text" name="firstName" v-model="firstName" placeholder="First name" required />
 					<input type="text" name="lastName" v-model="lastName" placeholder="Last name" required />

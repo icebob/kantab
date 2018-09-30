@@ -35,7 +35,7 @@ describe("Test signup page with password", () => {
 				return mailtrap.deleteMessage(null, messageID).then(() => {
 					cy.visit(`/verify-account?token=${token}`);
 					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Style guide");
+					cy.contains("h4", "Home");
 				});
 			});
 		});
@@ -77,7 +77,7 @@ describe("Test signup page with passwordless account", () => {
 				return mailtrap.deleteMessage(null, messageID).then(() => {
 					cy.visit(`/verify-account?token=${token}`);
 					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Style guide");
+					cy.contains("h4", "Home");
 				});
 			});
 		});
@@ -105,7 +105,7 @@ describe("Test signup page with passwordless account", () => {
 				return mailtrap.deleteMessage(null, messageID).then(() => {
 					cy.visit(`/passwordless?token=${token}`);
 					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Style guide");
+					cy.contains("h4", "Home");
 				});
 			});
 		});
@@ -125,7 +125,7 @@ describe("Test signup page with passwordless account", () => {
 				return mailtrap.deleteMessage(null, messageID).then(() => {
 					cy.visit(`/passwordless?token=${token}`);
 					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Style guide");
+					cy.contains("h4", "Home");
 				});
 			});
 		});
