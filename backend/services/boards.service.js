@@ -57,12 +57,34 @@ module.exports = {
 	 */
 	actions: {
 		// Change visibility of default actions
-		create: {},
-		list: {},
-		find: {},
-		get: {},
-		update: {},
-		remove: {},
+		create: {
+			permissions: ["boards.create"]
+		},
+		list: {
+			permissions: ["boards.read"]
+		},
+		find: {
+			permissions: ["boards.read"]
+		},
+		get: {
+			permissions: ["boards.read"]
+		},
+		update: {
+			permissions: [{
+				name: "boards.edit",
+				when(ctx, { board }) {
+					return ctx.meta.user && board.owner == ctx.meta.user._id;
+				}
+			}]
+		},
+		remove: {
+			permissions: [{
+				name: "boards.remove",
+				when(ctx, { board }) {
+					return ctx.meta.user && board.owner == ctx.meta.user._id;
+				}
+			}]
+		},
 	},
 
 	/**

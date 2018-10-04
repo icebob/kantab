@@ -24,14 +24,6 @@ module.exports = function(mixinOptions) {
 			Providers.push({ name, setting: _.isObject(setting) ? setting : {} });
 		}
 	});
-	/*
-	const strategies = require("./strategies")().filter(strategy => {
-		if (strategy.check()) {
-			strategyMethods[`register${_.capitalize(strategy.name)}Strategy`] = strategy.register;
-			strategyMethods[`process${_.capitalize(strategy.name)}Profile`] = strategy.processProfile;
-			return true;
-		}
-	});*/
 
 	return {
 		mixins: strategyMixins,

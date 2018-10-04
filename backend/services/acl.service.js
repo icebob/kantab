@@ -2,7 +2,7 @@
 
 /**
  * acl service
- * 
+ *
  * https://blog.nodeswat.com/implement-access-control-in-node-js-8567e7b484d1
  * https://github.com/DeadAlready/easy-rbac
  */
@@ -14,7 +14,12 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
-
+		permissions: [
+			"boards.create",
+			"boards.read",
+			"boards.edit",
+			"boards.remove",
+		]
 	},
 
 	/**
