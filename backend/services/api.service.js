@@ -78,7 +78,8 @@ module.exports = {
 
 				camelCaseNames: true,
 
-				authorization: true,
+				authentication: true,
+				//authorization: true,
 
 				aliases: {
 				},
@@ -120,14 +121,14 @@ module.exports = {
 
 	methods: {
 		/**
-		 * Authorize the request
+		 * Authenticate from request
 		 *
 		 * @param {Context} ctx
 		 * @param {Object} route
 		 * @param {IncomingRequest} req
 		 * @returns {Promise}
 		 */
-		async authorize(ctx, route, req) {
+		async authenticate(ctx, route, req) {
 			let token;
 			if (req.headers.cookie) {
 				const cookies = cookie.parse(req.headers.cookie);
@@ -140,10 +141,10 @@ module.exports = {
 				if (user) {
 					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, _id: user._id });
 					// Reduce user fields (it will be transferred to other nodes)
-					ctx.meta.user = _.pick(user, ["_id", "email", "username", "firstName", "lastName", "avatar"]);
 					ctx.meta.token = token;
+					return _.pick(user, ["_id", "email", "username", "firstName", "lastName", "avatar"]);
 				}
-				return user;
+				return null;
 			}
 
 			//return this.Promise.reject(new UnAuthorizedError());

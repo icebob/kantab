@@ -50,8 +50,8 @@
 				<div class="media-content"><div class="title">John Doe<small class="text-muted">@johndoe - 31m ago</small></div>
 				<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis. <a class="link" href="#">Read more...</a></p>
 				<div class="buttons">
-					<div class="button"><i class="icon fa fa-mail-reply"></i>Reply</div>
-					<div class="button warning"><i class="icon fa fa-ban"></i>Spam</div>
+					<div class="button icon"><i class="fa fa-mail-reply"></i>Reply</div>
+					<div class="button icon warning"><i class="fa fa-ban"></i>Spam</div>
 				</div>
 				</div>
 				<div class="media-right"><a class="close" href="#" title="Close"></a></div>
