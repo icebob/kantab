@@ -834,7 +834,7 @@ module.exports = {
 				}
 			]);
 
-			this.logger.info(`Generated ${res.length} users!`);
+			this.logger.info(`Generated ${res.length} users.`);
 		},
 
 	},

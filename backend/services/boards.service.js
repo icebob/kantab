@@ -58,20 +58,20 @@ module.exports = {
 	actions: {
 		// Change visibility of default actions
 		create: {
-			permissions: ["boards.create"]
+			permissions: ["boards:create"]
 		},
 		list: {
-			permissions: ["boards.read"]
+			permissions: ["boards:read"]
 		},
 		find: {
-			permissions: ["boards.read"]
+			permissions: ["boards:read"]
 		},
 		get: {
-			permissions: ["boards.read"]
+			permissions: ["boards:read"]
 		},
 		update: {
 			permissions: [{
-				name: "boards.edit",
+				name: "boards:edit",
 				when(ctx, { board }) {
 					return ctx.meta.user && board.owner == ctx.meta.user._id;
 				}
@@ -79,7 +79,7 @@ module.exports = {
 		},
 		remove: {
 			permissions: [{
-				name: "boards.remove",
+				name: "boards:remove",
 				when(ctx, { board }) {
 					return ctx.meta.user && board.owner == ctx.meta.user._id;
 				}
