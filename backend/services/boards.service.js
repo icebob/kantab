@@ -70,20 +70,22 @@ module.exports = {
 			permissions: ["boards:read"]
 		},
 		update: {
-			permissions: [{
-				name: "boards:edit",
-				when(ctx, { board }) {
-					return ctx.meta.user && board.owner == ctx.meta.user._id;
+			needEntity: true,
+			permissions: [
+				"administrator",
+				function(ctx) {
+					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.user._id;
 				}
-			}]
+			]
 		},
 		remove: {
-			permissions: [{
-				name: "boards:remove",
-				when(ctx, { board }) {
-					return ctx.meta.user && board.owner == ctx.meta.user._id;
+			needEntity: true,
+			permissions: [
+				"administrator",
+				function(ctx) {
+					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.user._id;
 				}
-			}]
+			]
 		},
 	},
 

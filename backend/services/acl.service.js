@@ -1,7 +1,9 @@
 "use strict";
 
+const _ 			= require("lodash");
 const DbService 	= require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
+const { match } 	= require("moleculer").Utils;
 
 /**
  * Role-based ACL (Access-Control-List) service
@@ -65,7 +67,12 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
+		async hasAccess(ctx) {
+			if (!ctx.meta.user)
+				return false;
 
+			return await this.hasAccess(ctx, ctx.params);
+		}
 	},
 
 	/**
@@ -85,8 +92,12 @@ module.exports = {
 		 * @param {Object} role
 		 * @param {string} permission
 		 */
-		assignPermission(role, permission) {
-
+		async assignPermission(role, permission) {
+			if (role.permissions.indexOf(permission) === -1) {
+				return await this.adapter.updateById(role._id, { $addToSet: {
+					permissions: permission
+				}});
+			}
 		},
 
 		/**
@@ -95,8 +106,12 @@ module.exports = {
 		 * @param {Object} role
 		 * @param {string} permission
 		 */
-		revokePermission(role, permission) {
-
+		async revokePermission(role, permission) {
+			if (role.permissions.indexOf(permission) !== -1) {
+				return await this.adapter.updateById(role._id, { $pull: {
+					permissions: permission
+				}});
+			}
 		},
 
 		/**
@@ -105,60 +120,80 @@ module.exports = {
 		 * @param {Object} role
 		 * @param {Array<String>} permissions
 		 */
-		syncPermissions(role, permissions) {
-
+		async syncPermissions(role, permissions) {
+			return await this.adapter.updateById(role._id, { $set: {
+				permissions: permissions
+			}});
 		},
 
 		/**
 		 * Get all permissions by user roles.
 		 *
-		 * @param {Array<string>} roles
+		 * @param {Array<string>} roleNames
 		 * @returns {Array<string>} List of permissions
 		 */
-		getPermissions(roles) {
-
+		async getPermissions(roleNames) {
+			const roles = await this.adapter.find({ name: { $in: roleNames }});
+			return _.uniq(roles.map(role => role.permissions));
 		},
 
 		/**
 		 * Check if user has the given role. A user must have at least one role order for this to return true.
 		 *
+		 * @param {Context} ctx
 		 * @param {string} role
 		 * @returns {boolean}
 		 */
-		hasRole(role) {
-
+		async hasRole(ctx, role) {
+			return Array.isArray(ctx.meta.user.roles) && ctx.meta.user.roles.indexOf(role) !== -1;
 		},
 
 		/**
 		 * Checks if the user has the given permission.
 		 *
+		 * @param {Context} ctx
 		 * @param {string} permission
 		 * @returns {boolean}
 		 */
-		can(permission) {
+		async can(ctx, permission) {
+			const roleNames = ctx.meta.user.roles;
+			if (!Array.isArray(roleNames)) return false;
 
+			const permList = await this.getPermissions(roleNames);
+			return permList.find(p => match(permission, p));
 		},
 
 		/**
 		 * Checks if the user has the given permission(s). At least one permission must be
 		 * accountable for in order for this to return true.
 		 *
+		 * @param {Context} ctx
 		 * @param {Array<string>} permissions
 		 * @returns {boolean}
 		 */
-		canAtLeast(permissions) {
+		async canAtLeast(ctx, permissions) {
+			const roleNames = ctx.meta.user.roles;
+			if (!Array.isArray(roleNames)) return false;
 
+			const permList = await this.getPermissions(roleNames);
+			return permissions.some(perm => permList.find(p => match(perm, p)));
 		},
 
 		/**
 		 * Checks if the user has the given permission(s) or role(s). At least one
 		 * permission or role must be accountable for in order for this to return true.
 		 *
+		 * @param {Context} ctx
 		 * @param {Array<string>} permissionAndRoles
 		 * @returns {boolean}
 		 */
-		canAccess(permissionAndRoles) {
-
+		async hasAccess(ctx, permissionAndRoles) {
+			return permissionAndRoles.some(async p => {
+				if (p.indexOf(":") !== -1)
+					return await this.can(ctx, p);
+				else
+					return await this.hasRole(ctx, p);
+			});
 		},
 
 
@@ -172,7 +207,7 @@ module.exports = {
 					name: "administrator",
 					description: "System Administrator",
 					permissions: [
-						"*"
+						"**"
 					],
 					status: 1,
 					createdAt: Date.now(),

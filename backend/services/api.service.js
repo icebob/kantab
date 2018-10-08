@@ -130,14 +130,23 @@ module.exports = {
 		 */
 		async authenticate(ctx, route, req) {
 			let token;
+
+			// Get JWT token from cookie
 			if (req.headers.cookie) {
 				const cookies = cookie.parse(req.headers.cookie);
 				token = cookies["jwt-token"];
 			}
 
+			// Get JWT token from Authorization header
+			if (!token) {
+				const auth = req.headers["authorization"];
+				if (auth && auth.startsWith("Bearer "))
+					token = auth.slice(7);
+			}
+
 			if (token) {
 				// Verify JWT token
-				let user = await ctx.call("v1.accounts.resolveToken", { token });
+				const user = await ctx.call("v1.accounts.resolveToken", { token });
 				if (user) {
 					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, _id: user._id });
 					// Reduce user fields (it will be transferred to other nodes)

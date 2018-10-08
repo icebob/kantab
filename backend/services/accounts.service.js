@@ -286,11 +286,9 @@ module.exports = {
 			params: {
 				id: { type: "string" }
 			},
+			needEntity: true,
 			async handler(ctx) {
-				const user = await this.adapter.findOne({ _id: ctx.params.id });
-				if (!user)
-					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
-
+				const user = ctx.entity;
 				if (user.status == 0)
 					throw new MoleculerClientError("Account has already been disabled!", 400, "ERR_USER_ALREADY_DISABLED");
 
@@ -311,11 +309,9 @@ module.exports = {
 			params: {
 				id: { type: "string" }
 			},
+			needEntity: true,
 			async handler(ctx) {
-				const user = await this.adapter.findOne({ _id: ctx.params.id });
-				if (!user)
-					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
-
+				const user = ctx.entity;
 				if (user.status == 1)
 					throw new MoleculerClientError("Account has already been enabled!", 400, "ERR_USER_ALREADY_ENABLED");
 
@@ -807,7 +803,7 @@ module.exports = {
 					lastName: "",
 					email: "admin@kantab.io",
 					avatar: "http://romaniarising.com/wp-content/uploads/2014/02/avatar-admin-robot-150x150.jpg",
-					roles: ["admin"],
+					roles: ["administrator"],
 					socialLinks: {},
 					status: 1,
 					plan: "full",
