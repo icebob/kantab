@@ -9,7 +9,8 @@ module.exports = {
 		// If this feature enabled
 		if (action.needEntity) {
 			return async function FindEntityMiddleware(ctx) {
-				const entity = await this.adapter.findOne({ _id: ctx.params.id });
+				const svc = ctx.service;
+				const entity = await svc.getById(ctx.params.id, true);
 				if (!entity)
 					throw new MoleculerClientError("Entity not found!", 400, "ERR_ENTITY_NOT_FOUND");
 
@@ -18,7 +19,7 @@ module.exports = {
 				// Call the handler
 				return handler(ctx);
 
-			}.bind(this);
+			};
 		}
 
 		// Return original handler, because feature is disabled

@@ -5,10 +5,16 @@ const TestService = require("../../../services/accounts.service");
 const ConfigService = require("../../../services/config.service");
 const E = require("moleculer").Errors;
 
+const FindEntityMiddleware = require("../../../middlewares/FindEntity");
+const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
+
 process.env.JWT_SECRET = "kantab-secret-test";
 
 describe("Test Accounts service", () => {
-	let broker = new ServiceBroker({ logger: false });
+	let broker = new ServiceBroker({ logger: false, middlewares: [
+		FindEntityMiddleware,
+		//CheckPermissionsMiddleware
+	] });
 
 	// Config service
 	broker.createService(ConfigService);
@@ -1615,7 +1621,7 @@ describe("Test Accounts service", () => {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
 				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_USER_NOT_FOUND");
+				expect(err.type).toBe("ERR_ENTITY_NOT_FOUND");
 			}
 		});
 
@@ -1647,7 +1653,7 @@ describe("Test Accounts service", () => {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
 				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_USER_NOT_FOUND");
+				expect(err.type).toBe("ERR_ENTITY_NOT_FOUND");
 			}
 		});
 
