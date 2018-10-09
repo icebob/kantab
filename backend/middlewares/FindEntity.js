@@ -19,7 +19,7 @@ module.exports = {
 				// Call the handler
 				return handler(ctx);
 
-			};
+			}.bind(this);
 		}
 
 		// Return original handler, because feature is disabled
