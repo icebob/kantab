@@ -1,9 +1,11 @@
 "use strict";
 
-const _ 			= require("lodash");
-const DbService 	= require("../mixins/db.mixin");
-const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
-const { match } 	= require("moleculer").Utils;
+const _ 				= require("lodash");
+const DbService 		= require("../mixins/db.mixin");
+const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
+const Memoize 			= require("../mixins/memoize.mixin");
+const { match } 		= require("moleculer").Utils;
+const ConfigLoader 		= require("../mixins/config.mixin");
 
 /**
  * Role-based ACL (Access-Control-List) service
@@ -23,7 +25,10 @@ module.exports = {
 		DbService("roles"),
 		CacheCleaner([
 			"cache.clean.acl"
-		])
+		]),
+		ConfigLoader([
+		]),
+		Memoize()
 	],
 
 	/**
@@ -60,7 +65,7 @@ module.exports = {
 	 * Service dependencies
 	 */
 	dependencies: [
-		{ name: "accounts", version: 1 },
+		//{ name: "accounts", version: 1 },
 	],
 
 	/**
@@ -98,6 +103,7 @@ module.exports = {
 					permissions: permission
 				}});
 			}
+			return role;
 		},
 
 		/**
@@ -112,6 +118,7 @@ module.exports = {
 					permissions: permission
 				}});
 			}
+			return role;
 		},
 
 		/**
@@ -133,8 +140,20 @@ module.exports = {
 		 * @returns {Array<string>} List of permissions
 		 */
 		async getPermissions(roleNames) {
-			const roles = await this.adapter.find({ name: { $in: roleNames }});
-			return _.uniq(roles.map(role => role.permissions));
+			return await this.memoize("permissions", roleNames, async () => {
+				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
+
+				const roles = await this.adapter.find({ name: { $in: roleNames }});
+				const permissions = await roles.map(async role => {
+					const res = Array.from(role.permissions);
+					if (Array.isArray(role.inherits) && role.inherits.length > 0)
+						res.concat(await this.getPermissions(role.inherits));
+
+					return res;
+				});
+
+				return _.uniq(permissions);
+			});
 		},
 
 		/**
@@ -218,7 +237,11 @@ module.exports = {
 					name: "user",
 					description: "Registered User",
 					permissions: [
-						"board:create"
+						"board:create",
+						"board:read",
+						"board:update",
+						"board:remove",
+						"cards:create"
 					],
 					status: 1,
 					createdAt: Date.now(),
