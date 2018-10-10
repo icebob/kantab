@@ -10,6 +10,12 @@ const ConfigLoader 		= require("../mixins/config.mixin");
 /**
  * Role-based ACL (Access-Control-List) service
  *
+ * Special roles:
+ * 		- $everyone (unauthenticated users)
+ * 		- $authenticated (authenticated user)
+ * 		- $owner (owner of entity)
+ * 		- $related (???)
+ *
  * https://blog.nodeswat.com/implement-access-control-in-node-js-8567e7b484d1
  * https://github.com/DeadAlready/easy-rbac
  * https://packagist.org/packages/visualappeal/laravel-rbac
