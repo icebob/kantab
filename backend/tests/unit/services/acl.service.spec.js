@@ -4,37 +4,39 @@ const { ServiceBroker, Context } = require("moleculer");
 const TestService = require("../../../services/acl.service");
 const ConfigService = require("../../../services/config.service");
 const E = require("moleculer").Errors;
+const C = require("../../../constants");
 
 const FindEntityMiddleware = require("../../../middlewares/FindEntity");
 //const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
 
 describe("Test ACL service", () => {
-	let broker = new ServiceBroker({ logger: false, middlewares: [
-		FindEntityMiddleware,
-		//CheckPermissionsMiddleware
-	] });
-
-	// Config service
-	broker.createService(ConfigService);
-
-	// ACL service
-	const service = broker.createService(TestService, {});
-
-	beforeAll(() => broker.start());
-	afterAll(() => broker.stop());
-
-	it.skip("check permissions", async () => {
-		expect(broker.findNextActionEndpoint("v1.acl.create").action.permissions).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.acl.list").action.permissions).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.acl.find").action.permissions).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.acl.get").action.permissions).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.acl.update").action.permissions).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.acl.remove").action.permissions).toBe("protected");
-	});
 
 	describe("Test common methods", () => {
 
-		describe("Test assignPermission method", () => {
+		let broker = new ServiceBroker({ logger: false, middlewares: [
+			FindEntityMiddleware,
+		//CheckPermissionsMiddleware
+		] });
+
+		// Config service
+		broker.createService(ConfigService);
+
+		// ACL service
+		const service = broker.createService(TestService, {});
+
+		beforeAll(() => broker.start());
+		afterAll(() => broker.stop());
+
+		it.skip("check permissions", async () => {
+			expect(broker.findNextActionEndpoint("v1.acl.create").action.permissions).toBe("protected");
+			expect(broker.findNextActionEndpoint("v1.acl.list").action.permissions).toBe("protected");
+			expect(broker.findNextActionEndpoint("v1.acl.find").action.permissions).toBe("protected");
+			expect(broker.findNextActionEndpoint("v1.acl.get").action.permissions).toBe("protected");
+			expect(broker.findNextActionEndpoint("v1.acl.update").action.permissions).toBe("protected");
+			expect(broker.findNextActionEndpoint("v1.acl.remove").action.permissions).toBe("protected");
+		});
+
+		describe("Test 'assignPermission' method", () => {
 			const role = {
 				_id: 123,
 				name: "moderator",
@@ -65,7 +67,7 @@ describe("Test ACL service", () => {
 			});
 		});
 
-		describe("Test revokePermission method", () => {
+		describe("Test 'revokePermission' method", () => {
 			const role = {
 				_id: 123,
 				name: "moderator",
@@ -96,1503 +98,312 @@ describe("Test ACL service", () => {
 			});
 		});
 
-	});
-	/*
-	describe("Test 'register' & 'verify' action", () => {
-
-		beforeAll(() => {
-			service.sendMail = jest.fn(() => Promise.resolve());
-		});
-
-		const user1 = {
-			username: "user1",
-			password: "password1",
-			email: "user1@kantab.io",
-			firstName: "User",
-			lastName: "One",
-			avatar: "https://s3.amazonaws.com/uifaces/faces/twitter/ekvium/128.jpg"
-		};
-
-		const user2 = {
-			username: "user2",
-			password: "password2",
-			email: "user2@kantab.io",
-			firstName: "User",
-			lastName: "Two"
-		};
-
-		const user3 = {
-			username: "user3",
-			email: "user3@kantab.io",
-			firstName: "User",
-			lastName: "Three"
-		};
-
-		it("should throw error if signup is disabled", async () => {
-			service.config["accounts.signup.enabled"] = false;
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.register", user1);
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_SIGNUP_DISABLED");
-			}
-
-			service.config["accounts.signup.enabled"] = true;
-		});
-
-		it("should throw error if email is exist", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.register", Object.assign({}, user1, { email: "test@kantab.io" }));
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_EMAIL_EXISTS");
-			}
-		});
-
-		it("should throw error if username is not exist but username is enabled", async () => {
-			service.config["accounts.username.enabled"] = true;
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.register", Object.assign({}, user1, { username: null }));
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_USERNAME_EMPTY");
-			}
-		});
-
-		it("should throw error if username is exist", async () => {
-			service.config["accounts.username.enabled"] = true;
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.register", Object.assign({}, user1, { username: "test" }));
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_USERNAME_EXISTS");
-			}
-		});
-
-		it("should create new user with avatar, password without verification", async () => {
-			service.config["accounts.verification.enabled"] = false;
-
-			const res = await broker.call("v1.accounts.register", user1);
-
-			expect(res).toEqual({
-				_id: expect.any(String),
-				email: "user1@kantab.io",
-				username: "user1",
-				firstName: "User",
-				lastName: "One",
-				roles: ["user"],
-				plan: "free",
-				socialLinks: {},
-				createdAt: expect.any(Number),
-				verified: true,
-				status: 1,
-				avatar: "https://s3.amazonaws.com/uifaces/faces/twitter/ekvium/128.jpg",
-				token: expect.any(String)
-			});
-
-			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({ password: expect.any(String) }, res), "welcome");
-		});
-
-		it("should create new user without avatar with verification", async () => {
-			service.sendMail.mockClear();
-			service.config["accounts.verification.enabled"] = true;
-
-			const res = await broker.call("v1.accounts.register", user2);
-
-			expect(res).toEqual({
-				_id: expect.any(String),
-				email: "user2@kantab.io",
-				username: "user2",
-				firstName: "User",
-				lastName: "Two",
-				roles: ["user"],
-				plan: "free",
-				socialLinks: {},
-				createdAt: expect.any(Number),
-				verified: false,
-				status: 1,
-				avatar: "https://gravatar.com/avatar/6a99f787601d736a0d1b79b13a252f9a?s=64&d=robohash"
-			});
-
-			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
-				password: expect.any(String),
-				verificationToken: expect.any(String),
-			}, res), "activate", { token: expect.any(String) });
-		});
-
-		it("should throw error if no password & passwordless is not enabled", async () => {
-			service.sendMail.mockClear();
-			service.config["accounts.passwordless.enabled"] = false;
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.register", user3);
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_PASSWORD_EMPTY");
-			}
-		});
-
-		let user3VerificationToken;
-
-		it("should create new passwordless user", async () => {
-			service.sendMail.mockClear();
-			service.config["accounts.passwordless.enabled"] = true;
-			service.config["accounts.defaultRoles"] = ["admin", "visitor"];
-			service.config["accounts.defaultPlan"] = "premium";
-
-			const res = await broker.call("v1.accounts.register", user3);
-
-			expect(res).toEqual({
-				_id: expect.any(String),
-				email: "user3@kantab.io",
-				username: "user3",
-				firstName: "User",
-				lastName: "Three",
-				passwordless: true,
-				roles: ["admin", "visitor"],
-				plan: "premium",
-				socialLinks: {},
-				createdAt: expect.any(Number),
-				verified: false,
-				status: 1,
-				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
-			});
-
-			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
-				password: expect.any(String),
-				verificationToken: expect.any(String),
-			}, res), "activate", { token: expect.any(String) });
-
-			user3VerificationToken = service.sendMail.mock.calls[0][3].token;
-		});
-
-		it("should verify user3 with token", async () => {
-			service.sendMail.mockClear();
-
-			const res = await broker.call("v1.accounts.verify", { token: user3VerificationToken });
-			expect(res).toEqual({
-				token: expect.any(String)
-			});
-
-			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, {
-				_id: expect.any(String),
-				email: "user3@kantab.io",
-				username: "user3",
-				firstName: "User",
-				lastName: "Three",
-				password: expect.any(String),
-				passwordless: true,
-				roles: ["admin", "visitor"],
-				plan: "premium",
-				socialLinks: {},
-				createdAt: expect.any(Number),
-				verified: true, // !
-				verificationToken: null,
-				status: 1,
-				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
-			}), "welcome");
-
-			service.config["accounts.defaultRoles"] = ["user"];
-			service.config["accounts.defaultPlan"] = "free";
-		});
-
-		it("should throw error if verification token is not exist", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.verify", { token: "12345678" });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("INVALID_TOKEN");
-			}
-		});
-
-	});
-
-	describe("Test 'login' action", () => {
-
-		beforeAll(() => {
-			service.sendMail = jest.fn(() => Promise.resolve());
-		});
-
-		describe("with password", () => {
-
-			const user = {
-				username: "user4",
-				password: "password4",
-				email: "user4@kantab.io",
-				firstName: "User",
-				lastName: "Four"
+		describe("Test 'syncPermissions' method", () => {
+			const role = {
+				_id: 123,
+				name: "moderator",
+				permissions: [
+					"boards:create"
+				]
 			};
 
-			let savedUser, verificationToken;
+			it("should revoke permission to role", async () => {
+				service.adapter.updateById = jest.fn(async () => role);
+				const res = await service.syncPermissions(role, ["boards:remove", "users.list"]);
 
-			beforeAll(async () => {
-				service.sendMail.mockClear();
-				service.config["accounts.verification.enabled"] = true;
+				expect(res).toBe(role);
 
-				const regged = await broker.call("v1.accounts.register", user);
-				savedUser = regged;
-				verificationToken = service.sendMail.mock.calls[0][3].token;
+				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
+				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $set: {
+					permissions: ["boards:remove", "users.list"]
+				}});
 			});
-
-			it("should not logged in with non-exist account", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "no-user@kantab.io", password: "pass" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_USER_NOT_FOUND");
-				}
-			});
-
-			it("should not logged in unverified account", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
-				}
-			});
-
-			it("verify account", async () => {
-				await broker.call("v1.accounts.verify", { token: verificationToken });
-			});
-
-			it("should not logged in with wrong password", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "wrong-password" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_WRONG_PASSWORD");
-				}
-			});
-
-			it("should logged with correct email & password", async () => {
-				const res = await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
-				expect(res).toEqual({
-					token: expect.any(String)
-				});
-			});
-
-			it("should not logged in with username if this feature is disabled", async () => {
-				expect.assertions(4);
-				service.config["accounts.username.enabled"] = false;
-
-				try {
-					await broker.call("v1.accounts.login", { email: "user4", password: "password4" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_USER_NOT_FOUND");
-				}
-			});
-
-			it("should logged with correct username & password", async () => {
-				service.config["accounts.username.enabled"] = true;
-				const res = await broker.call("v1.accounts.login", { email: "user4", password: "password4" });
-				expect(res).toEqual({
-					token: expect.any(String)
-				});
-			});
-
-			it("should not logged in disabled account", async () => {
-				expect.assertions(4);
-
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
-				}
-
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
-			});
-
-			it("should not send magic-link email if no password and feature is disabled", async () => {
-				service.config["accounts.passwordless.enabled"] = false;
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_PASSWORDLESS_DISABLED");
-				}
-			});
-
-			it("should send magic-link email if no password and feature is enabled", async () => {
-				service.config["accounts.passwordless.enabled"] = true;
-				const oldSendMagicLink = service.sendMagicLink;
-				service.sendMagicLink = jest.fn();
-				const res = await broker.call("v1.accounts.login", { email: "user4@kantab.io" });
-				expect(res).toEqual({
-					email: "user4@kantab.io",
-					passwordless: true
-				});
-
-				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
-				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
-					password: expect.any(String),
-					verified: true,
-					verificationToken: null,
-				}));
-
-				service.sendMagicLink = oldSendMagicLink;
-			});
-
 		});
 
-		describe("with passwordless", () => {
+		describe("Test 'getPermissions' method", () => {
+			const roles = {
+				admin: {
+					inherits: [
+						"boardRead",
+						"boardWrite",
+						"userFull"
+					]
+				},
 
-			const user = {
-				username: "user5",
-				email: "user5@kantab.io",
-				firstName: "User",
-				lastName: "Five"
+				boardRead: {
+					permissions: [
+						"boards.list",
+						"boards.get"
+					],
+					inherits: []
+				},
+
+				boardWrite: {
+					permissions: [
+						"boards.create",
+						"boards.list",
+						"boards.update",
+						"boards.remove",
+					],
+					inherits: [
+						"empty"
+					]
+				},
+
+				empty: {
+
+				},
+
+				userRead: {
+					permissions: [
+						"users.list",
+						"users.get"
+					]
+				},
+
+				userWrite: {
+					permissions: [
+						"users.list",
+						"users.update",
+						"users.remove"
+					]
+				},
+
+				userFull: {
+					inherits: [
+						"userRead",
+						"userWrite"
+					]
+				}
 			};
 
-			let savedUser, verificationToken;
-			let oldSendMagicLink;
+			service.adapter.find = jest.fn(async query => Promise.resolve(query.name["$in"].map(name => roles[name])));
 
-			beforeAll(async () => {
-				service.sendMail.mockClear();
+			it("should return permissions of role", async () => {
+				const res = await service.getPermissions("userRead");
 
-				 oldSendMagicLink = service.sendMagicLink;
-				service.sendMagicLink = jest.fn();
+				expect(res).toEqual([
+					"users.list",
+					"users.get"
+				]);
 
-				service.config["accounts.passwordless.enabled"] = true;
-
-				const regged = await broker.call("v1.accounts.register", user);
-				savedUser = regged;
-				verificationToken = service.sendMail.mock.calls[0][3].token;
+				expect(service.adapter.find).toHaveBeenCalledTimes(1);
+				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["userRead"] } });
 			});
 
-			afterAll(async () => {
-				service.sendMagicLink = oldSendMagicLink;
+			it("should return multiple merged permissions of roles", async () => {
+				service.adapter.find.mockClear();
+
+				const res = await service.getPermissions(["userRead", "userWrite"]);
+
+				expect(res).toEqual([
+					"users.list",
+					"users.get",
+					"users.update",
+					"users.remove",
+				]);
+
+				expect(service.adapter.find).toHaveBeenCalledTimes(1);
+				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["userRead", "userWrite"] } });
 			});
 
-			it("should not logged in unverified account", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
-				}
-			});
+			it("should return nested merged permissions of roles", async () => {
+				service.adapter.find.mockClear();
 
-			it("verify account", async () => {
-				await broker.call("v1.accounts.verify", { token: verificationToken });
-			});
+				const res = await service.getPermissions("admin");
 
-			it("should not logged in with password", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user5@kantab.io", password: "some-password" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_PASSWORDLESS_WITH_PASSWORD");
-				}
-			});
+				expect(res).toEqual([
+					"boards.list",
+					"boards.get",
+					"boards.create",
+					"boards.update",
+					"boards.remove",
+					"users.list",
+					"users.get",
+					"users.update",
+					"users.remove",
+				]);
 
-			it("should not logged in if mail sending is disabled", async () => {
-				service.config["mail.enabled"] = false;
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_PASSWORDLESS_UNAVAILABLE");
-				}
-				service.config["mail.enabled"] = true;
-			});
-
-			it("should not logged in if passwordless feature is disabled", async () => {
-				service.config["accounts.passwordless.enabled"] = false;
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_PASSWORDLESS_DISABLED");
-				}
-				service.config["accounts.passwordless.enabled"] = true;
-			});
-
-			it("should send magic-link email if email is exist", async () => {
-				service.sendMagicLink.mockClear();
-				const res = await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
-				expect(res).toEqual({
-					email: "user5@kantab.io",
-					passwordless: true
-				});
-
-				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
-				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
-					password: expect.any(String),
-					verified: true,
-					verificationToken: null,
-				}));
-			});
-
-			it("should not logged in with username if this feature is disabled", async () => {
-				expect.assertions(4);
-				service.config["accounts.username.enabled"] = false;
-
-				try {
-					await broker.call("v1.accounts.login", { email: "user5", password: "password5" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_USER_NOT_FOUND");
-				}
-			});
-
-			it("should send magic-link email if username is exist", async () => {
-				service.config["accounts.username.enabled"] = true;
-				service.sendMagicLink.mockClear();
-				const res = await broker.call("v1.accounts.login", { email: "user5" });
-				expect(res).toEqual({
-					email: "user5@kantab.io",
-					passwordless: true
-				});
-
-				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
-				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
-					password: expect.any(String),
-					verified: true,
-					verificationToken: null,
-				}));
-			});
-
-			it("should not logged in disabled account", async () => {
-				expect.assertions(4);
-
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-				try {
-					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
-				}
+				expect(service.adapter.find).toHaveBeenCalledTimes(4);
+				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["admin"] } });
+				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["boardRead", "boardWrite", "userFull"] } });
+				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["empty"] } });
+				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["userRead", "userWrite"] } });
 			});
 
 		});
 
-		describe("Test resolveToken", () => {
-			let savedUser, token;
+		describe("Test 'hasRole' method", () => {
 
-			beforeAll(async () => {
-				savedUser = await service.getUserByUsername(new Context(broker), "test");
+			it("should find the role", async () => {
+				const res = await service.hasRole("admin", "admin");
+				expect(res).toBe(true);
 			});
 
-			it("should generate a token after login", async () => {
-				const res = await broker.call("v1.accounts.login", { email: "test", password: "test" });
-				expect(res.token).toBeDefined();
-				token = res.token;
+			it("should find the role", async () => {
+				const res = await service.hasRole(["user", "admin"], "admin");
+				expect(res).toBe(true);
 			});
 
-			it("should throw error if token is invalid", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resolveToken", { token: "12345" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(401);
-					expect(err.type).toBe("INVALID_TOKEN");
-				}
+			it("should not find the role", async () => {
+				const res = await service.hasRole("admin", "user");
+				expect(res).toBe(false);
 			});
 
-			it("should throw error if token is invalid", async () => {
-				const wrongToken = await service.generateJWT({});
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resolveToken", { token: wrongToken });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(401);
-					expect(err.type).toBe("INVALID_TOKEN");
-				}
+			it("should not find the role", async () => {
+				const res = await service.hasRole(["admin", "moderator"], "user");
+				expect(res).toBe(false);
 			});
 
-			it("should throw error if user is not found", async () => {
-				const wrongToken = await service.generateJWT({ id: 1 });
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resolveToken", { token: wrongToken });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(401);
-					expect(err.type).toBe("USER_NOT_FOUND");
-				}
-			});
-
-			it("should throw error if account is not verified", async () => {
-				await unverifiedAccount(savedUser._id);
-
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resolveToken", { token });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(401);
-					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
-				}
-
-				await verifiedAccount(savedUser._id);
-			});
-
-			it("should throw error if account is disabled", async () => {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resolveToken", { token });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(401);
-					expect(err.type).toBe("USER_DISABLED");
-				}
-
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
-			});
-
-			it("should return resolved user if token is valid", async () => {
-				const res = await broker.call("v1.accounts.resolveToken", { token });
-
-				expect(res).toEqual({
-					_id: expect.any(String),
-					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
-					email: "test@kantab.io",
-					username: "test",
-					firstName: "Test",
-					lastName: "User",
-					passwordless: false,
-					plan: "free",
-					roles: ["user"],
-					createdAt: expect.any(Number),
-					socialLinks: {},
-					status: 1,
-					verified: true
-				});
-			});
-
-		});
-
-		describe("Test resolveToken", () => {
-			let savedUser;
-
-			beforeAll(async () => {
-				savedUser = await service.getUserByUsername(new Context(broker), "test");
-			});
-
-			it("should throw error if no user in meta", async () => {
-				const res = await broker.call("v1.accounts.me");
-				expect(res).toBeNull();
-			});
-
-			it("should throw error if user is not found", async () => {
-				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: 1 }}});
-				expect(res).toBeNull();
-			});
-
-			it("should throw error if account is not activated", async () => {
-				await unverifiedAccount(savedUser._id);
-
-				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: savedUser._id }}});
-				expect(res).toBeNull();
-
-				await verifiedAccount(savedUser._id);
-			});
-
-			it("should throw error if account is disabled", async () => {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: savedUser._id }}});
-				expect(res).toBeNull();
-
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
-			});
-
-			it("should throw error if user is not found", async () => {
-				const res = await broker.call("v1.accounts.me", null, { meta: { user: { _id: savedUser._id }}});
-				expect(res).toEqual({
-					_id: expect.any(String),
-					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
-					email: "test@kantab.io",
-					username: "test",
-					firstName: "Test",
-					lastName: "User",
-					passwordless: false,
-					plan: "free",
-					roles: ["user"],
-					createdAt: expect.any(Number),
-					socialLinks: {},
-					status: 1,
-					verified: true
-				});
+			it("should not find the role", async () => {
+				const res = await service.hasRole([], "admin");
+				expect(res).toBe(false);
 			});
 		});
 
-	});
-
-	describe("Test 'socialLogin' action", () => {
-
-		beforeAll(() => {
-			service.sendMail = jest.fn(() => Promise.resolve());
-		});
-
-		describe("without logged in user", () => {
-
-			const user = {
-				username: "user6",
-				password: "password6",
-				email: "user6@kantab.io",
-				firstName: "User",
-				lastName: "Six"
-			};
-
-			let savedUser;
-
-			beforeAll(async () => {
-				service.sendMail.mockClear();
-				service.config["accounts.verification.enabled"] = true;
-
-				savedUser = await broker.call("v1.accounts.register", user);
-			});
-
-			it("should throw error if profile doesn't contain email", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.socialLogin", {
-						provider: "google",
-						profile: {
-							socialID: 1000
-						},
-						accessToken: "token-1"
-					});
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_NO_SOCIAL_EMAIL");
-				}
-			});
-
-			it("should throw error if account is disabled", async () => {
-				expect.assertions(4);
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-				try {
-					await broker.call("v1.accounts.socialLogin", {
-						provider: "google",
-						profile: {
-							socialID: 1000,
-							email: "user6@kantab.io"
-						},
-						accessToken: "token-1"
-					});
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ACCOUNT_DISABLED");
-				}
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
-			});
-
-			it("should link the profile to an existing account", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 1000,
-						email: "user6@kantab.io"
-					},
-					accessToken: "token-1"
-				});
-
-				expect(res).toEqual({
-					...savedUser,
-					socialLinks: {
-						google: 1000
-					},
-					verified: true,
-					token: expect.any(String)
-				});
-			});
-
-			it("should not link again", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 1000,
-						email: "user6@kantab.io"
-					},
-					accessToken: "token-1"
-				});
-
-				expect(res).toEqual({
-					...savedUser,
-					socialLinks: {
-						google: 1000
-					},
-					verified: true,
-					token: expect.any(String)
-				});
-
-				// TODO: check that link action is not called.
-			});
-
-			it("should link new provider to an existing account", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "facebook",
-					profile: {
-						socialID: 2000,
-						email: "user6@kantab.io"
-					},
-					accessToken: "token-1"
-				});
-
-				expect(res).toEqual({
-					...savedUser,
-					socialLinks: {
-						google: 1000,
-						facebook: 2000
-					},
-					verified: true,
-					token: expect.any(String)
-				});
-			});
-
-			it("should throw error if socialID not found & signup is disabled", async () => {
-				service.config["accounts.signup.enabled"] = false;
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.socialLogin", {
-						provider: "google",
-						profile: {
-							socialID: 3000,
-							email: "user7@kantab.io",
-							firstName: "User",
-							lastName: "Seven",
-							avatar: "social-avatar.jpg"
-						},
-						accessToken: "token-100"
-					});
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_SIGNUP_DISABLED");
-				}
-			});
-
-			it("should create new user by social profile & link", async () => {
-				service.config["accounts.signup.enabled"] = true;
-
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 3000,
-						email: "user7@kantab.io",
-						firstName: "User",
-						lastName: "Seven",
-						avatar: "social-avatar.jpg"
-					},
-					accessToken: "token-100"
-				});
-
-				expect(res).toEqual({
-					_id: expect.any(String),
-					email: "user7@kantab.io",
-					username: "user7",
-					firstName: "User",
-					lastName: "Seven",
-					roles: ["user"],
-					plan: "free",
-					socialLinks: {
-						google: 3000
-					},
-					createdAt: expect.any(Number),
-					verified: true,
-					status: 1,
-					avatar: "social-avatar.jpg",
-					token: expect.any(String)
-				});
-			});
-
-		});
-
-		describe("with logged in user", () => {
-
-			const user = {
-				username: "user8",
-				password: "password8",
-				email: "user8@kantab.io",
-				firstName: "User",
-				lastName: "Eight"
-			};
-
-			let savedUser;
-			let meta;
-
-			beforeAll(async () => {
-				service.sendMail.mockClear();
-				service.config["accounts.verification.enabled"] = false;
-
-				savedUser = await broker.call("v1.accounts.register", user);
-				meta = { user: { _id: savedUser._id } };
-			});
-
-			it("should throw error if socialID is assigned to another account", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.socialLogin", {
-						provider: "google",
-						profile: {
-							socialID: 3000
-						},
-						accessToken: "token-8"
-					}, { meta });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_SOCIAL_ACCOUNT_MISMATCH");
-				}
-			});
-
-			it("should link & login with same user", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 4000
-					},
-					accessToken: "token-8"
-				}, { meta });
-
-				expect(res).toEqual({
-					...savedUser,
-					socialLinks: {
-						google: 4000
-					},
-					verified: true,
-					token: expect.any(String)
-				});
-			});
-
-			it("should not link but login with same user", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 4000
-					},
-					accessToken: "token-8"
-				}, { meta });
-
-				expect(res).toEqual({
-					...savedUser,
-					socialLinks: {
-						google: 4000
-					},
-					verified: true,
-					token: expect.any(String)
-				});
-			});
-
-			it("should add new link", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "facebook",
-					profile: {
-						socialID: 5000
-					},
-					accessToken: "token-8"
-				}, { meta });
-
-				expect(res).toEqual({
-					...savedUser,
-					socialLinks: {
-						google: 4000,
-						facebook: 5000
-					},
-					verified: true,
-					token: expect.any(String)
-				});
-			});
-
-		});
-
-	});
-
-	describe("Test `link` & `unlink` actions", () => {
-
-		const user = {
-			username: "user9",
-			password: "password9",
-			email: "user9@kantab.io",
-			firstName: "User",
-			lastName: "Nine"
-		};
-
-		let savedUser;
-
-		beforeAll(async () => {
-			service.sendMail.mockClear();
-			service.config["accounts.verification.enabled"] = false;
-		});
-
-		it("should create user without links", async () => {
-			savedUser = await broker.call("v1.accounts.register", user);
-
-			expect(savedUser).toEqual({
-				_id: expect.any(String),
-				username: "user9",
-				email: "user9@kantab.io",
-				firstName: "User",
-				lastName: "Nine",
-				avatar: "https://gravatar.com/avatar/328e47ea15a902d25ef32f2a59cb9199?s=64&d=robohash",
-				plan: "free",
-				roles: ["user"],
-				socialLinks: {},
-				verified: true,
-				status: 1,
-				createdAt: expect.any(Number),
-				token: expect.any(String)
-			});
-
-			delete savedUser.token;
-		});
-
-		it("should link user to google", async () => {
-			const res = await broker.call("v1.accounts.link", {
-				id: savedUser._id,
-				provider: "google",
-				profile: {
-					socialID: 6000
-				}
-			});
-
-			expect(res).toEqual({
-				...savedUser,
-				socialLinks: {
-					google: 6000
-				}
-			});
-		});
-
-		it("should link user to facebook", async () => {
-			const res = await broker.call("v1.accounts.link", {
-				id: savedUser._id,
-				provider: "facebook",
-				profile: {
-					socialID: 7000
-				}
-			});
-
-			expect(res).toEqual({
-				...savedUser,
-				socialLinks: {
-					google: 6000,
-					facebook: 7000
-				}
-			});
-		});
-
-		it("should not unlink if no user", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.unlink", {
-					provider: "google"
-				});
-			} catch(err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("MISSING_USER_ID");
-			}
-		});
-
-		it("should unlink user from google via meta", async () => {
-			const res = await broker.call("v1.accounts.unlink", {
-				provider: "google"
-			}, { meta: { user: savedUser }});
-
-			expect(res).toEqual({
-				...savedUser,
-				socialLinks: {
-					google: null,
-					facebook: 7000
-				}
-			});
-		});
-
-		it("should unlink user from facebook", async () => {
-			const res = await broker.call("v1.accounts.unlink", {
-				id: savedUser._id,
-				provider: "facebook"
-			});
-
-			expect(res).toEqual({
-				...savedUser,
-				socialLinks: {
-					google: null,
-					facebook: null
-				}
-			});
-		});
-
-	});
-
-	describe("Test `passwordless` action", () => {
-
-		const user = {
-			username: "user10",
-			email: "user10@kantab.io",
-			firstName: "User",
-			lastName: "Ten"
-		};
-
-		let savedUser;
-		let passwordlessToken;
-
-		beforeAll(async () => {
-			service.sendMail = jest.fn();
-			service.config["accounts.verification.enabled"] = false;
-			service.config["accounts.passwordless.enabled"] = true;
-
-			savedUser = await broker.call("v1.accounts.register", user);
-		});
-
-		it("should generate passwordless token", async () => {
-			service.sendMail.mockClear();
-			await service.sendMagicLink(new Context(broker), savedUser);
-
-			passwordlessToken = service.sendMail.mock.calls[0][3].token;
-
-			expect(passwordlessToken).toBeDefined();
-		});
-
-		it("should throw error if passwordless is disabled", async () => {
-			service.config["accounts.passwordless.enabled"] = false;
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.passwordless", { token: "12345" });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_PASSWORDLESS_DISABLED");
-			}
-
-			service.config["accounts.passwordless.enabled"] = true;
-		});
-
-		it("should throw error if token is not exist", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.passwordless", { token: "12345" });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("INVALID_TOKEN");
-			}
-		});
-
-		it("should throw error if account is disabled", async () => {
-			await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
-			}
-
-			await broker.call("v1.accounts.enable", { id: savedUser._id });
-		});
-
-		it("should return token if token is valid and not expired", async () => {
-			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
-
-			expect(res).toEqual({
-				token: expect.any(String)
-			});
-		});
-
-		it("should return token multiple times while token is not expired", async () => {
-			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
-
-			expect(res).toEqual({
-				token: expect.any(String)
-			});
-		});
-
-		it("should verify account if it is not verified yet", async () => {
-			await unverifiedAccount(savedUser._id);
-
-			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
-
-			expect(res).toEqual({
-				token: expect.any(String)
-			});
-
-			const user = await service.getUserByUsername(new Context(broker), "user10");
-			expect(user.verified).toBe(true);
-		});
-
-		it("should throw error if token is expired", async () => {
-			await broker.call("v1.accounts.update", {
-				id: savedUser._id,
-				passwordlessTokenExpires: Date.now() - (3600 * 1000) - 5000
-			});
-
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("TOKEN_EXPIRED");
-			}
-		});
-
-	});
-
-	describe("Test forgot password flow", () => {
-
-		const user = {
-			username: "user11",
-			password: "password11",
-			email: "user11@kantab.io",
-			firstName: "User",
-			lastName: "Eleven"
-		};
-
-		let savedUser;
-		let resetToken;
-
-		beforeAll(async () => {
-			service.sendMail = jest.fn();
-			service.config["accounts.verification.enabled"] = false;
-
-			savedUser = await broker.call("v1.accounts.register", user);
-		});
-
-		describe("Test `forgotPassword` action", () => {
-
-			it("should login with username & original password", async () => {
-				const res = await broker.call("v1.accounts.login", { email: user.email, password: user.password });
-
-				expect(res).toEqual({
-					token: expect.any(String)
-				});
-			});
-
-			it("should throw error if email is not found", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.forgotPassword", { email: "user12@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_EMAIL_NOT_FOUND");
-				}
-			});
-
-			it("should throw error if account is not verified", async () => {
-				await unverifiedAccount(savedUser._id);
-
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
-				}
-
-				await verifiedAccount(savedUser._id);
-			});
-
-			it("should throw error if account is disabled", async () => {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
-				}
-
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
-			});
-
-			it("should generate token and call sendMail", async () => {
-				service.sendMail.mockClear();
-
-				const res = await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
+		describe("Test 'can' method", () => {
+
+			it("should find the permission", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:create"]);
+				const res = await service.can("admin", "boards:create");
 
 				expect(res).toBe(true);
-
-				expect(service.sendMail).toHaveBeenCalledTimes(1);
-				expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), expect.any(Object), "reset-password", {
-					token: expect.any(String)
-				});
-				resetToken = service.sendMail.mock.calls[0][3].token;
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["admin"]);
 			});
 
+			it("should find the permission", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:create"]);
+				const res = await service.can(["user", "admin"], "boards:create");
+
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["user", "admin"]);
+			});
+
+			it("should not find the role", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:create"]);
+				const res = await service.can(["admin"], "boards:remove");
+
+				expect(res).toBe(false);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["admin"]);
+			});
+
+			it("should find with wildcard", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:*"]);
+				const res = await service.can(["user", "admin"], "boards:create");
+
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["user", "admin"]);
+			});
+
+			it("should find with wildcard", async () => {
+				service.getPermissions = jest.fn(async () => ["**"]);
+				const res = await service.can("user", "boards:remove");
+
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["user"]);
+			});
 		});
 
-		describe("Test `resetPassword` action", () => {
+		describe("Test 'canAtLeast' method", () => {
 
-			it("should throw error if token is not exist", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resetPassword", { token: "12345", password: "newpass1234" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("INVALID_TOKEN");
-				}
+			it("should find the permission", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:create"]);
+				const res = await service.canAtLeast("admin", ["boards:create"]);
+
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["admin"]);
 			});
 
-			it("should throw error if account is disabled", async () => {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+			it("should find the permission", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:create"]);
+				const res = await service.canAtLeast(["user", "admin"], ["boards:insert", "boards:create"]);
 
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
-				}
-
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["user", "admin"]);
 			});
 
-			it("should throw error if token is expired", async () => {
-				await broker.call("v1.accounts.update", {
-					id: savedUser._id,
-					resetTokenExpires: Date.now() - (3600 * 1000) - 5000
-				});
+			it("should not find the role", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:create"]);
+				const res = await service.canAtLeast(["admin"], ["boards:insert", "boards:insertMany"]);
 
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("TOKEN_EXPIRED");
-				}
-
-				await broker.call("v1.accounts.update", {
-					id: savedUser._id,
-					resetTokenExpires: Date.now() + (3600 * 1000)
-				});
+				expect(res).toBe(false);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["admin"]);
 			});
 
-			it("should return token if token is valid and not expired", async () => {
-				service.sendMail.mockClear();
-				const res = await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+			it("should find with wildcard", async () => {
+				service.getPermissions = jest.fn(async () => ["boards:*"]);
+				const res = await service.canAtLeast(["user", "admin"], ["boards:insert"]);
 
-				expect(res).toEqual({
-					token: expect.any(String)
-				});
-
-				expect(service.sendMail).toHaveBeenCalledTimes(1);
-				expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), expect.any(Object), "password-changed");
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["user", "admin"]);
 			});
 
-			it("should not accept token multiple times", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("INVALID_TOKEN");
-				}
+			it("should find with wildcard", async () => {
+				service.getPermissions = jest.fn(async () => ["**"]);
+				const res = await service.canAtLeast("user", ["boards:remove"]);
+
+				expect(res).toBe(true);
+				expect(service.getPermissions).toHaveBeenCalledTimes(1);
+				expect(service.getPermissions).toHaveBeenCalledWith(["user"]);
+			});
+		});
+
+		describe("Test 'hasAccess' method", () => {
+
+			it("should call 'can' method", async () => {
+				service.can = jest.fn(async () => false);
+				service.hasRole = jest.fn(async () => false);
+
+				await service.hasAccess("admin", ["boards:create"]);
+
+				expect(service.can).toHaveBeenCalledTimes(1);
+				expect(service.can).toHaveBeenCalledWith("admin", "boards:create");
 			});
 
-			it("should login with username & new password", async () => {
-				const res = await broker.call("v1.accounts.login", { email: user.email, password: "newpass1234" });
+			it("should call 'can' method twice", async () => {
+				service.can.mockClear();
 
-				expect(res).toEqual({
-					token: expect.any(String)
-				});
+				await service.hasAccess("admin", ["boards:create", "boards:insert"]);
+
+				expect(service.can).toHaveBeenCalledTimes(2);
+				expect(service.can).toHaveBeenCalledWith("admin", "boards:create");
+				expect(service.can).toHaveBeenCalledWith("admin", "boards:insert");
 			});
 
-			it("should not login with username & original password", async () => {
-				expect.assertions(4);
-				try {
-					await broker.call("v1.accounts.login", { email: user.email, password: user.password });
-				} catch (err) {
-					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.name).toBe("MoleculerClientError");
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("ERR_WRONG_PASSWORD");
-				}
+			it("should call 'hasRole' method", async () => {
+				service.hasRole.mockClear();
+
+				await service.hasAccess("admin", ["moderator"]);
+
+				expect(service.hasRole).toHaveBeenCalledTimes(1);
+				expect(service.hasRole).toHaveBeenCalledWith("admin", "moderator");
+			});
+
+			it("should call 'hasRole' & 'can' methods", async () => {
+				service.hasRole.mockClear();
+				service.can.mockClear();
+
+				await service.hasAccess("admin", ["administrator", "owner", "boards:remove"]);
+
+				expect(service.hasRole).toHaveBeenCalledTimes(2);
+				expect(service.hasRole).toHaveBeenCalledWith("admin", "administrator");
+				expect(service.hasRole).toHaveBeenCalledWith("admin", "owner");
+
+				expect(service.can).toHaveBeenCalledTimes(1);
+				expect(service.can).toHaveBeenCalledWith("admin", "boards:remove");
 			});
 
 		});
 
 	});
 
-	describe("Test `disable` & `enable` actions", () => {
-
-		const user = {
-			//username: "user12",
-			password: "password12",
-			email: "user12@kantab.io",
-			firstName: "User",
-			lastName: "Twelve"
-		};
-
-		let savedUser;
-
-		beforeAll(async () => {
-			service.config["accounts.username.enabled"] = false;
-			service.config["accounts.verification.enabled"] = false;
-			savedUser = await broker.call("v1.accounts.register", user);
-		});
-
-		it("should not contain username if this feature is disabled", async () => {
-			expect(savedUser.username).toBeUndefined();
-		});
-
-		it("should throw error if user not found", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.disable", { id: "1234" });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_ENTITY_NOT_FOUND");
-			}
-		});
-
-		it("should disable account", async () => {
-			const res = await broker.call("v1.accounts.disable", { id: savedUser._id });
-
-			expect(res).toEqual({
-				status: 0
-			});
-		});
-
-		it("should throw error if account has been already disabled", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_USER_ALREADY_DISABLED");
-			}
-		});
-
-		it("should throw error if user not found", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.enable", { id: "1234" });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_ENTITY_NOT_FOUND");
-			}
-		});
-
-		it("should enable account", async () => {
-			const res = await broker.call("v1.accounts.enable", { id: savedUser._id });
-
-			expect(res).toEqual({
-				status: 1
-			});
-		});
-
-		it("should throw error if account has been already enabled", async () => {
-			expect.assertions(4);
-			try {
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
-			} catch (err) {
-				expect(err).toBeInstanceOf(E.MoleculerClientError);
-				expect(err.name).toBe("MoleculerClientError");
-				expect(err.code).toBe(400);
-				expect(err.type).toBe("ERR_USER_ALREADY_ENABLED");
-			}
-		});
-	});
-*/
 });

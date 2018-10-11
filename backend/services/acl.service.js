@@ -16,6 +16,10 @@ const ConfigLoader 		= require("../mixins/config.mixin");
  * 		- $owner (owner of entity)
  * 		- $related (???)
  *
+ * TODO:
+ * 	- role name can't start with $. It's an internal special role marker.
+ *  - role name can't contain colon (:). It's a permission separator
+ *
  * https://blog.nodeswat.com/implement-access-control-in-node-js-8567e7b484d1
  * https://github.com/DeadAlready/easy-rbac
  * https://packagist.org/packages/visualappeal/laravel-rbac
@@ -150,55 +154,55 @@ module.exports = {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
 				const roles = await this.adapter.find({ name: { $in: roleNames }});
-				const permissions = await roles.map(async role => {
-					const res = Array.from(role.permissions);
+				const permissions = await this.Promise.map(roles, async role => {
+					let res = role.permissions ? Array.from(role.permissions) : [];
+
 					if (Array.isArray(role.inherits) && role.inherits.length > 0)
-						res.concat(await this.getPermissions(role.inherits));
+						res = res.concat(await this.getPermissions(role.inherits));
 
 					return res;
 				});
 
-				return _.uniq(permissions);
+				return _.uniq(_.flattenDeep(permissions));
 			});
 		},
 
 		/**
 		 * Check if user has the given role. A user must have at least one role order for this to return true.
 		 *
-		 * @param {Context} ctx
+		 * @param {Array<String>|String} roleNames
 		 * @param {string} role
 		 * @returns {boolean}
 		 */
-		async hasRole(ctx, role) {
-			return Array.isArray(ctx.meta.user.roles) && ctx.meta.user.roles.indexOf(role) !== -1;
+		async hasRole(roleNames, role) {
+			roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
+			return Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
 		},
 
 		/**
 		 * Checks if the user has the given permission.
 		 *
-		 * @param {Context} ctx
+		 * @param {Array<String>|String} roleNames
 		 * @param {string} permission
 		 * @returns {boolean}
 		 */
-		async can(ctx, permission) {
-			const roleNames = ctx.meta.user.roles;
-			if (!Array.isArray(roleNames)) return false;
+		async can(roleNames, permission) {
+			roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
 			const permList = await this.getPermissions(roleNames);
-			return permList.find(p => match(permission, p));
+			return permList.some(p => match(permission, p));
 		},
 
 		/**
 		 * Checks if the user has the given permission(s). At least one permission must be
 		 * accountable for in order for this to return true.
 		 *
-		 * @param {Context} ctx
+		 * @param {Array<String>|String} roleNames
 		 * @param {Array<string>} permissions
 		 * @returns {boolean}
 		 */
-		async canAtLeast(ctx, permissions) {
-			const roleNames = ctx.meta.user.roles;
-			if (!Array.isArray(roleNames)) return false;
+		async canAtLeast(roleNames, permissions) {
+			roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
 			const permList = await this.getPermissions(roleNames);
 			return permissions.some(perm => permList.find(p => match(perm, p)));
@@ -208,17 +212,18 @@ module.exports = {
 		 * Checks if the user has the given permission(s) or role(s). At least one
 		 * permission or role must be accountable for in order for this to return true.
 		 *
-		 * @param {Context} ctx
-		 * @param {Array<string>} permissionAndRoles
+		 * @param {Array<String>|String} roleNames
+		 * @param {Array<string>} permissionsAndRoles
 		 * @returns {boolean}
 		 */
-		async hasAccess(ctx, permissionAndRoles) {
-			return permissionAndRoles.some(async p => {
+		async hasAccess(roleNames, permissionsAndRoles) {
+			const res = await this.Promise.all(permissionsAndRoles.map(async p => {
 				if (p.indexOf(":") !== -1)
-					return await this.can(ctx, p);
+					return await this.can(roleNames, p);
 				else
-					return await this.hasRole(ctx, p);
-			});
+					return await this.hasRole(roleNames, p);
+			}));
+			return res.some(p => !!p);
 		},
 
 
