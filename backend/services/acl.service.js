@@ -287,7 +287,17 @@ module.exports = {
 		 */
 		async hasRole(roleNames, role) {
 			roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
-			return Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
+			let res = Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
+			if (!res) {
+				// Check inherits
+				const entities = await this.adapter.find({ query: { name: { $in: roleNames } }});
+				if (Array.isArray(entities) && entities.length > 0) {
+					const inherits = _.uniq(_.compact(_.flattenDeep(entities.map(entity => entity.inherits))));
+					if (inherits.length > 0)
+						res = await this.hasRole(inherits, role);
+				}
+			}
+			return res;
 		},
 
 		/**

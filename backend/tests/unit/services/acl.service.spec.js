@@ -245,29 +245,39 @@ describe("Test ACL service", () => {
 
 		describe("Test 'hasRole' method", () => {
 
-			it("should find the role", async () => {
+			it("should find the role 1", async () => {
+				service.adapter.find = jest.fn(async () => Promise.resolve([]));
+
 				const res = await service.hasRole("admin", "admin");
 				expect(res).toBe(true);
 			});
 
-			it("should find the role", async () => {
+			it("should find the role 2", async () => {
 				const res = await service.hasRole(["user", "admin"], "admin");
 				expect(res).toBe(true);
 			});
 
-			it("should not find the role", async () => {
+			it("should not find the role 1", async () => {
 				const res = await service.hasRole("admin", "user");
 				expect(res).toBe(false);
 			});
 
-			it("should not find the role", async () => {
+			it("should not find the role 2", async () => {
 				const res = await service.hasRole(["admin", "moderator"], "user");
 				expect(res).toBe(false);
 			});
 
-			it("should not find the role", async () => {
+			it("should not find the role 3", async () => {
 				const res = await service.hasRole([], "admin");
 				expect(res).toBe(false);
+			});
+		});
+
+		describe("Test 'hasRole' method with inherits", () => {
+			it("should find the role", async () => {
+				service.adapter.find = jest.fn(async () => Promise.resolve([{ inherits: ["user", "board-admin"] }]));
+				const res = await service.hasRole(["moderator"], "user");
+				expect(res).toBe(true);
 			});
 		});
 
