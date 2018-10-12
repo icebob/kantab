@@ -6,6 +6,7 @@ const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
 const Memoize 			= require("../mixins/memoize.mixin");
 const { match } 		= require("moleculer").Utils;
 const ConfigLoader 		= require("../mixins/config.mixin");
+const C 				= require("../constants");
 
 /**
  * Role-based ACL (Access-Control-List) service
@@ -82,12 +83,112 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
-		async hasAccess(ctx) {
-			if (!ctx.meta.user)
-				return false;
+		// Change visibility of default actions
+		create: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
+		list: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
+		find: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
+		get: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
+		update: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
+		remove: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
 
-			return await this.hasAccess(ctx, ctx.params);
-		}
+		can: {
+			visibility: C.VISIBILITY_PUBLIC,
+			cache: {
+				keys: ["#roles", "permissions"]
+			},
+			params: {
+				roles: { type: "array", items: "string" },
+				permission: { type: "string" },
+			},
+			async handler(ctx) {
+				return await this.can(ctx.params.roles, ctx.params.permission);
+			}
+		},
+
+		hasAccess: {
+			visibility: C.VISIBILITY_PUBLIC,
+			cache: {
+				keys: ["#roles", "permissions"]
+			},
+			params: {
+				roles: { type: "array", items: "string" },
+				permissions: { type: "array", items: "string", min: 1 },
+			},
+			async handler(ctx) {
+				return await this.hasAccess(ctx.params.roles, ctx.params.permissions);
+			}
+		},
+
+		/**
+		 * Assigns the given permission to the role.
+		 * @param {String} id
+		 * @param {string} permission
+		 */
+		assignPermission: {
+			needEntity: true,
+			params: {
+				id: "string",
+				permission: "string"
+			},
+			async handler(ctx) {
+				const role = await this.assignPermission(ctx.entity, ctx.params.permission);
+				const json = await this.transformDocuments(ctx, {}, role);
+				this.entityChanged("updated", json, ctx);
+				return json;
+			}
+		},
+
+		/**
+		 * Revokes the given permission from the role.
+		 *
+		 * @param {String} id
+		 * @param {string} permission
+		 */
+		revokePermission: {
+			needEntity: true,
+			params: {
+				id: "string",
+				permission: "string"
+			},
+			async handler(ctx) {
+				const role = await this.revokePermission(ctx.entity, ctx.params.permission);
+				const json = await this.transformDocuments(ctx, {}, role);
+				this.entityChanged("updated", json, ctx);
+				return json;
+			}
+		},
+
+		/**
+		 * Syncs the given permissions with the role. This will revoke any permissions not supplied.
+		 *
+		 * @param {String} id
+		 * @param {Array<String>} permissions
+		 */
+		syncPermissions: {
+			needEntity: true,
+			params: {
+				id: "string",
+				permissions: { type: "array", items: "string" }
+			},
+			async handler(ctx) {
+				const role = await this.syncPermissions(ctx.entity, ctx.params.permissions);
+				const json = await this.transformDocuments(ctx, {}, role);
+				this.entityChanged("updated", json, ctx);
+				return json;
+			}
+		},
 	},
 
 	/**
@@ -109,9 +210,14 @@ module.exports = {
 		 */
 		async assignPermission(role, permission) {
 			if (role.permissions.indexOf(permission) === -1) {
-				return await this.adapter.updateById(role._id, { $addToSet: {
-					permissions: permission
-				}});
+				return await this.adapter.updateById(role._id, {
+					$addToSet: {
+						permissions: permission
+					},
+					$set: {
+						updatedAt: Date.now()
+					}
+				});
 			}
 			return role;
 		},
@@ -124,9 +230,14 @@ module.exports = {
 		 */
 		async revokePermission(role, permission) {
 			if (role.permissions.indexOf(permission) !== -1) {
-				return await this.adapter.updateById(role._id, { $pull: {
-					permissions: permission
-				}});
+				return await this.adapter.updateById(role._id, {
+					$pull: {
+						permissions: permission
+					},
+					$set: {
+						updatedAt: Date.now()
+					}
+				});
 			}
 			return role;
 		},
@@ -146,14 +257,14 @@ module.exports = {
 		/**
 		 * Get all permissions by user roles.
 		 *
-		 * @param {Array<string>} roleNames
+		 * @param {String|Array<string>} roleNames
 		 * @returns {Array<string>} List of permissions
 		 */
 		async getPermissions(roleNames) {
 			return await this.memoize("permissions", roleNames, async () => {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
-				const roles = await this.adapter.find({ name: { $in: roleNames }});
+				const roles = await this.adapter.find({ query: { name: { $in: roleNames }}});
 				const permissions = await this.Promise.map(roles, async role => {
 					let res = role.permissions ? Array.from(role.permissions) : [];
 
@@ -218,7 +329,7 @@ module.exports = {
 		 */
 		async hasAccess(roleNames, permissionsAndRoles) {
 			const res = await this.Promise.all(permissionsAndRoles.map(async p => {
-				if (p.indexOf(":") !== -1)
+				if (p.indexOf(".") !== -1)
 					return await this.can(roleNames, p);
 				else
 					return await this.hasRole(roleNames, p);

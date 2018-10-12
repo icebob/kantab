@@ -41,25 +41,30 @@ describe("Test ACL service", () => {
 				_id: 123,
 				name: "moderator",
 				permissions: [
-					"boards:create"
+					"boards.create"
 				]
 			};
 
 			it("should assign permission to role", async () => {
 				service.adapter.updateById = jest.fn(async () => role);
-				const res = await service.assignPermission(role, "boards:remove");
+				const res = await service.assignPermission(role, "boards.remove");
 
 				expect(res).toBe(role);
 
 				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
-				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $addToSet: {
-					permissions: "boards:remove"
-				}});
+				expect(service.adapter.updateById).toHaveBeenCalledWith(123, {
+					$addToSet: {
+						permissions: "boards.remove"
+					},
+					$set: {
+						updatedAt: expect.any(Number)
+					}
+				});
 			});
 
 			it("should not assign available permission to role", async () => {
 				service.adapter.updateById = jest.fn(async () => role);
-				const res = await service.assignPermission(role, "boards:create");
+				const res = await service.assignPermission(role, "boards.create");
 
 				expect(res).toBe(role);
 
@@ -72,13 +77,13 @@ describe("Test ACL service", () => {
 				_id: 123,
 				name: "moderator",
 				permissions: [
-					"boards:create"
+					"boards.create"
 				]
 			};
 
 			it("should not revoke available permission to role", async () => {
 				service.adapter.updateById = jest.fn(async () => role);
-				const res = await service.revokePermission(role, "boards:remove");
+				const res = await service.revokePermission(role, "boards.remove");
 
 				expect(res).toBe(role);
 
@@ -87,14 +92,19 @@ describe("Test ACL service", () => {
 
 			it("should revoke permission to role", async () => {
 				service.adapter.updateById = jest.fn(async () => role);
-				const res = await service.revokePermission(role, "boards:create");
+				const res = await service.revokePermission(role, "boards.create");
 
 				expect(res).toBe(role);
 
 				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
-				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $pull: {
-					permissions: "boards:create"
-				}});
+				expect(service.adapter.updateById).toHaveBeenCalledWith(123, {
+					$pull: {
+						permissions: "boards.create"
+					},
+					$set: {
+						updatedAt: expect.any(Number)
+					}
+				});
 			});
 		});
 
@@ -103,19 +113,19 @@ describe("Test ACL service", () => {
 				_id: 123,
 				name: "moderator",
 				permissions: [
-					"boards:create"
+					"boards.create"
 				]
 			};
 
 			it("should revoke permission to role", async () => {
 				service.adapter.updateById = jest.fn(async () => role);
-				const res = await service.syncPermissions(role, ["boards:remove", "users.list"]);
+				const res = await service.syncPermissions(role, ["boards.remove", "users.list"]);
 
 				expect(res).toBe(role);
 
 				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
 				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $set: {
-					permissions: ["boards:remove", "users.list"]
+					permissions: ["boards.remove", "users.list"]
 				}});
 			});
 		});
@@ -177,7 +187,7 @@ describe("Test ACL service", () => {
 				}
 			};
 
-			service.adapter.find = jest.fn(async query => Promise.resolve(query.name["$in"].map(name => roles[name])));
+			service.adapter.find = jest.fn(async ({query}) => Promise.resolve(query.name["$in"].map(name => roles[name])));
 
 			it("should return permissions of role", async () => {
 				const res = await service.getPermissions("userRead");
@@ -188,7 +198,7 @@ describe("Test ACL service", () => {
 				]);
 
 				expect(service.adapter.find).toHaveBeenCalledTimes(1);
-				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["userRead"] } });
+				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["userRead"] } }});
 			});
 
 			it("should return multiple merged permissions of roles", async () => {
@@ -204,7 +214,7 @@ describe("Test ACL service", () => {
 				]);
 
 				expect(service.adapter.find).toHaveBeenCalledTimes(1);
-				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["userRead", "userWrite"] } });
+				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["userRead", "userWrite"] } }});
 			});
 
 			it("should return nested merged permissions of roles", async () => {
@@ -225,10 +235,10 @@ describe("Test ACL service", () => {
 				]);
 
 				expect(service.adapter.find).toHaveBeenCalledTimes(4);
-				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["admin"] } });
-				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["boardRead", "boardWrite", "userFull"] } });
-				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["empty"] } });
-				expect(service.adapter.find).toHaveBeenCalledWith({ name: { $in: ["userRead", "userWrite"] } });
+				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["admin"] } }});
+				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["boardRead", "boardWrite", "userFull"] } }});
+				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["empty"] } }});
+				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["userRead", "userWrite"] } }});
 			});
 
 		});
@@ -264,8 +274,8 @@ describe("Test ACL service", () => {
 		describe("Test 'can' method", () => {
 
 			it("should find the permission", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:create"]);
-				const res = await service.can("admin", "boards:create");
+				service.getPermissions = jest.fn(async () => ["boards.create"]);
+				const res = await service.can("admin", "boards.create");
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -273,8 +283,8 @@ describe("Test ACL service", () => {
 			});
 
 			it("should find the permission", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:create"]);
-				const res = await service.can(["user", "admin"], "boards:create");
+				service.getPermissions = jest.fn(async () => ["boards.create"]);
+				const res = await service.can(["user", "admin"], "boards.create");
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -282,8 +292,8 @@ describe("Test ACL service", () => {
 			});
 
 			it("should not find the role", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:create"]);
-				const res = await service.can(["admin"], "boards:remove");
+				service.getPermissions = jest.fn(async () => ["boards.create"]);
+				const res = await service.can(["admin"], "boards.remove");
 
 				expect(res).toBe(false);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -291,8 +301,8 @@ describe("Test ACL service", () => {
 			});
 
 			it("should find with wildcard", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:*"]);
-				const res = await service.can(["user", "admin"], "boards:create");
+				service.getPermissions = jest.fn(async () => ["boards.*"]);
+				const res = await service.can(["user", "admin"], "boards.create");
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -301,7 +311,7 @@ describe("Test ACL service", () => {
 
 			it("should find with wildcard", async () => {
 				service.getPermissions = jest.fn(async () => ["**"]);
-				const res = await service.can("user", "boards:remove");
+				const res = await service.can("user", "boards.remove");
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -312,8 +322,8 @@ describe("Test ACL service", () => {
 		describe("Test 'canAtLeast' method", () => {
 
 			it("should find the permission", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:create"]);
-				const res = await service.canAtLeast("admin", ["boards:create"]);
+				service.getPermissions = jest.fn(async () => ["boards.create"]);
+				const res = await service.canAtLeast("admin", ["boards.create"]);
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -321,8 +331,8 @@ describe("Test ACL service", () => {
 			});
 
 			it("should find the permission", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:create"]);
-				const res = await service.canAtLeast(["user", "admin"], ["boards:insert", "boards:create"]);
+				service.getPermissions = jest.fn(async () => ["boards.create"]);
+				const res = await service.canAtLeast(["user", "admin"], ["boards.insert", "boards.create"]);
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -330,8 +340,8 @@ describe("Test ACL service", () => {
 			});
 
 			it("should not find the role", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:create"]);
-				const res = await service.canAtLeast(["admin"], ["boards:insert", "boards:insertMany"]);
+				service.getPermissions = jest.fn(async () => ["boards.create"]);
+				const res = await service.canAtLeast(["admin"], ["boards.insert", "boards.insertMany"]);
 
 				expect(res).toBe(false);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -339,8 +349,8 @@ describe("Test ACL service", () => {
 			});
 
 			it("should find with wildcard", async () => {
-				service.getPermissions = jest.fn(async () => ["boards:*"]);
-				const res = await service.canAtLeast(["user", "admin"], ["boards:insert"]);
+				service.getPermissions = jest.fn(async () => ["boards.*"]);
+				const res = await service.canAtLeast(["user", "admin"], ["boards.insert"]);
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -349,7 +359,7 @@ describe("Test ACL service", () => {
 
 			it("should find with wildcard", async () => {
 				service.getPermissions = jest.fn(async () => ["**"]);
-				const res = await service.canAtLeast("user", ["boards:remove"]);
+				const res = await service.canAtLeast("user", ["boards.remove"]);
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -363,20 +373,20 @@ describe("Test ACL service", () => {
 				service.can = jest.fn(async () => false);
 				service.hasRole = jest.fn(async () => false);
 
-				await service.hasAccess("admin", ["boards:create"]);
+				await service.hasAccess("admin", ["boards.create"]);
 
 				expect(service.can).toHaveBeenCalledTimes(1);
-				expect(service.can).toHaveBeenCalledWith("admin", "boards:create");
+				expect(service.can).toHaveBeenCalledWith("admin", "boards.create");
 			});
 
 			it("should call 'can' method twice", async () => {
 				service.can.mockClear();
 
-				await service.hasAccess("admin", ["boards:create", "boards:insert"]);
+				await service.hasAccess("admin", ["boards.create", "boards.insert"]);
 
 				expect(service.can).toHaveBeenCalledTimes(2);
-				expect(service.can).toHaveBeenCalledWith("admin", "boards:create");
-				expect(service.can).toHaveBeenCalledWith("admin", "boards:insert");
+				expect(service.can).toHaveBeenCalledWith("admin", "boards.create");
+				expect(service.can).toHaveBeenCalledWith("admin", "boards.insert");
 			});
 
 			it("should call 'hasRole' method", async () => {
@@ -392,14 +402,14 @@ describe("Test ACL service", () => {
 				service.hasRole.mockClear();
 				service.can.mockClear();
 
-				await service.hasAccess("admin", ["administrator", "owner", "boards:remove"]);
+				await service.hasAccess("admin", ["administrator", "owner", "boards.remove"]);
 
 				expect(service.hasRole).toHaveBeenCalledTimes(2);
 				expect(service.hasRole).toHaveBeenCalledWith("admin", "administrator");
 				expect(service.hasRole).toHaveBeenCalledWith("admin", "owner");
 
 				expect(service.can).toHaveBeenCalledTimes(1);
-				expect(service.can).toHaveBeenCalledWith("admin", "boards:remove");
+				expect(service.can).toHaveBeenCalledWith("admin", "boards.remove");
 			});
 
 		});

@@ -6,10 +6,11 @@ const _ 			= require("lodash");
 
 const jwt 			= require("jsonwebtoken");
 
-const DbService = require("../mixins/db.mixin");
+const DbService 	= require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
-const ConfigLoader = require("../mixins/config.mixin");
+const ConfigLoader 	= require("../mixins/config.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
+const C 			= require("../constants");
 
 const HASH_SALT_ROUND = 10;
 
@@ -72,22 +73,22 @@ module.exports = {
 	actions: {
 		// Change visibility of default actions
 		create: {
-			visibility: "protected"
+			visibility: C.VISIBILITY_PROTECTED
 		},
 		list: {
-			visibility: "protected"
+			visibility: C.VISIBILITY_PROTECTED
 		},
 		find: {
-			visibility: "protected"
+			visibility: C.VISIBILITY_PROTECTED
 		},
 		get: {
-			visibility: "protected"
+			visibility: C.VISIBILITY_PROTECTED
 		},
 		update: {
-			visibility: "protected"
+			visibility: C.VISIBILITY_PROTECTED
 		},
 		remove: {
-			visibility: "protected"
+			visibility: C.VISIBILITY_PROTECTED
 		},
 
 		/**

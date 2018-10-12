@@ -15,14 +15,16 @@ module.exports = {
 			const permFuncs = permissions.filter(p => _.isFunction(p));
 
 			return async function CheckPermissionsMiddleware(ctx) {
+				const roles = ctx.meta.roles;
+				if (roles) {
+					let res = await ctx.call("v1.acl.hasAccess", { roles, permissions: permNames });
+					if (res !== true) {
+						if (permFuncs.length > 0)
+							res = await ctx.broker.Promise.some(permFuncs.map(async fn => fn.call(this, ctx)), 1);
 
-				let res = await ctx.call("v1.acl.hasAccess", permNames);
-				if (res !== true) {
-					if (permFuncs.length > 0)
-						res = await ctx.broker.Promise.some(permFuncs.map(async fn => fn.call(this, ctx)), 1);
-
-					if (res !== true)
-						throw new MoleculerClientError("You have no right for this operation!", 401, "ERR_HAS_NO_ACCESS", { action: action.name });
+						if (res !== true)
+							throw new MoleculerClientError("You have no right for this operation!", 401, "ERR_HAS_NO_ACCESS", { action: action.name });
+					}
 				}
 
 				// Call the handler
