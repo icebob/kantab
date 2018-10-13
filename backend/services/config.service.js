@@ -26,10 +26,10 @@ module.exports = {
 	settings: {
 		defaultConfig: {
 			"site.name": "KanBan",
-			"site.url": "http://localhost:4000",
+			"site.url": process.env.NOW_URL || "http://localhost:4000",
 
 			"mail.enabled": true,
-			"mail.from": "no-reply@kantab.moleculer.services",
+			"mail.from": "no-reply@kantab.io",
 
 			"accounts.signup.enabled": true,
 			"accounts.username.enabled": true,

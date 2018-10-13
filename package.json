@@ -88,6 +88,9 @@
   "engines": {
     "node": ">= 8.x.x"
   },
+  "now": {
+    "alias": "kantab"
+  },
   "jest": {
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
