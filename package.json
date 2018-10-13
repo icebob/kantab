@@ -1,10 +1,11 @@
 {
   "name": "kantab",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Kanban board application with Moleculer microservices & Vue.js",
   "scripts": {
     "dev": "moleculer-runner --env --repl --hot backend/services",
     "start": "moleculer-runner --env",
+    "now-start": "cross-env NEDB_FOLDER=data moleculer-runner --env backend/services",
     "build": "vue-cli-service build",
     "lint": "eslint backend && vue-cli-service lint",
     "deps": "npm-check -u",

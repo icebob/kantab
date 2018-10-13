@@ -1,13 +1,27 @@
 "use strict";
 
 const _ 			= require("lodash");
+const path 			= require("path");
+const mkdir			= require("mkdirp").sync;
 const DbService		= require("moleculer-db");
 const MongoAdapter 	= require("moleculer-db-adapter-mongo");
 
 const TESTING = process.env.NODE_ENV === "test";
+const ISMONGO = !process.env.NEDB_FOLDER;
 
 module.exports = function(collection, opts = {}) {
-	const adapter = TESTING ? new DbService.MemoryAdapter() : new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab");
+	let adapter;
+	if (TESTING) {
+		adapter = new DbService.MemoryAdapter();
+	} else {
+		if (process.env.NEDB_FOLDER) {
+			const dir = path.resolve(process.env.NEDB_FOLDER);
+			mkdir(dir);
+			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`)});
+		} else {
+			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab");
+		}
+	}
 
 	const schema = {
 		mixins: [DbService],
@@ -40,7 +54,8 @@ module.exports = function(collection, opts = {}) {
 				// Create indexes
 				if (this.settings.indexes) {
 					try {
-						await this.Promise.all(this.settings.indexes.map(idx => this.adapter.collection.createIndex(idx)));
+						if (_.isFunction(this.adapter.collection.createIndex))
+							await this.Promise.all(this.settings.indexes.map(idx => this.adapter.collection.createIndex(idx)));
 					} catch(err) {
 						this.logger.error("Unable to create indexes.", err);
 					}
