@@ -98,8 +98,8 @@ export default new class Authenticator {
 		return null;
 	}
 
-	async login(email, password) {
-		const res = await axios.post("/api/v1/accounts/login", { email, password });
+	async login(email, password, token) {
+		const res = await axios.post("/api/v1/accounts/login", { email, password, token });
 		if (res.token) {
 			const user = await this.applyToken(res.token);
 
@@ -146,6 +146,18 @@ export default new class Authenticator {
 		const user = await this.applyToken(token);
 		router.push({ name: "home" });
 		return user;
+	}
+
+	async enable2FA() {
+		return await axios.post("/api/v1/accounts/enable2fa");
+	}
+
+	async finalize2FA(token) {
+		return await axios.post("/api/v1/accounts/finalize2FA", { token });
+	}
+
+	async disable2FA() {
+		return await axios.post("/api/v1/accounts/disable2fa");
 	}
 
 	async applyToken(token) {

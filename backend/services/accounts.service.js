@@ -5,6 +5,7 @@ const bcrypt 		= require("bcrypt");
 const _ 			= require("lodash");
 
 const jwt 			= require("jsonwebtoken");
+const speakeasy		= require("speakeasy");
 
 const DbService 	= require("../mixins/db.mixin");
 const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
@@ -60,6 +61,7 @@ module.exports = {
 			"plan",
 			"verified",
 			"token",
+			"totp.enabled",
 			"passwordless",
 			"createdAt",
 			"updatedAt",
@@ -476,7 +478,8 @@ module.exports = {
 		login: {
 			params: {
 				email: { type: "string", optional: false },
-				password: { type: "string", optional: true }
+				password: { type: "string", optional: true },
+				token: { type: "string", optional: true }
 			},
 			async handler(ctx) {
 				let query;
@@ -532,6 +535,16 @@ module.exports = {
 
 				} else {
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
+				}
+
+				// Check Two-factor authentication
+				if (user.totp && user.totp.enabled) {
+					if (!ctx.params.token)
+						throw new MoleculerClientError("Two-factor authentication is enabled. Please give the 2FA code.", 400, "ERR_MISSING_2FA_CODE");
+
+					if (!(await this.verify2FA(user.totp.secret, ctx.params.token)))
+						throw new MoleculerClientError("Invalid 2FA token!", 400, "TWOFACTOR_INVALID_TOKEN");
+
 				}
 
 				return {
@@ -630,8 +643,94 @@ module.exports = {
 					return this.transformDocuments(ctx, {}, user);
 				}
 			}
-		}
+		},
 
+		/**
+		 * Enable Two-Factor authentication (2FA)
+		 * TODO
+		 * 	- merge with finalize2Fa
+		 */
+		enable2Fa: {
+			params: {
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.meta.user._id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+
+				const tempSecret = speakeasy.generateSecret();
+				await this.adapter.updateById(ctx.meta.user._id, { $set: {
+					"totp.enabled": false,
+					"totp.tempSecret": tempSecret.base32
+				}});
+
+				const otpauthURL = speakeasy.otpauthURL({
+					secret: tempSecret.ascii,
+					label: `${this.configObj.site.name} (${ctx.meta.user.email})`,
+				});
+
+				return { otpauthURL };
+			}
+		},
+
+		/**
+		 * Finaliza Two-Factor authentication (2FA) enabling.
+		 * TODO
+		 */
+		finalize2Fa: {
+			params: {
+				token: "string"
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.meta.user._id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+
+				if (!user.totp || !user.totp.tempSecret)
+					throw new MoleculerClientError("Two-factor authentication is not enabled!", 400, "TWOFACTOR_NOT_ENABLED");
+
+				const secret = user.totp.tempSecret;
+				if (!(await this.verify2FA(secret, ctx.params.token)))
+					throw new MoleculerClientError("Invalid token!", 400, "TWOFACTOR_INVALID_TOKEN");
+
+				await this.adapter.updateById(ctx.meta.user._id, {
+					$set: {
+						"totp.enabled": true,
+						"totp.secret": secret,
+					},
+					$unset: {
+						"totp.tempSecret": 1
+					}
+				});
+
+				return true;
+			}
+		},
+
+		/**
+		 * Disable Two-Factor authentication (2FA)
+		 * TODO
+		 * 	- check token before disabling
+		 */
+		disable2Fa: {
+			params: {
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.meta.user._id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+
+				if (!user.totp || !user.totp.enabled)
+					throw new MoleculerClientError("Two-factor authentication is not enabled!", 400, "TWOFACTOR_NOT_ENABLED");
+
+				await this.adapter.updateById(ctx.meta.user._id, { $set: {
+					"totp.enabled": false,
+					"totp.secret": null,
+				}});
+
+				return true;
+			}
+		},
 
 	},
 
@@ -700,8 +799,8 @@ module.exports = {
 		 * Unlink account from a social account
 		 */
 		async unlink(id, provider) {
-			return await this.adapter.updateById(id, { $set: {
-				[`socialLinks.${provider}`]: null
+			return await this.adapter.updateById(id, { $unset: {
+				[`socialLinks.${provider}`]: 1
 			}});
 		},
 
@@ -789,6 +888,21 @@ module.exports = {
 		 */
 		async hashPassword(pass) {
 			return bcrypt.hash(pass, HASH_SALT_ROUND);
+		},
+
+		/**
+		 * Verify 2FA token
+		 *
+		 * @param {String} secret
+		 * @param {String} token
+		 * @returns {Boolean}
+		 */
+		async verify2FA(secret, token) {
+			return speakeasy.totp.verify({
+				secret,
+				encoding: "base32",
+				token
+			});
 		},
 
 		/**

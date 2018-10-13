@@ -59,7 +59,8 @@
     "vuex-router-sync": "5.0.0",
     "webpack-bundle-analyzer": "3.0.2",
     "webpack-dev-middleware": "3.4.0",
-    "webpack-hot-middleware": "2.24.2"
+    "webpack-hot-middleware": "2.24.2",
+    "yaqrcode": "0.2.1"
   },
   "dependencies": {
     "axios": "0.18.0",
@@ -83,7 +84,8 @@
     "passport-facebook": "2.1.1",
     "passport-github": "1.1.0",
     "passport-google-oauth20": "1.0.0",
-    "pug": "2.0.3"
+    "pug": "2.0.3",
+    "speakeasy": "2.0.0"
   },
   "engines": {
     "node": ">= 8.x.x"

@@ -22,6 +22,10 @@
 						<router-link to="/forgot-password">Forgot password?</router-link>
 					</div>
 				</fieldset>
+				<fieldset v-if="need2FAToken" class="token">
+					<input type="text" name="token" v-model="token" ref="token" placeholder="Two-factor code" />
+					<i class="fa fa-key"></i>
+				</fieldset>
 				<fieldset>
 					<submit-button :loading="processing" size="large" color="primary" caption="Login" />
 				</fieldset>
@@ -44,11 +48,32 @@ export default {
 		AuthPanel
 	],
 
+	data() {
+		return {
+			need2FAToken: false,
+			token: ""
+		};
+	},
+
 	methods: {
 		async process() {
-			const res = await this.$authenticator.login(this.email, this.password);
-			if (res.passwordless) {
-				this.success = `Magic link has been sent to '${res.email}'. Use it to sign in.`;
+			try {
+				const res = await this.$authenticator.login(this.email, this.password, this.need2FAToken ? this.token : null);
+				if (res.passwordless) {
+					this.success = `Magic link has been sent to '${res.email}'. Use it to sign in.`;
+				}
+			} catch(err) {
+				console.log(err);
+				if (err.type == "ERR_MISSING_2FA_CODE") {
+					this.need2FAToken = true;
+					this.token = "";
+
+					this.$nextTick(() => this.$refs.token.focus());
+
+					return;
+				}
+
+				throw err;
 			}
 		}
 	}

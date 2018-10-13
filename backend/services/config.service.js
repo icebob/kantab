@@ -25,7 +25,7 @@ module.exports = {
 	 */
 	settings: {
 		defaultConfig: {
-			"site.name": "KanBan",
+			"site.name": "KanTab",
 			"site.url": process.env.NOW_URL || "http://localhost:4000",
 
 			"mail.enabled": true,
@@ -37,7 +37,8 @@ module.exports = {
 			"accounts.verification.enabled": true,
 			"accounts.defaultRoles": ["user"],
 			"accounts.defaultPlan": "free",
-			"accounts.jwt.expiresIn": "30d"
+			"accounts.jwt.expiresIn": "30d",
+			"accounts.two-factor.enabled": true
 		},
 
 		// Fields in responses
