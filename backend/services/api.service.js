@@ -4,6 +4,7 @@ const ApiGateway 		= require("moleculer-web");
 const _ 				= require("lodash");
 const helmet 			= require("helmet");
 const cookie 			= require("cookie");
+const C 				= require("../constants");
 
 const PassportMixin 	= require("../mixins/passport.mixin");
 
@@ -144,13 +145,18 @@ module.exports = {
 					token = auth.slice(7);
 			}
 
+			ctx.meta.roles = [C.ROLE_EVERYONE];
+
 			if (token) {
 				// Verify JWT token
 				const user = await ctx.call("v1.accounts.resolveToken", { token });
 				if (user) {
 					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, _id: user._id });
-					// Reduce user fields (it will be transferred to other nodes)
+
+					ctx.meta.roles.push(C.ROLE_AUTHENTICATED, ...user.roles);
 					ctx.meta.token = token;
+					ctx.meta.userID = user._id;
+					// Reduce user fields (it will be transferred to other nodes)
 					return _.pick(user, ["_id", "email", "username", "firstName", "lastName", "avatar"]);
 				}
 				return null;

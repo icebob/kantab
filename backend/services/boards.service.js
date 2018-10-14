@@ -74,7 +74,7 @@ module.exports = {
 			permissions: [
 				"administrator",
 				function(ctx) {
-					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.user._id;
+					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.userID;
 				}
 			]
 		},
@@ -83,7 +83,7 @@ module.exports = {
 			permissions: [
 				"administrator",
 				function(ctx) {
-					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.user._id;
+					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.userID;
 				}
 			]
 		},

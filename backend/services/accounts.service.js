@@ -140,12 +140,12 @@ module.exports = {
 				keys: ["#user._id"]
 			},
 			async handler(ctx) {
-				if (!ctx.meta.user) {
+				if (!ctx.meta.userID) {
 					return null;
 					//throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
 				}
 
-				const user = await this.getById(ctx.meta.user._id);
+				const user = await this.getById(ctx.meta.userID);
 				if (!user) {
 					return null;
 					//throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
@@ -463,7 +463,7 @@ module.exports = {
 				provider: { type: "string" }
 			},
 			async handler(ctx) {
-				const id = ctx.params.id ? ctx.params.id : (ctx.meta.user ? ctx.meta.user._id : null);
+				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
 				if (!id)
 					throw new MoleculerClientError("Missing user ID!", 400, "MISSING_USER_ID");
 
@@ -571,7 +571,7 @@ module.exports = {
 					// There is logged in user. Link to the logged in user
 					let user = await this.adapter.findOne(query);
 					if (user) {
-						if (user._id != ctx.meta.user._id)
+						if (user._id != ctx.meta.userID)
 							throw new MoleculerClientError("This social account has been linked to another account.", 400, "ERR_SOCIAL_ACCOUNT_MISMATCH");
 
 						// Same user
@@ -580,7 +580,7 @@ module.exports = {
 
 					} else {
 						// Not found linked account. Create the link
-						user = await this.link(ctx.meta.user._id, provider, profile);
+						user = await this.link(ctx.meta.userID, provider, profile);
 
 						user.token = await this.generateJWT({ id: user._id.toString() });
 						return this.transformDocuments(ctx, {}, user);
@@ -647,22 +647,21 @@ module.exports = {
 
 		/**
 		 * Enable Two-Factor authentication (2FA)
-		 * TODO
-		 * 	- merge with finalize2Fa
 		 */
 		enable2Fa: {
 			params: {
 				token: { type: "string", optional: true }
 			},
+			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.meta.user._id);
+				const user = await this.adapter.findById(ctx.meta.userID);
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
 				if (!ctx.params.token && (!user.totp || !user.totp.enabled)) {
 					// Generate a TOTP secret and send back otpauthURL & secret
 					const secret = speakeasy.generateSecret({ length: 10 });
-					await this.adapter.updateById(ctx.meta.user._id, { $set: {
+					await this.adapter.updateById(ctx.meta.userID, { $set: {
 						"totp.enabled": false,
 						"totp.secret": secret.base32
 					}});
@@ -683,7 +682,7 @@ module.exports = {
 					if (!(await this.verify2FA(secret, ctx.params.token)))
 						throw new MoleculerClientError("Invalid token!", 400, "TWOFACTOR_INVALID_TOKEN");
 
-					await this.adapter.updateById(ctx.meta.user._id, { $set: {
+					await this.adapter.updateById(ctx.meta.userID, { $set: {
 						"totp.enabled": true,
 					}});
 
@@ -699,8 +698,9 @@ module.exports = {
 			params: {
 				token: "string"
 			},
+			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.meta.user._id);
+				const user = await this.adapter.findById(ctx.meta.userID);
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
@@ -711,7 +711,7 @@ module.exports = {
 				if (!(await this.verify2FA(secret, ctx.params.token)))
 					throw new MoleculerClientError("Invalid token!", 400, "TWOFACTOR_INVALID_TOKEN");
 
-				await this.adapter.updateById(ctx.meta.user._id, { $set: {
+				await this.adapter.updateById(ctx.meta.userID, { $set: {
 					"totp.enabled": false,
 					"totp.secret": null,
 				}});
@@ -722,6 +722,7 @@ module.exports = {
 
 		/**
 		 * Generate a Two-Factor authentication token (TOTP)
+		 * For tests
 		 */
 		generate2FaToken: {
 			visibility: "protected",
