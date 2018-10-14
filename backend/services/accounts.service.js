@@ -652,68 +652,52 @@ module.exports = {
 		 */
 		enable2Fa: {
 			params: {
+				token: { type: "string", optional: true }
 			},
 			async handler(ctx) {
 				const user = await this.adapter.findById(ctx.meta.user._id);
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
-				const tempSecret = speakeasy.generateSecret();
-				await this.adapter.updateById(ctx.meta.user._id, { $set: {
-					"totp.enabled": false,
-					"totp.tempSecret": tempSecret.base32
-				}});
+				if (!ctx.params.token && (!user.totp || !user.totp.enabled)) {
+					// Generate a TOTP secret and send back otpauthURL & secret
+					const secret = speakeasy.generateSecret({ length: 10 });
+					await this.adapter.updateById(ctx.meta.user._id, { $set: {
+						"totp.enabled": false,
+						"totp.secret": secret.base32
+					}});
 
-				const otpauthURL = speakeasy.otpauthURL({
-					secret: tempSecret.ascii,
-					label: `${this.configObj.site.name} (${ctx.meta.user.email})`,
-				});
+					const otpauthURL = speakeasy.otpauthURL({
+						secret: secret.ascii,
+						label: ctx.meta.user.email,
+						issuer: this.configObj.site.name
+					});
 
-				return { otpauthURL };
-			}
-		},
+					return {
+						secret: secret.base32,
+						otpauthURL
+					};
+				} else {
+					// Verify the token with secret
+					const secret = user.totp.secret;
+					if (!(await this.verify2FA(secret, ctx.params.token)))
+						throw new MoleculerClientError("Invalid token!", 400, "TWOFACTOR_INVALID_TOKEN");
 
-		/**
-		 * Finaliza Two-Factor authentication (2FA) enabling.
-		 * TODO
-		 */
-		finalize2Fa: {
-			params: {
-				token: "string"
-			},
-			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.meta.user._id);
-				if (!user)
-					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
-
-				if (!user.totp || !user.totp.tempSecret)
-					throw new MoleculerClientError("Two-factor authentication is not enabled!", 400, "TWOFACTOR_NOT_ENABLED");
-
-				const secret = user.totp.tempSecret;
-				if (!(await this.verify2FA(secret, ctx.params.token)))
-					throw new MoleculerClientError("Invalid token!", 400, "TWOFACTOR_INVALID_TOKEN");
-
-				await this.adapter.updateById(ctx.meta.user._id, {
-					$set: {
+					await this.adapter.updateById(ctx.meta.user._id, { $set: {
 						"totp.enabled": true,
-						"totp.secret": secret,
-					},
-					$unset: {
-						"totp.tempSecret": 1
-					}
-				});
+					}});
 
-				return true;
+					return true;
+				}
 			}
 		},
 
 		/**
 		 * Disable Two-Factor authentication (2FA)
-		 * TODO
-		 * 	- check token before disabling
 		 */
 		disable2Fa: {
 			params: {
+				token: "string"
 			},
 			async handler(ctx) {
 				const user = await this.adapter.findById(ctx.meta.user._id);
@@ -723,6 +707,10 @@ module.exports = {
 				if (!user.totp || !user.totp.enabled)
 					throw new MoleculerClientError("Two-factor authentication is not enabled!", 400, "TWOFACTOR_NOT_ENABLED");
 
+				const secret = user.totp.secret;
+				if (!(await this.verify2FA(secret, ctx.params.token)))
+					throw new MoleculerClientError("Invalid token!", 400, "TWOFACTOR_INVALID_TOKEN");
+
 				await this.adapter.updateById(ctx.meta.user._id, { $set: {
 					"totp.enabled": false,
 					"totp.secret": null,
@@ -731,6 +719,29 @@ module.exports = {
 				return true;
 			}
 		},
+
+		/**
+		 * Generate a Two-Factor authentication token (TOTP)
+		 */
+		generate2FaToken: {
+			visibility: "protected",
+			params: {
+				id: "string"
+			},
+			async handler(ctx) {
+				const user = await this.adapter.findById(ctx.params.id);
+				if (!user)
+					throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+
+				if (!user.totp || !user.totp.enabled)
+					throw new MoleculerClientError("Two-factor authentication is not enabled!", 400, "TWOFACTOR_NOT_ENABLED");
+
+				const secret = user.totp.secret;
+				const token = this.generate2FaToken(secret);
+
+				return { token };
+			}
+		}
 
 	},
 
@@ -902,6 +913,19 @@ module.exports = {
 				secret,
 				encoding: "base32",
 				token
+			});
+		},
+
+		/**
+		 * Generate a TOTP token
+		 *
+		 * @param {String} secret
+		 * @returns {String}
+		 */
+		async generate2FaToken(secret) {
+			return speakeasy.totp({
+				secret,
+				encoding: "base32"
 			});
 		},
 

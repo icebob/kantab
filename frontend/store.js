@@ -15,7 +15,7 @@ axios.interceptors.response.use(response => {
 
 }, error => {
 	// Forbidden, need to relogin
-	if (error.status == 401) {
+	if (error.response && error.response.status == 401) {
 		authenticator.logout();
 		return Promise.reject(error);
 	}
@@ -43,8 +43,6 @@ export default new Vuex.Store({
 			try {
 				await dispatch("getMe");
 				await dispatch("getSupporterSocialAuthProviders");
-				//await dispatch("getMyBooks");
-				//await dispatch("getHomeInfo");
 			} catch (err) {
 				console.log("Error", err);
 				//Raven.captureException(err);

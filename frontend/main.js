@@ -20,6 +20,20 @@ sync(store, router);
 // --- SERVICE WORKER ---
 import "./registerServiceWorker";
 
+// --- SWEET ALERTS ---
+import swal from "sweetalert";
+Vue.prototype.$swal = swal;
+
+// --- NOTIFICATIONS (IZITOAST) ---
+import VueIziToast from "vue-izitoast";
+import "izitoast/dist/css/iziToast.css";
+Vue.use(VueIziToast, {
+	theme: "light",
+	position: "topRight",
+	animateInside: false,
+	transitionIn: "fadeInDown",
+});
+
 // Authenticator
 import authenticator from "./authenticator";
 Vue.prototype.$authenticator = authenticator;

@@ -67,6 +67,7 @@ export default {
 				if (err.type == "ERR_MISSING_2FA_CODE") {
 					this.need2FAToken = true;
 					this.token = "";
+					this.success = "Open your authenticator app and enter the verification code";
 
 					this.$nextTick(() => this.$refs.token.focus());
 

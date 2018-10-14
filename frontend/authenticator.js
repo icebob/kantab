@@ -113,10 +113,7 @@ export default new class Authenticator {
 	}
 
 	async getMe() {
-		const user = await axios.post("/api/v1/accounts/me");
-		store.commit("SET_LOGGED_IN_USER", user);
-
-		return user;
+		return store.dispatch("getMe");
 	}
 
 	async logout() {
@@ -153,11 +150,13 @@ export default new class Authenticator {
 	}
 
 	async finalize2FA(token) {
-		return await axios.post("/api/v1/accounts/finalize2FA", { token });
+		await axios.post("/api/v1/accounts/enable2fa", { token });
+		return await this.getMe();
 	}
 
-	async disable2FA() {
-		return await axios.post("/api/v1/accounts/disable2fa");
+	async disable2FA(token) {
+		await axios.post("/api/v1/accounts/disable2fa", { token });
+		return await this.getMe();
 	}
 
 	async applyToken(token) {
