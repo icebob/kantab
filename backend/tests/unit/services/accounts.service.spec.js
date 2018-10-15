@@ -578,7 +578,7 @@ describe("Test Accounts service", () => {
 			beforeAll(async () => {
 				service.sendMail.mockClear();
 
-				 oldSendMagicLink = service.sendMagicLink;
+				oldSendMagicLink = service.sendMagicLink;
 				service.sendMagicLink = jest.fn();
 
 				service.config["accounts.passwordless.enabled"] = true;

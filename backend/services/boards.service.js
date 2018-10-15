@@ -28,6 +28,7 @@ module.exports = {
 	 * Service dependencies
 	 */
 	dependencies: [
+		{ name: "accounts", version: 1 }
 	],
 
 	/**
@@ -36,7 +37,7 @@ module.exports = {
 	settings: {
 		fields: [
 			"_id",
-			"createdBy",
+			"owner",
 
 			"title",
 			"description",
@@ -48,43 +49,56 @@ module.exports = {
 
 			"options",
 			"createdAt",
-			"archivedAt"
-		]
+			"archivedAt",
+			"deletedAt"
+		],
+		softDelete: true // TODO
 	},
 
 	/**
 	 * Actions
 	 */
 	actions: {
-		// Change visibility of default actions
 		create: {
-			permissions: ["boards:create"]
+			permissions: ["boards.create"],
+			async handler(ctx) {
+				const entity = {
+					title: ctx.params.title,
+					description: ctx.params.description,
+					owner: ctx.meta.userID
+				};
+
+				const doc = await this.adapter.insert(entity);
+				const json = await this.transformDocuments(ctx, {}, doc);
+				this.entityChanged("created", json, ctx);
+				return json;
+			}
 		},
 		list: {
-			permissions: ["boards:read"]
+			permissions: ["boards.read"]
 		},
 		find: {
-			permissions: ["boards:read"]
+			permissions: ["boards.read"]
 		},
 		get: {
-			permissions: ["boards:read"]
+			needEntity: true,
+			permissions: [
+				"boards.read",
+				"$owner"
+			]
 		},
 		update: {
 			needEntity: true,
 			permissions: [
-				"administrator",
-				function(ctx) {
-					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.userID;
-				}
+				"boards.",
+				"$owner"
 			]
 		},
 		remove: {
 			needEntity: true,
 			permissions: [
 				"administrator",
-				function(ctx) {
-					return ctx.meta.user && ctx.entity && ctx.entity.owner == ctx.meta.userID;
-				}
+				"$owner"
 			]
 		},
 	},
@@ -100,7 +114,15 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
-
+		/**
+		 * Internal method to check the owner of entity. (called from CheckPermission middleware)
+		 *
+		 * @param {Context} ctx
+		 * @returns {Boolean}
+		 */
+		async isEntityOwner(ctx) {
+			return !!(ctx.entity && ctx.entity.owner == ctx.meta.userID);
+		}
 	},
 
 	/**

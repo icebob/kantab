@@ -3,7 +3,8 @@
 const _ 			= require("lodash");
 const path 			= require("path");
 const mkdir			= require("mkdirp").sync;
-const DbService		= require("moleculer-db");
+//const DbService		= require("moleculer-db");
+const DbService		= require("./database");
 const MongoAdapter 	= require("moleculer-db-adapter-mongo");
 
 const TESTING = process.env.NODE_ENV === "test";
@@ -24,8 +25,7 @@ module.exports = function(collection, opts = {}) {
 	}
 
 	const schema = {
-		mixins: [DbService],
-		adapter,
+		mixins: [DbService(adapter)],
 		collection,
 
 		methods: {

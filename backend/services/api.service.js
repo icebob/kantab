@@ -83,6 +83,7 @@ module.exports = {
 				//authorization: true,
 
 				aliases: {
+					"REST /v1/boards": "v1.boards"
 				},
 
 				// Disable to call not-mapped actions

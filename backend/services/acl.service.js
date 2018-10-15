@@ -58,10 +58,10 @@ module.exports = {
 		],
 
 		permissions: [
-			"boards:create",
-			"boards:read",
-			"boards:edit",
-			"boards:remove",
+			"boards.create",
+			"boards.read",
+			"boards.edit",
+			"boards.remove",
 		]
 	},
 
@@ -279,7 +279,7 @@ module.exports = {
 		},
 
 		/**
-		 * Check if user has the given role. A user must have at least one role order for this to return true.
+		 * Check if user has the given role. A user must have at least one role in order to return true.
 		 *
 		 * @param {Array<String>|String} roleNames
 		 * @param {string} role
@@ -316,7 +316,7 @@ module.exports = {
 
 		/**
 		 * Checks if the user has the given permission(s). At least one permission must be
-		 * accountable for in order for this to return true.
+		 * accountable in order to return true.
 		 *
 		 * @param {Array<String>|String} roleNames
 		 * @param {Array<string>} permissions
@@ -331,7 +331,7 @@ module.exports = {
 
 		/**
 		 * Checks if the user has the given permission(s) or role(s). At least one
-		 * permission or role must be accountable for in order for this to return true.
+		 * permission or role must be accountable in order to return true.
 		 *
 		 * @param {Array<String>|String} roleNames
 		 * @param {Array<string>} permissionsAndRoles

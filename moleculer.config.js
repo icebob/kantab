@@ -66,8 +66,8 @@ module.exports = {
 
 	// Register custom middlewares
 	middlewares: [
-		require("./backend/middlewares/FindEntity"),
 		require("./backend/middlewares/CheckPermissions"),
+		require("./backend/middlewares/FindEntity"),
 	],
 
 	// Called after broker created.
