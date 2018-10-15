@@ -18,8 +18,20 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  *
  * TODO:
  * 	- [ ] enhanced `fields` with visibility, default value...etc
+ * 			{ name: "_id", id: true, type: "string", writable: false }, // Can't set by user
+ * 			{ name: "title", type: "string", trim: true },	// Sanitization
+ * 			{ name: "slug", set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter
+ * 			{ name: "fullName", get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Custom formatter
+ * 			{ name: "password", type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Validation
+ * 			{ name: "status", type: "Number", optional: true, default: 1 } // Optional field with default value
+ * 			{ name: "createdAt", type: "Date", default: Date.now },	// Default value with custom function
+ * 			{ name: "updatedAt", type: "Date", default: () => new Date() }, // -||-
+ * 			{ name: "roles", type: "Array", permissions: ["administrator", "$owner"] } // Visibility by permissions
+ * 			{ name: "members", type: "Array", populate: "v1.accounts.populate" readPermissions: ["$owner"] }
+ *
  * 	- [ ] review populates
  * 	- [ ] review transform
+ * 	- [ ] rewrite `get` action. Rename to `resolve` and write a simple `get` action.
  * 	- [ ] add `create`, `find` ...etc methods in order to create new actions easily
  * 	- [ ] tenant handling https://github.com/moleculerjs/moleculer-db/pull/5
  * 	- [ ] monorepo with adapters
