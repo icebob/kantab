@@ -60,19 +60,7 @@ module.exports = {
 	 */
 	actions: {
 		create: {
-			permissions: ["boards.create"],
-			async handler(ctx) {
-				const entity = {
-					title: ctx.params.title,
-					description: ctx.params.description,
-					owner: ctx.meta.userID
-				};
-
-				const doc = await this.adapter.insert(entity);
-				const json = await this.transformDocuments(ctx, {}, doc);
-				this.entityChanged("created", json, ctx);
-				return json;
-			}
+			permissions: ["boards.create"]
 		},
 		list: {
 			permissions: ["boards.read"]

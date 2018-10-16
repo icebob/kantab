@@ -38,7 +38,6 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  * 	- [ ] multi collections in a service
  * 	- [ ] useTimestamps option.
  * 	- [ ] softDelete option with `deletedAt`
- * 	- [ ] fillable settings. Milyen mezők jöhetnek a usertől. Pl ne tudjon belementeni más role-t. De lehet permission-höz kéne kötni, mert admin felületen admin user menthet.
  *
  * @name moleculer-database
  * @module Service
@@ -46,6 +45,7 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
 module.exports = function(adapter, opts) {
 	opts = _.defaultsDeep(opts, {
 		createActions: true,
+		actionVisibility: "published",
 		autoReconnect: true
 	});
 
@@ -88,6 +88,15 @@ module.exports = function(adapter, opts) {
 		},
 
 		/**
+		 * Hooks
+		 */
+		hooks: {
+			before: {},
+			after: {},
+			errors: {}
+		},
+
+		/**
 		 * Actions
 		 */
 		actions: {
@@ -114,6 +123,7 @@ module.exports = function(adapter, opts) {
 		 * @returns {Array<Object>} List of found entities.
 		 */
 		schema.actions.find = {
+			visibility: opts.actionVisibility,
 			cache: {
 				keys: ["populate", "fields", "limit", "offset", "sort", "search", "searchFields", "query"]
 			},
@@ -128,13 +138,12 @@ module.exports = function(adapter, opts) {
 				query: { type: "object", optional: true }
 			},
 			handler(ctx) {
-				let params = this.sanitizeParams(ctx, ctx.params);
-
-				return this.adapter.find(params)
-					.then(docs => this.transformDocuments(ctx, params, docs));
-
+				return this.adapter.find(ctx.params);
 			}
 		};
+
+		schema.hooks.before.find = ["sanitizeHook"];
+		schema.hooks.after.find = ["transformHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.count === true) {
@@ -151,6 +160,7 @@ module.exports = function(adapter, opts) {
 		 * @returns {Number} Count of found entities.
 		 */
 		schema.actions.count = {
+			visibility: opts.actionVisibility,
 			cache: {
 				keys: ["search", "searchFields", "query"]
 			},
@@ -160,17 +170,17 @@ module.exports = function(adapter, opts) {
 				query: { type: "object", optional: true }
 			},
 			handler(ctx) {
-				let params = this.sanitizeParams(ctx, ctx.params);
-
 				// Remove pagination params
-				if (params && params.limit)
-					params.limit = null;
-				if (params && params.offset)
-					params.offset = null;
+				if (ctx.params && ctx.params.limit)
+					ctx.params.limit = null;
+				if (ctx.params && ctx.params.offset)
+					ctx.params.offset = null;
 
-				return this.adapter.count(params);
+				return this.adapter.count(ctx.params);
 			}
 		};
+
+		schema.hooks.before.count = ["sanitizeHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.list === true) {
@@ -192,6 +202,7 @@ module.exports = function(adapter, opts) {
 		 * @returns {Object} List of found entities and count.
 		 */
 		schema.actions.list = {
+			visibility: opts.actionVisibility,
 			cache: {
 				keys: ["populate", "fields", "page", "pageSize", "sort", "search", "searchFields", "query"]
 			},
@@ -206,7 +217,7 @@ module.exports = function(adapter, opts) {
 				query: { type: "object", optional: true }
 			},
 			handler(ctx) {
-				let params = this.sanitizeParams(ctx, ctx.params);
+				let params = Object.assign({}, ctx.params);
 
 				let countParams = Object.assign({}, params);
 				// Remove pagination params
@@ -222,25 +233,12 @@ module.exports = function(adapter, opts) {
 
 					// Get count of all rows
 					this.adapter.count(countParams)
-				]).then(res => {
-					return this.transformDocuments(ctx, params, res[0])
-						.then(docs => {
-							return {
-							// Rows
-								rows: docs,
-								// Total rows
-								total: res[1],
-								// Page
-								page: params.page,
-								// Page size
-								pageSize: params.pageSize,
-								// Total pages
-								totalPages: Math.floor((res[1] + params.pageSize - 1) / params.pageSize)
-							};
-						});
-				});
+				]);
 			}
 		};
+
+		schema.hooks.before.list = ["sanitizeHook"];
+		schema.hooks.after.list = ["pagingHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.create === true) {
@@ -252,16 +250,16 @@ module.exports = function(adapter, opts) {
 		 * @returns {Object} Saved entity.
 		 */
 		schema.actions.create = {
+			visibility: opts.actionVisibility,
 			handler(ctx) {
 				let entity = ctx.params;
 
-				return this.validateEntity(entity)
-					.then(entity => this.adapter.insert(entity))
-					.then(doc => this.transformDocuments(ctx, {}, doc))
-					.then(json => this.entityChanged("created", json, ctx).then(() => json));
-
+				return this.adapter.insert(entity);
 			}
 		};
+
+		schema.hooks.before.create = ["validateHook"];
+		schema.hooks.after.create = ["transformHook", "changedHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.insert === true) {
@@ -276,12 +274,13 @@ module.exports = function(adapter, opts) {
 		 * @returns {Object|Array.<Object>} Saved entity(ies).
 		 */
 		schema.actions.insert = {
+			visibility: opts.actionVisibility,
 			params: {
 				entity: { type: "object", optional: true },
 				entities: { type: "array", optional: true }
 			},
 			handler(ctx) {
-				let params = this.sanitizeParams(ctx, ctx.params);
+				const params = ctx.params;
 
 				return Promise.resolve()
 					.then(() => {
@@ -293,11 +292,12 @@ module.exports = function(adapter, opts) {
 								.then(entity => this.adapter.insert(entity));
 						}
 						return Promise.reject(new MoleculerClientError("Invalid request! The 'params' must contain 'entity' or 'entities'!", 400));
-					})
-					.then(docs => this.transformDocuments(ctx, params, docs))
-					.then(json => this.entityChanged("created", json, ctx).then(() => json));
+					});
 			}
 		};
+
+		schema.hooks.before.insert = ["validateHook"];
+		schema.hooks.after.insert = ["transformHook", "changedHook"]; // TODO `inserted` instead of [`created]`
 	}
 
 	if (opts.createActions === true || opts.createActions.get === true) {
@@ -317,6 +317,45 @@ module.exports = function(adapter, opts) {
 		 * @throws {EntityNotFoundError} - 404 Entity not found
 		 */
 		schema.actions.get = {
+			visibility: opts.actionVisibility,
+			cache: {
+				keys: ["id", "populate", "fields"]
+			},
+			params: {
+				id: [
+					{ type: "string" },
+					{ type: "number" }
+				],
+				populate: { type: "array", optional: true, items: "string" },
+				fields: { type: "array", optional: true, items: "string" }
+			},
+			handler(ctx) {
+				return this.getById(ctx.params.id, true);
+			}
+		};
+
+		schema.hooks.before.get = ["sanitizeHook"];
+		schema.hooks.after.get = ["entityNotFoundHook", "transformHook"];
+	}
+
+	if (opts.createActions === true || opts.createActions.populate === true) {
+		/**
+		 * Populate entitites by IDs.
+		 *
+		 * @actions
+		 * @cached
+		 *
+		 * @param {any|Array<any>} id - ID(s) of entity.
+		 * @param {Array<String>?} populate - Field list for populate.
+		 * @param {Array<String>?} fields - Fields filter.
+		 * @param {Boolean?} mapping - Convert the returned `Array` to `Object` where the key is the value of `id`.
+		 *
+		 * @returns {Object|Array<Object>} Found entity(ies).
+		 *
+		 * @throws {EntityNotFoundError} - 404 Entity not found
+		 */
+		schema.actions.populate = {
+			visibility: opts.actionVisibility,
 			cache: {
 				keys: ["id", "populate", "fields", "mapping"]
 			},
@@ -331,7 +370,7 @@ module.exports = function(adapter, opts) {
 				mapping: { type: "boolean", optional: true }
 			},
 			handler(ctx) {
-				let params = this.sanitizeParams(ctx, ctx.params);
+				let params = ctx.params;
 				let id = params.id;
 
 				let origDoc;
@@ -359,6 +398,9 @@ module.exports = function(adapter, opts) {
 
 			}
 		};
+
+		schema.hooks.before.populate = ["sanitizeHook"];
+		// TODO: schema.hooks.after.populate = ["transformHook, "mappingHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.update === true) {
@@ -373,6 +415,7 @@ module.exports = function(adapter, opts) {
 		 * @throws {EntityNotFoundError} - 404 Entity not found
 		 */
 		schema.actions.update = {
+			visibility: opts.actionVisibility,
 			handler(ctx) {
 				let id;
 				let sets = {};
@@ -385,17 +428,13 @@ module.exports = function(adapter, opts) {
 						sets[prop] = ctx.params[prop];
 				});
 
-				return this.adapter.updateById(id, { "$set": sets })
-					.then(doc => {
-						if (!doc)
-							return Promise.reject(new EntityNotFoundError(id));
-
-						return this.transformDocuments(ctx, ctx.params, doc)
-							.then(json => this.entityChanged("updated", json, ctx).then(() => json));
-					});
+				return this.adapter.updateById(id, { "$set": sets });
 
 			}
 		};
+
+		//schema.hooks.before.update = ["validateHook"];
+		schema.hooks.after.update = ["entityNotFoundHook", "transformHook", "changedHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.remove === true) {
@@ -410,24 +449,16 @@ module.exports = function(adapter, opts) {
 		 * @throws {EntityNotFoundError} - 404 Entity not found
 		 */
 		schema.actions.remove = {
+			visibility: opts.actionVisibility,
 			params: {
 				id: { type: "any" }
 			},
 			handler(ctx) {
-				let params = this.sanitizeParams(ctx, ctx.params);
-				const id = this.decodeID(params.id);
-
-				return this.adapter.removeById(id)
-					.then(doc => {
-						if (!doc)
-							return Promise.reject(new EntityNotFoundError(params.id));
-
-						return this.transformDocuments(ctx, params, doc)
-							.then(json => this.entityChanged("removed", json, ctx).then(() => json));
-					});
-
+				return this.adapter.removeById(this.decodeID(ctx.params.id));
 			}
 		};
+
+		schema.hooks.after.update = ["entityNotFoundHook", "transformHook", "changedHook"];
 	}
 
 	/**
@@ -440,7 +471,7 @@ module.exports = function(adapter, opts) {
 		 */
 		connect() {
 			return this.adapter.connect().then(() => {
-			// Call an 'afterConnected' handler in schema
+				// Call an 'afterConnected' handler in schema
 				if (_.isFunction(this.schema.afterConnected)) {
 					try {
 						return this.schema.afterConnected.call(this);
@@ -456,15 +487,55 @@ module.exports = function(adapter, opts) {
 		 * Disconnect from database.
 		 */
 		disconnect() {
-			if (_.isFunction(this.adapter.disconnect))
+			if (this.adapter && _.isFunction(this.adapter.disconnect))
 				return this.adapter.disconnect();
+		},
+
+		sanitizeHook(ctx) {
+			ctx.params = this.sanitizeParams(ctx, ctx.params);
+		},
+
+		transformHook(ctx, docs) {
+			return this.transformDocuments(ctx, ctx.params, docs);
+		},
+
+		pagingHook(ctx, [docs, total]) {
+			const params = ctx.params;
+			return this.transformDocuments(ctx, params, docs)
+				.then(docs => {
+					return {
+						// Rows
+						rows: docs,
+						// Total rows
+						total: total,
+						// Page
+						page: params.page,
+						// Page size
+						pageSize: params.pageSize,
+						// Total pages
+						totalPages: Math.floor((total + params.pageSize - 1) / params.pageSize)
+					};
+				});
+		},
+
+		validateHook(ctx) {
+			return this.validateEntity(ctx.params);
+		},
+
+		changedHook(ctx, json) {
+			return this.entityChanged(ctx.action.rawName + "d", json, ctx).then(() => json);
+		},
+
+		entityNotFoundHook(ctx, doc) {
+			if (!doc)
+				return Promise.reject(new EntityNotFoundError(ctx.params.id));
 		},
 
 		/**
 		 * Sanitize context parameters at `find` action.
 		 *
 		 * @param {Context} ctx
-		 * @param {any} origParams
+		 * @param {any} params
 		 * @returns {Promise}
 		 */
 		sanitizeParams(ctx, params) {
@@ -527,7 +598,7 @@ module.exports = function(adapter, opts) {
 					if (_.isArray(id)) {
 						return this.adapter.findByIds(decoding ? id.map(this.decodeID) : id);
 					} else {
-						return this.adapter.findById(decoding ? id.map(this.decodeID) : id);
+						return this.adapter.findById(decoding ? this.decodeID(id) : id);
 					}
 				});
 		},
