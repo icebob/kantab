@@ -8,6 +8,7 @@
 
 const _ = require("lodash");
 const Promise = require("bluebird");
+const { isPromise } = require("moleculer").Utils;
 const { MoleculerClientError, ValidationError, ServiceSchemaError } = require("moleculer").Errors;
 
 const EntityNotFoundError = require("moleculer-db").EntityNotFoundError;
@@ -27,7 +28,7 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  * 			{ name: "createdAt", type: "Date", default: Date.now },	// Default value with custom function
  * 			{ name: "updatedAt", type: "Date", default: () => new Date() }, // -||-
  * 			{ name: "roles", type: "Array", permissions: ["administrator", "$owner"] } // Visibility by permissions
- * 			{ name: "members", type: "Array", populate: "v1.accounts.populate" readPermissions: ["$owner"] }
+ * 			{ name: "members", type: "Array", populate: "v1.accounts.populate", readPermissions: ["$owner"] }
  *
  * 	- [ ] review populates
  * 	- [ ] review transform
@@ -60,7 +61,7 @@ module.exports = function(adapter, opts) {
 			/** @type {String} Name of ID field. */
 			idField: "_id",
 
-			/** @type {Array<String>?} Field filtering list. It must be an `Array`. If the value is `null` or `undefined` doesn't filter the fields of entities. */
+			/** @type {Array<String|Object>?} Field filtering list. It must be an `Array`. If the value is `null` or `undefined` doesn't filter the fields of entities. */
 			fields: null,
 
 			/** @type {Array?} Schema for population. [Read more](#populating). */
@@ -74,9 +75,6 @@ module.exports = function(adapter, opts) {
 
 			/** @type {Number} Maximum value of limit in `find` action. Default: `-1` (no limit) */
 			maxLimit: -1,
-
-			/** @type {Object|Function} Validator schema or a function to validate the incoming entity in `create` & 'insert' actions. */
-			entityValidator: null,
 
 			/** @type {Boolean} Soft delete mode. If true, doesn't remove the entity, just set the `deletedAt` field. */
 			softDelete: false,
@@ -128,13 +126,22 @@ module.exports = function(adapter, opts) {
 				keys: ["populate", "fields", "limit", "offset", "sort", "search", "searchFields", "query"]
 			},
 			params: {
-				populate: { type: "array", optional: true, items: "string" },
-				fields: { type: "array", optional: true, items: "string" },
+				populate: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
+				fields: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
 				limit: { type: "number", integer: true, min: 0, optional: true, convert: true },
 				offset: { type: "number", integer: true, min: 0, optional: true, convert: true },
 				sort: { type: "string", optional: true },
 				search: { type: "string", optional: true },
-				searchFields: { type: "array", optional: true },
+				searchFields: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
 				query: { type: "object", optional: true }
 			},
 			handler(ctx) {
@@ -142,7 +149,7 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.find = ["sanitizeHook"];
+		schema.hooks.before.find = ["sanitizeFindHook"];
 		schema.hooks.after.find = ["transformHook"];
 	}
 
@@ -180,7 +187,7 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.count = ["sanitizeHook"];
+		schema.hooks.before.count = ["sanitizeFindHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.list === true) {
@@ -207,25 +214,33 @@ module.exports = function(adapter, opts) {
 				keys: ["populate", "fields", "page", "pageSize", "sort", "search", "searchFields", "query"]
 			},
 			params: {
-				populate: { type: "array", optional: true, items: "string" },
-				fields: { type: "array", optional: true, items: "string" },
+				populate: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
+				fields: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
 				page: { type: "number", integer: true, min: 1, optional: true, convert: true },
 				pageSize: { type: "number", integer: true, min: 0, optional: true, convert: true },
 				sort: { type: "string", optional: true },
 				search: { type: "string", optional: true },
-				searchFields: { type: "array", optional: true },
+				searchFields: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
 				query: { type: "object", optional: true }
 			},
 			handler(ctx) {
 				let params = Object.assign({}, ctx.params);
-
 				let countParams = Object.assign({}, params);
+
 				// Remove pagination params
 				if (countParams && countParams.limit)
 					countParams.limit = null;
 				if (countParams && countParams.offset)
 					countParams.offset = null;
-
 
 				return Promise.all([
 				// Get rows
@@ -237,8 +252,8 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.list = ["sanitizeHook"];
-		schema.hooks.after.list = ["pagingHook"];
+		schema.hooks.before.list = ["sanitizeFindHook"];
+		schema.hooks.after.list = ["transformHook", "pagingHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.create === true) {
@@ -276,27 +291,26 @@ module.exports = function(adapter, opts) {
 		schema.actions.insert = {
 			visibility: opts.actionVisibility,
 			params: {
-				entity: { type: "object", optional: true },
-				entities: { type: "array", optional: true }
+				entity: [
+					{ type: "object", optional: true },
+					{ type: "array", optional: true }
+				]
 			},
 			handler(ctx) {
 				const params = ctx.params;
 
 				return Promise.resolve()
-					.then(() => {
-						if (Array.isArray(params.entities)) {
-							return this.validateEntity(params.entities)
-								.then(entities => this.adapter.insertMany(entities));
-						} else if (params.entity) {
-							return this.validateEntity(params.entity)
-								.then(entity => this.adapter.insert(entity));
-						}
-						return Promise.reject(new MoleculerClientError("Invalid request! The 'params' must contain 'entity' or 'entities'!", 400));
+					.then(() => this.validateEntity(params.entity))
+					.then(entity => {
+						if (Array.isArray(params.entity))
+							return this.adapter.insertMany(entity);
+						else
+							return this.adapter.insert(entity);
 					});
 			}
 		};
 
-		schema.hooks.before.insert = ["validateHook"];
+		//schema.hooks.before.insert = ["validateHook"];
 		schema.hooks.after.insert = ["transformHook", "changedHook"]; // TODO `inserted` instead of [`created]`
 	}
 
@@ -307,12 +321,12 @@ module.exports = function(adapter, opts) {
 		 * @actions
 		 * @cached
 		 *
-		 * @param {any|Array<any>} id - ID(s) of entity.
+		 * @param {any} id - ID of entity.
 		 * @param {Array<String>?} populate - Field list for populate.
 		 * @param {Array<String>?} fields - Fields filter.
 		 * @param {Boolean?} mapping - Convert the returned `Array` to `Object` where the key is the value of `id`.
 		 *
-		 * @returns {Object|Array<Object>} Found entity(ies).
+		 * @returns {Object} Found entity.
 		 *
 		 * @throws {EntityNotFoundError} - 404 Entity not found
 		 */
@@ -326,21 +340,27 @@ module.exports = function(adapter, opts) {
 					{ type: "string" },
 					{ type: "number" }
 				],
-				populate: { type: "array", optional: true, items: "string" },
-				fields: { type: "array", optional: true, items: "string" }
+				populate: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
+				fields: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
 			},
 			handler(ctx) {
 				return this.getById(ctx.params.id, true);
 			}
 		};
 
-		schema.hooks.before.get = ["sanitizeHook"];
+		schema.hooks.before.get = ["sanitizeFindHook"];
 		schema.hooks.after.get = ["entityNotFoundHook", "transformHook"];
 	}
 
-	if (opts.createActions === true || opts.createActions.populate === true) {
+	if (opts.createActions === true || opts.createActions.resolve === true) {
 		/**
-		 * Populate entitites by IDs.
+		 * Resolve entity(ies) by ID(s).
 		 *
 		 * @actions
 		 * @cached
@@ -354,7 +374,7 @@ module.exports = function(adapter, opts) {
 		 *
 		 * @throws {EntityNotFoundError} - 404 Entity not found
 		 */
-		schema.actions.populate = {
+		schema.actions.resolve = {
 			visibility: opts.actionVisibility,
 			cache: {
 				keys: ["id", "populate", "fields", "mapping"]
@@ -365,8 +385,14 @@ module.exports = function(adapter, opts) {
 					{ type: "number" },
 					{ type: "array" }
 				],
-				populate: { type: "array", optional: true, items: "string" },
-				fields: { type: "array", optional: true, items: "string" },
+				populate: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
+				fields: [
+					{ type: "string", optional: true },
+					{ type: "array", optional: true, items: "string" },
+				],
 				mapping: { type: "boolean", optional: true }
 			},
 			handler(ctx) {
@@ -399,7 +425,7 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.populate = ["sanitizeHook"];
+		schema.hooks.before.populate = ["sanitizeFindHook"];
 		// TODO: schema.hooks.after.populate = ["transformHook, "mappingHook"];
 	}
 
@@ -430,6 +456,41 @@ module.exports = function(adapter, opts) {
 
 				return this.adapter.updateById(id, { "$set": sets });
 
+			}
+		};
+
+		//schema.hooks.before.update = ["validateHook"];
+		schema.hooks.after.update = ["entityNotFoundHook", "transformHook", "changedHook"];
+	}
+
+	if (opts.createActions === true || opts.createActions.replace === true) {
+		/**
+		 * Replace an entity by ID.
+		 * > After replace, clear the cache & call lifecycle events.
+		 *
+		 * @actions
+		 *
+		 * @returns {Object} Replaced entity.
+		 *
+		 * @throws {EntityNotFoundError} - 404 Entity not found
+		 */
+		schema.actions.replace = {
+			visibility: opts.actionVisibility,
+			handler(ctx) {
+				let id;
+				let entity = ctx.params;
+
+				// Convert fields from params to "$set" update object
+				Object.keys(ctx.params).forEach(prop => {
+					if (prop == "id" || prop == this.settings.idField) {
+						id = this.decodeID(ctx.params[prop]);
+					}
+				});
+
+				// TODO: implement replace in adapters
+				return this.adapter.collection.findOneAndUpdate({
+					[this.settings.idField]: this.stringToObjectID(entity[this.settings.idField])
+				}, entity, { returnNewDocument : true }).then(res => res.value);
 			}
 		};
 
@@ -491,12 +552,15 @@ module.exports = function(adapter, opts) {
 				return this.adapter.disconnect();
 		},
 
-		sanitizeHook(ctx) {
+		sanitizeFindHook(ctx) {
 			ctx.params = this.sanitizeParams(ctx, ctx.params);
 		},
 
 		transformHook(ctx, docs) {
-			return this.transformDocuments(ctx, ctx.params, docs);
+			if (ctx.action.rawName == "list")
+				return this.transformDocuments(ctx, ctx.params, docs[0]).then(res => [res, docs[1]]);
+			else
+				return this.transformDocuments(ctx, ctx.params, docs);
 		},
 
 		pagingHook(ctx, [docs, total]) {
@@ -529,6 +593,8 @@ module.exports = function(adapter, opts) {
 		entityNotFoundHook(ctx, doc) {
 			if (!doc)
 				return Promise.reject(new EntityNotFoundError(ctx.params.id));
+
+			return doc;
 		},
 
 		/**
@@ -552,13 +618,16 @@ module.exports = function(adapter, opts) {
 				p.pageSize = Number(p.pageSize);
 
 			if (typeof(p.sort) === "string")
-				p.sort = p.sort.replace(/,/, " ").split(" ");
+				p.sort = p.sort.replace(/,/g, " ").split(" ");
 
 			if (typeof(p.fields) === "string")
-				p.fields = p.fields.replace(/,/, " ").split(" ");
+				p.fields = p.fields.replace(/,/g, " ").split(" ");
 
 			if (typeof(p.populate) === "string")
-				p.populate = p.populate.replace(/,/, " ").split(" ");
+				p.populate = p.populate.replace(/,/g, " ").split(" ");
+
+			if (typeof(p.searchFields) === "string")
+				p.searchFields = p.searchFields.replace(/,/g, " ").split(" ");
 
 			if (ctx.action.name.endsWith(".list")) {
 				// Default `pageSize`
@@ -647,8 +716,10 @@ module.exports = function(adapter, opts) {
 					isDoc = true;
 					docs = [docs];
 				}
-				else
+				else {
+					// It's a number value (like count) or anything else.
 					return Promise.resolve(docs);
+				}
 			}
 
 			return Promise.resolve(docs)
@@ -657,89 +728,99 @@ module.exports = function(adapter, opts) {
 				.then(docs => docs.map(doc => this.adapter.entityToObject(doc)))
 
 				// Encode IDs
-				.then(docs => docs.map(doc => {
-					doc[this.settings.idField] = this.encodeID(doc[this.settings.idField]);
-					return doc;
-				}))
+				.then(docs => Promise.all(docs.map(doc => this.reformFields(ctx, params, doc))))
 
 				// Populate
 				.then(json => (ctx && params.populate) ? this.populateDocs(ctx, json, params.populate) : json)
-
-			// TODO onTransformHook
-
-				// Filter fields
-				.then(json => {
-					let fields = ctx && params.fields ? params.fields : this.settings.fields;
-
-					// Authorize the requested fields
-					const authFields = this.authorizeFields(fields);
-
-					return json.map(item => this.filterFields(item, authFields));
-				})
 
 				// Return
 				.then(json => isDoc ? json[0] : json);
 		},
 
 		/**
-		 * Filter fields in the entity object
 		 *
-		 * @param {Object} 	doc
-		 * @param {Array} 	fields	Filter properties of model.
-		 * @returns	{Object}
+		 *
+		 * @param {Context} ctx
+		 * @param {Object?} params
+		 * @param {Object} doc
+		 * @returns {Object}
 		 */
-		filterFields(doc, fields) {
-			// Apply field filter (support nested paths)
-			if (Array.isArray(fields)) {
-				let res = {};
-				fields.forEach(n => {
-					const v = _.get(doc, n);
-					if (v !== undefined)
-						_.set(res, n, v);
-				});
-				return res;
-			}
+		reformFields(ctx, params, doc) {
+			// Skip if fields in not defined in settings.
+			if (!Array.isArray(this.settings.fields) || this.settings.fields.length == 0) return Promise.resolve(doc);
 
-			return doc;
+			const wantedFields = params.fields;
+			return this.authorizeFields(ctx, true).then(authorizedFields => {
+
+				const res = {};
+				const promises = [];
+
+				authorizedFields.forEach(field => {
+					if (_.isString(field)) // TODO: move to `created` lifecycle handler
+						field = { name: field };
+
+					// Skip if the field is not wanted
+					if (wantedFields && wantedFields.indexOf(field.name) === -1) return;
+
+					// Skip if hidden
+					if (field.hidden === true) return;
+
+					// Virtual or formatted field
+					if (_.isFunction(field.get)) {
+						const value = field.get.call(this, _.get(doc, field.name), doc, ctx);
+						if (isPromise(value))
+							promises.push(value.then(v => _.set(res, field.name, v)));
+						else
+							res[field.name] = value;
+					} else {
+						const value = _.get(doc, field.name);
+						if (value !== undefined) {
+							_.set(res, field.name, value);
+						}
+					}
+				});
+
+				return Promise.all(promises).then(() => res);
+			});
 		},
 
 		/**
-		 * Authorize the required field list. Remove fields which is not exist in the `this.settings.fields`
+		 * Authorize the required field list. Check the `permissions`
+		 * and `readPermissions` against the logged in user's permissions.
 		 *
-		 * @param {Array} fields
+		 * @param {Context} ctx
+		 * @param {Boolean} readOnly
 		 * @returns {Array}
 		 */
-		authorizeFields(fields) {
-			if (this.settings.fields && this.settings.fields.length > 0) {
-				let res = [];
-				if (Array.isArray(fields) && fields.length > 0) {
-					fields.forEach(f => {
-						if (this.settings.fields.indexOf(f) !== -1) {
-							res.push(f);
-							return;
-						}
+		authorizeFields(ctx, readOnly) {
+			const res = [];
+			const promises = _.compact(this.settings.fields.map(field => {
 
-						if (f.indexOf(".") !== -1) {
-							let parts = f.split(".");
-							while (parts.length > 1) {
-								parts.pop();
-								if (this.settings.fields.indexOf(parts.join(".")) !== -1) {
-									res.push(f);
-									break;
-								}
-							}
-						}
-
-						let nestedFields = this.settings.fields.filter(prop => prop.indexOf(f + ".") !== -1);
-						if (nestedFields.length > 0) {
-							res = res.concat(nestedFields);
-						}
-					});
+				if (readOnly && field.readPermissions) {
+					return this.checkAuthority(ctx, field.readPermissions)
+						.then(has => has ? res.push(field) : null);
 				}
-				return res;
-			}
 
-			return fields;
+				if (field.permissions) {
+					return this.checkAuthority(ctx, field.permissions)
+						.then(has => has ? res.push(field) : null);
+				}
+
+				res.push(field);
+			}));
+
+			return Promise.all(promises).then(() => res);
+		},
+
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @param {Array<String>} permissions
+		 * @returns {Promise<Boolean>}
+		 */
+		checkAuthority(ctx, permissions) {
+			return ctx.call("v1.acl.hasAccess", { roles: ctx.meta.roles, permissions });
 		},
 
 		/**
@@ -812,41 +893,6 @@ module.exports = function(adapter, opts) {
 			return Promise.all(promises).then(() => docs);
 		},
 
-		/**
-		 * Validate an entity by validator.
-		 *
-		 * @param {any} entity
-		 * @returns {Promise}
-		 */
-		validateEntity(entity) {
-			if (!_.isFunction(this.settings.entityValidator))
-				return Promise.resolve(entity);
-
-			let entities = Array.isArray(entity) ? entity : [entity];
-			return Promise.all(entities.map(entity => this.settings.entityValidator.call(this, entity))).then(() => entity);
-		},
-
-		/**
-		 * Encode ID of entity.
-		 *
-		 * @methods
-		 * @param {any} id
-		 * @returns {any}
-		 */
-		encodeID(id) {
-			return id;
-		},
-
-		/**
-		 * Decode ID of entity.
-		 *
-		 * @methods
-		 * @param {any} id
-		 * @returns {any}
-		 */
-		decodeID(id) {
-			return id;
-		}
 	};
 
 	/**

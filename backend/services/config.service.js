@@ -14,7 +14,7 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("configurations", { disableActions: true }),
+		DbService("configurations", { createActions: false }),
 		CacheCleaner([
 			"cache.clean.config"
 		])

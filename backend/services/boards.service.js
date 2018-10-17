@@ -36,21 +36,22 @@ module.exports = {
 	 */
 	settings: {
 		fields: [
-			"_id",
-			"owner",
+			{ name: "_id", writable: false, id: true },
+			{ name: "owner", populate: "v1.accounts.populate" },
 
-			"title",
-			"description",
-			"position",
-			"archived",
-			"stars",
-			"labels",
-			"members",
+			{ name: "title", type: "string", trim: true },
+			{ name: "slug", type: "string", writable: false, get: (value, entity, ctx) => `${entity.title}-slug` },
+			{ name: "description", type: "string" },
+			{ name: "position", type: "number", default: 0 },
+			{ name: "archived", type: "boolean", default: false },
+			{ name: "stars", type: "number", defaults: 0 },
+			{ name: "labels", type: "array", optional: true },
+			{ name: "members", type: "array", optional: true },
 
-			"options",
-			"createdAt",
-			"archivedAt",
-			"deletedAt"
+			{ name: "options", type: "object", optional: true },
+			{ name: "createdAt", type: "date", default: () => Date.now() },
+			{ name: "archivedAt", type: "date", optional: true },
+			{ name: "deletedAt", type: "date", optional: true },
 		],
 		softDelete: true // TODO
 	},

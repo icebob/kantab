@@ -21,11 +21,13 @@ module.exports = function(collection, opts = {}) {
 			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`)});
 		} else {
 			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab");
+			// Mongo has an internal reconnect logic
+			opts.autoReconnect = false;
 		}
 	}
 
 	const schema = {
-		mixins: [DbService(adapter)],
+		mixins: [DbService(adapter, opts)],
 		collection,
 
 		methods: {
@@ -76,19 +78,6 @@ module.exports = function(collection, opts = {}) {
 			}
 		}
 	};
-
-	if (opts.disableActions) {
-		schema.actions = {
-			create: false,
-			insert: false,
-			count: false,
-			list: false,
-			find: false,
-			get: false,
-			update: false,
-			remove: false
-		};
-	}
 
 	return schema;
 };
