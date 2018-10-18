@@ -36,23 +36,25 @@ module.exports = {
 	 */
 	settings: {
 		fields: [
-			{ name: "_id", writable: false, id: true },
-			{ name: "owner", populate: "v1.accounts.populate" },
+			{ name: "_id", readonly: true, id: true },
+			{ name: "owner", populate: "v1.accounts.populate", set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
 
 			{ name: "title", type: "string", trim: true },
-			{ name: "slug", type: "string", writable: false, get: (value, entity, ctx) => `${entity.title}-slug` },
-			{ name: "description", type: "string" },
-			{ name: "position", type: "number", default: 0 },
+			{ name: "slug", type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
+			{ name: "description", type: "string", optional: true },
+			{ name: "position", type: "number", hidden: true, default: 0 },
 			{ name: "archived", type: "boolean", default: false },
-			{ name: "stars", type: "number", defaults: 0 },
+			{ name: "stars", type: "number", default: 0 },
 			{ name: "labels", type: "array", optional: true },
 			{ name: "members", type: "array", optional: true },
 
 			{ name: "options", type: "object", optional: true },
-			{ name: "createdAt", type: "date", default: () => Date.now() },
+			{ name: "createdAt", type: "date", readonly: true, default: () => Date.now() },
+			{ name: "updatedAt", type: "date", readonly: true, updateSet: () => Date.now() },
 			{ name: "archivedAt", type: "date", optional: true },
 			{ name: "deletedAt", type: "date", optional: true },
 		],
+		strict: true, // TODO
 		softDelete: true // TODO
 	},
 

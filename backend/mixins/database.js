@@ -19,26 +19,27 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  *
  * TODO:
  * 	- [ ] enhanced `fields` with visibility, default value...etc
- * 			{ name: "_id", id: true, type: "string", writable: false }, // Can't set by user
- * 			{ name: "title", type: "string", trim: true },	// Sanitization
- * 			{ name: "slug", set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter
- * 			{ name: "fullName", get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Custom formatter
+ * 			{ name: "_id", id: true, type: "string", readonly: true }, // Can't set by user
+ *			{ name: "owner", populate: "v1.accounts.populate" }, // Get value from ctx.meta
+ * 			{ name: "title", type: "string", trim: true, maxlength: 50 },	// Sanitization & validation
+ * 			{ name: "slug", set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter before saving
+ * 			{ name: "fullName", get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Virtual/calculated field
  * 			{ name: "password", type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Validation
  * 			{ name: "status", type: "Number", optional: true, default: 1 } // Optional field with default value
- * 			{ name: "createdAt", type: "Date", default: Date.now },	// Default value with custom function
- * 			{ name: "updatedAt", type: "Date", default: () => new Date() }, // -||-
- * 			{ name: "roles", type: "Array", permissions: ["administrator", "$owner"] } // Visibility by permissions
+ * 			{ name: "createdAt", type: "Date", updateable: false, default: Date.now },	// Default value with custom function and can't update this field
+ * 			{ name: "updatedAt", type: "Date", readonly: true, updateDefault: () => new Date() }, Default value only at updating. It can't writable by user.
+ * 			{ name: "roles", type: "Array", permissions: ["administrator", "$owner"] } // Access control by permissions
  * 			{ name: "members", type: "Array", populate: "v1.accounts.populate", readPermissions: ["$owner"] }
  *
  * 	- [ ] review populates
  * 	- [ ] review transform
- * 	- [ ] rewrite `get` action. Rename to `resolve` and write a simple `get` action.
- * 	- [ ] add `create`, `find` ...etc methods in order to create new actions easily
+ * 	- [x] rewrite `get` action. Rename to `resolve` and write a simple `get` action.
+ * 	- [-] add `create`, `find` ...etc methods in order to create new actions easily
  * 	- [ ] tenant handling https://github.com/moleculerjs/moleculer-db/pull/5
  * 	- [ ] monorepo with adapters
- * 	- [ ] multi collections in a service
+ * 	- [?] multi collections in a service
  * 	- [ ] useTimestamps option.
- * 	- [ ] softDelete option with `deletedAt`
+ * 	- [ ] softDelete option with `deletedAt` and `allowDeleted` params in find, list, get, resolve actions.
  *
  * @name moleculer-database
  * @module Service
@@ -267,13 +268,11 @@ module.exports = function(adapter, opts) {
 		schema.actions.create = {
 			visibility: opts.actionVisibility,
 			handler(ctx) {
-				let entity = ctx.params;
-
-				return this.adapter.insert(entity);
+				return this.validateEntity(ctx, null, ctx.params)
+					.then(entity => this.adapter.insert(entity));
 			}
 		};
 
-		schema.hooks.before.create = ["validateHook"];
 		schema.hooks.after.create = ["transformHook", "changedHook"];
 	}
 
@@ -297,15 +296,15 @@ module.exports = function(adapter, opts) {
 				]
 			},
 			handler(ctx) {
-				const params = ctx.params;
-
-				return Promise.resolve()
-					.then(() => this.validateEntity(params.entity))
+				return Promise.resolve(ctx.params.entity)
 					.then(entity => {
-						if (Array.isArray(params.entity))
-							return this.adapter.insertMany(entity);
-						else
-							return this.adapter.insert(entity);
+						if (Array.isArray(entity)) {
+							return this.validateEntity(ctx, null, ctx.params.entity)
+								.then(entities => this.adapter.insertMany(entities));
+						} else {
+							return this.validateEntity(ctx, null, ctx.params.entity)
+								.then(entity => this.adapter.insert(entity));
+						}
 					});
 			}
 		};
@@ -350,12 +349,12 @@ module.exports = function(adapter, opts) {
 				],
 			},
 			handler(ctx) {
-				return this.getById(ctx.params.id, true);
+				return ctx.entity;
 			}
 		};
 
-		schema.hooks.before.get = ["sanitizeFindHook"];
-		schema.hooks.after.get = ["entityNotFoundHook", "transformHook"];
+		schema.hooks.before.get = ["sanitizeFindHook", "findEntity", "entityNotFoundHook"];
+		schema.hooks.after.get = ["transformHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.resolve === true) {
@@ -443,24 +442,18 @@ module.exports = function(adapter, opts) {
 		schema.actions.update = {
 			visibility: opts.actionVisibility,
 			handler(ctx) {
-				let id;
-				let sets = {};
+				let changes = Object.assign({}, ctx.params);
+				delete changes.id;
+				delete changes[this.settings.idField];
 
-				// Convert fields from params to "$set" update object
-				Object.keys(ctx.params).forEach(prop => {
-					if (prop == "id" || prop == this.settings.idField)
-						id = this.decodeID(ctx.params[prop]);
-					else
-						sets[prop] = ctx.params[prop];
-				});
-
-				return this.adapter.updateById(id, { "$set": sets });
-
+				return Promise.resolve(ctx.entity)
+					.then(entity => this.validateEntity(ctx, entity, changes))
+					.then(entity => this.adapter.updateById(ctx.entity[this.settings.idField], { "$set": entity }));
 			}
 		};
 
-		//schema.hooks.before.update = ["validateHook"];
-		schema.hooks.after.update = ["entityNotFoundHook", "transformHook", "changedHook"];
+		schema.hooks.before.update = ["findEntity", "entityNotFoundHook"];
+		schema.hooks.after.update = ["transformHook", "changedHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.replace === true) {
@@ -477,25 +470,17 @@ module.exports = function(adapter, opts) {
 		schema.actions.replace = {
 			visibility: opts.actionVisibility,
 			handler(ctx) {
-				let id;
 				let entity = ctx.params;
-
-				// Convert fields from params to "$set" update object
-				Object.keys(ctx.params).forEach(prop => {
-					if (prop == "id" || prop == this.settings.idField) {
-						id = this.decodeID(ctx.params[prop]);
-					}
-				});
 
 				// TODO: implement replace in adapters
 				return this.adapter.collection.findOneAndUpdate({
-					[this.settings.idField]: this.stringToObjectID(entity[this.settings.idField])
+					[this.settings.idField]: this.stringToObjectID(ctx.entity[this.settings.idField])
 				}, entity, { returnNewDocument : true }).then(res => res.value);
 			}
 		};
 
-		//schema.hooks.before.update = ["validateHook"];
-		schema.hooks.after.update = ["entityNotFoundHook", "transformHook", "changedHook"];
+		schema.hooks.before.update = ["findEntity", "entityNotFoundHook"];
+		schema.hooks.after.update = ["transformHook", "changedHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.remove === true) {
@@ -515,11 +500,12 @@ module.exports = function(adapter, opts) {
 				id: { type: "any" }
 			},
 			handler(ctx) {
-				return this.adapter.removeById(this.decodeID(ctx.params.id));
+				return this.adapter.removeById(ctx.entity[this.settings.idField]);
 			}
 		};
 
-		schema.hooks.after.update = ["entityNotFoundHook", "transformHook", "changedHook"];
+		schema.hooks.before.update = ["findEntity", "entityNotFoundHook"];
+		schema.hooks.after.update = ["transformHook", "changedHook"];
 	}
 
 	/**
@@ -582,12 +568,20 @@ module.exports = function(adapter, opts) {
 				});
 		},
 
-		validateHook(ctx) {
-			return this.validateEntity(ctx.params);
-		},
-
 		changedHook(ctx, json) {
 			return this.entityChanged(ctx.action.rawName + "d", json, ctx).then(() => json);
+		},
+
+		findEntity(ctx) {
+			let id = ctx.params.id;
+			if (id == null)
+				id = ctx.params[this.settings.idField];
+
+			if (id != null) {
+				ctx.entityID = id;
+				return this.getById(id, true);
+			}
+			return null;
 		},
 
 		entityNotFoundHook(ctx, doc) {
@@ -756,7 +750,7 @@ module.exports = function(adapter, opts) {
 				const promises = [];
 
 				authorizedFields.forEach(field => {
-					if (_.isString(field)) // TODO: move to `created` lifecycle handler
+					if (_.isString(field)) // TODO: move to `created` lifecycle handler as `this.$fields`
 						field = { name: field };
 
 					// Skip if the field is not wanted
@@ -781,6 +775,117 @@ module.exports = function(adapter, opts) {
 				});
 
 				return Promise.all(promises).then(() => res);
+			});
+		},
+
+		/**
+		 * Validate an entity before saving & updating
+		 *
+		 * @param {Context} ctx
+		 * @param {Object} entity
+		 * @param {Object} changes
+		 * @returns {Object} validated entity
+		 */
+		validateEntity(ctx, entity, changes) {
+			const isNew = !entity;
+			entity = entity || {};
+
+			// Copy all fields if fields in not defined in settings.
+			if (!Array.isArray(this.settings.fields) || this.settings.fields.length == 0) {
+				_.forIn(changes, (value, key) => _.set(entity, key, value));
+
+				return entity;
+			}
+
+			return this.authorizeFields(ctx, true).then(authorizedFields => {
+
+				const updates = {};
+				const promises = [];
+
+				const callCustomFn = (field, fn, args) => {
+					const value = fn.apply(this, args);
+					if (isPromise(value))
+						promises.push(value.then(v => setValue(field, v)));
+					else
+						setValue(field, value);
+				};
+
+				const setValue = (field, value) => {
+					// Sanitizing
+					if (field.trim) {
+						if (field.trim === true)
+							value = value.trim();
+						else if (field.trim === "right")
+							value = value.trimRight();
+						else if (field.trim === "left")
+							value = value.trimLeft();
+					}
+
+					// TODO: more sanitization
+					// - lowercase, uppercase, ...etc
+
+					// Validating
+					if (value == undefined) {
+						if (!field.optional)
+							promises.push(Promise.reject(new ValidationError(`The '${field.name}' field is missing.`))); // TODO
+						return;
+					}
+
+					/**
+					 * TODO:
+					 * 	- custom validate fn
+					 *  - min, max for number
+					 *  - pattern for string
+					 */
+
+
+					_.set(entity, field.name, value);
+					_.set(updates, field.name, value);
+				};
+
+				authorizedFields.forEach(field => {
+					if (_.isString(field)) // TODO: move to `created` lifecycle handler as `this.$fields`
+						field = { name: field };
+
+					// Custom formatter
+					if (!isNew && _.isFunction(field.updateSet))
+						return callCustomFn(field, field.updateSet, [_.get(changes, field.name), entity, ctx]);
+					else if (_.isFunction(field.set))
+						return callCustomFn(field, field.set, [_.get(changes, field.name), entity, ctx]);
+
+					// Get new value
+					let value = _.get(changes, field.name);
+
+					if (value !== undefined) {
+						// Skip if readonly field
+						if (field.readonly) return;
+
+						// Skip if not allowed to update the field
+						if (!isNew && field.updateable === false) return;
+					}
+
+					// Get previous value
+					const prevValue = _.get(entity, field.name);
+
+					// Skip if update and field is not defined but has previous value.
+					if (!isNew && value == undefined && prevValue !== undefined) return;
+
+					// Handle default value if new entity
+					if (value == undefined) {
+						const defaultValue = isNew ? field.default : field.updateDefault;
+						if (defaultValue !== undefined) {
+							if (_.isFunction(defaultValue))
+								return callCustomFn(field, defaultValue, [_.get(changes, field.name), entity, ctx]);
+
+							value = defaultValue;
+						}
+					}
+
+					// Set new value to entity
+					setValue(field, value);
+				});
+
+				return Promise.all(_.compact(promises)).then(() => updates);
 			});
 		},
 
