@@ -59,8 +59,6 @@ module.exports = function(adapter, opts) {
 		 * Default settings
 		 */
 		settings: {
-			/** @type {String} Name of ID field. */
-			idField: "_id",
 
 			/** @type {Array<String|Object>?} Field filtering list. It must be an `Array`. If the value is `null` or `undefined` doesn't filter the fields of entities. */
 			fields: null,
@@ -412,7 +410,7 @@ module.exports = function(adapter, opts) {
 						if (_.isArray(json) && params.mapping === true) {
 							let res = {};
 							json.forEach((doc, i) => {
-								const id = origDoc[i][this.settings.idField];
+								const id = origDoc[i][this.$primaryField.name];
 								res[id] = doc;
 							});
 
@@ -443,12 +441,11 @@ module.exports = function(adapter, opts) {
 			visibility: opts.actionVisibility,
 			handler(ctx) {
 				let changes = Object.assign({}, ctx.params);
-				delete changes.id;
-				delete changes[this.settings.idField];
+				delete changes[this.$primaryField.name];
 
 				return Promise.resolve(ctx.entity)
 					.then(entity => this.validateEntity(ctx, entity, changes))
-					.then(entity => this.adapter.updateById(ctx.entity[this.settings.idField], { "$set": entity }));
+					.then(entity => this.adapter.updateById(ctx.entity[this.$primaryField.name], { "$set": entity }));
 			}
 		};
 
@@ -474,7 +471,7 @@ module.exports = function(adapter, opts) {
 
 				// TODO: implement replace in adapters
 				return this.adapter.collection.findOneAndUpdate({
-					[this.settings.idField]: this.stringToObjectID(ctx.entity[this.settings.idField])
+					[this.$primaryField.name]: this.stringToObjectID(ctx.entity[this.$primaryField.name])
 				}, entity, { returnNewDocument : true }).then(res => res.value);
 			}
 		};
@@ -500,7 +497,7 @@ module.exports = function(adapter, opts) {
 				id: { type: "any" }
 			},
 			handler(ctx) {
-				return this.adapter.removeById(ctx.entity[this.settings.idField]);
+				return this.adapter.removeById(ctx.entity[this.$primaryField.name]);
 			}
 		};
 
@@ -538,10 +535,24 @@ module.exports = function(adapter, opts) {
 				return this.adapter.disconnect();
 		},
 
+		// --- HOOKS ---
+
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 */
 		sanitizeFindHook(ctx) {
 			ctx.params = this.sanitizeParams(ctx, ctx.params);
 		},
 
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @param {*} docs
+		 * @returns
+		 */
 		transformHook(ctx, docs) {
 			if (ctx.action.rawName == "list")
 				return this.transformDocuments(ctx, ctx.params, docs[0]).then(res => [res, docs[1]]);
@@ -549,6 +560,13 @@ module.exports = function(adapter, opts) {
 				return this.transformDocuments(ctx, ctx.params, docs);
 		},
 
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @param {*} [docs, total]
+		 * @returns
+		 */
 		pagingHook(ctx, [docs, total]) {
 			const params = ctx.params;
 			return this.transformDocuments(ctx, params, docs)
@@ -568,27 +586,45 @@ module.exports = function(adapter, opts) {
 				});
 		},
 
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @param {*} json
+		 * @returns
+		 */
 		changedHook(ctx, json) {
 			return this.entityChanged(ctx.action.rawName + "d", json, ctx).then(() => json);
 		},
 
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @returns
+		 */
 		findEntity(ctx) {
-			let id = ctx.params.id;
+			let id = ctx.params[this.$primaryField.name];
 			if (id == null)
-				id = ctx.params[this.settings.idField];
+				id = ctx.params.id;
 
 			if (id != null) {
 				ctx.entityID = id;
-				return this.getById(id, true);
+				return this.getById(id, true)
+					.then(entity => ctx.entity = entity);
 			}
 			return null;
 		},
 
-		entityNotFoundHook(ctx, doc) {
-			if (!doc)
-				return Promise.reject(new EntityNotFoundError(ctx.params.id));
-
-			return doc;
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @returns
+		 */
+		entityNotFoundHook(ctx) {
+			if (!ctx.entity)
+				return Promise.reject(new EntityNotFoundError(ctx.entityID));
 		},
 
 		/**
@@ -741,7 +777,7 @@ module.exports = function(adapter, opts) {
 		 */
 		reformFields(ctx, params, doc) {
 			// Skip if fields in not defined in settings.
-			if (!Array.isArray(this.settings.fields) || this.settings.fields.length == 0) return Promise.resolve(doc);
+			if (!this.$fields) return Promise.resolve(doc);
 
 			const wantedFields = params.fields;
 			return this.authorizeFields(ctx, true).then(authorizedFields => {
@@ -791,7 +827,7 @@ module.exports = function(adapter, opts) {
 			entity = entity || {};
 
 			// Copy all fields if fields in not defined in settings.
-			if (!Array.isArray(this.settings.fields) || this.settings.fields.length == 0) {
+			if (!this.$fields) {
 				_.forIn(changes, (value, key) => _.set(entity, key, value));
 
 				return entity;
@@ -826,7 +862,7 @@ module.exports = function(adapter, opts) {
 
 					// Validating
 					if (value == undefined) {
-						if (!field.optional)
+						if (field.optional !== true && field.id == null)
 							promises.push(Promise.reject(new ValidationError(`The '${field.name}' field is missing.`))); // TODO
 						return;
 					}
@@ -899,7 +935,7 @@ module.exports = function(adapter, opts) {
 		 */
 		authorizeFields(ctx, readOnly) {
 			const res = [];
-			const promises = _.compact(this.settings.fields.map(field => {
+			const promises = _.compact(this.$fields.map(field => {
 
 				if (readOnly && field.readPermissions) {
 					return this.checkAuthority(ctx, field.readPermissions)
@@ -1008,17 +1044,25 @@ module.exports = function(adapter, opts) {
 
 		this.adapter.init(this.broker, this);
 
-		// Transform entity validation schema to checker function
-		if (this.broker.validator && _.isObject(this.settings.entityValidator) && !_.isFunction(this.settings.entityValidator)) {
-			const check = this.broker.validator.compile(this.settings.entityValidator);
-			this.settings.entityValidator = entity => {
-				const res = check(entity);
-				if (res === true)
-					return Promise.resolve();
-				else
-					return Promise.reject(new ValidationError("Entity validation error!", null, res));
-			};
+		this.$fields = null;
+
+		// Process fields
+		if (Array.isArray(this.settings.fields) && this.settings.fields.length > 0) {
+			this.$fields = this.settings.fields.map(field => {
+				// Backward compatibility
+				if (_.isString(field))
+					field = { name: field };
+
+				if (field.id === true)
+					this.$primaryField = field;
+
+				return field;
+			});
 		}
+
+		if (!this.$primaryField)
+			this.$primaryField = { name: "_id" };
+
 	};
 
 	/**
@@ -1055,8 +1099,8 @@ module.exports = function(adapter, opts) {
 			return this.disconnect();
 	};
 
-	// Export Memory Adapter class
-	schema.MemoryAdapter = MemoryAdapter;
-
 	return schema;
 };
+
+// Export Memory Adapter class
+module.exports.MemoryAdapter = MemoryAdapter;

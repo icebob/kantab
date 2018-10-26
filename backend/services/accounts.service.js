@@ -49,23 +49,26 @@ module.exports = {
 		},
 
 		fields: [
-			"_id",
-			"username",
-			"firstName",
-			"lastName",
-			"email",
-			"avatar",
-			"roles",
-			"socialLinks",
-			"status",
-			"plan",
-			"verified",
-			"token",
-			"totp.enabled",
-			"passwordless",
-			"createdAt",
-			"updatedAt",
-			"lastLoginAt"
+			{ name: "_id", id: true },
+			{ name: "username" },
+			{ name: "firstName" },
+			{ name: "lastName" },
+			{ name: "email" },
+			{ name: "avatar" },
+			{ name: "roles" },
+			{ name: "socialLinks" },
+			{ name: "status", default: 1 },
+			{ name: "plan" },
+			{ name: "verified", default: false },
+			{ name: "token", readonly: true, optional: true },
+			{ name: "totp.enabled", optional: true },
+			{ name: "passwordless", default: false },
+			{ name: "passwordlessTokenExpires", hidden: true, optional: true },
+			{ name: "resetTokenExpires", hidden: true, optional: true },
+			{ name: "verificationToken", hidden: true, optional: true },
+			{ name: "createdAt", type: "number", updateable: false, default: Date.now },
+			{ name: "updatedAt", type: "number", readonly: true, updateDefault: () => Date.now },
+			{ name: "lastLoginAt", type: "date", optional: true },
 		]
 	},
 
@@ -137,7 +140,7 @@ module.exports = {
 		 */
 		me: {
 			cache: {
-				keys: ["#user._id"]
+				keys: ["#userID"]
 			},
 			async handler(ctx) {
 				if (!ctx.meta.userID) {
@@ -225,6 +228,7 @@ module.exports = {
 
 				// Generate passwordless token or hash password
 				if (params.password) {
+					entity.passwordless = false;
 					entity.password = await bcrypt.hash(params.password, 10);
 				} else if (this.config["accounts.passwordless.enabled"]) {
 					entity.passwordless = true;
