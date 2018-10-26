@@ -811,6 +811,7 @@ describe("Test Accounts service", () => {
 					plan: "free",
 					roles: ["user"],
 					createdAt: expect.any(Number),
+					updatedAt: expect.any(Number),
 					socialLinks: {},
 					status: 1,
 					verified: true
@@ -867,7 +868,7 @@ describe("Test Accounts service", () => {
 					plan: "free",
 					roles: ["user"],
 					createdAt: expect.any(Number),
-					//updatedAt: expect.any(Number),
+					updatedAt: expect.any(Number),
 					socialLinks: {},
 					status: 1,
 					verified: true

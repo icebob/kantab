@@ -21,16 +21,17 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  * 	- [ ] enhanced `fields` with visibility, default value...etc
  * 			{ name: "_id", id: true, type: "string", readonly: true }, // Can't set by user
  *			{ name: "owner", populate: "v1.accounts.populate" }, // Get value from ctx.meta
- * 			{ name: "title", type: "string", trim: true, maxlength: 50 },	// Sanitization & validation
+ * 			{ name: "title", type: "string", trim: true, maxlength: 50, required: true },	// Sanitization & validation
  * 			{ name: "slug", set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter before saving
  * 			{ name: "fullName", get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Virtual/calculated field
  * 			{ name: "password", type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Validation
- * 			{ name: "status", type: "Number", optional: true, default: 1 } // Optional field with default value
+ * 			{ name: "status", type: "Number", default: 1 } // Optional field with default value
  * 			{ name: "createdAt", type: "Date", updateable: false, default: Date.now },	// Default value with custom function and can't update this field
  * 			{ name: "updatedAt", type: "Date", readonly: true, updateDefault: () => new Date() }, Default value only at updating. It can't writable by user.
  * 			{ name: "roles", type: "Array", permissions: ["administrator", "$owner"] } // Access control by permissions
  * 			{ name: "members", type: "Array", populate: "v1.accounts.populate", readPermissions: ["$owner"] }
  *
+ *  - [x] change optional to required.
  * 	- [ ] review populates
  * 	- [ ] review transform
  * 	- [x] rewrite `get` action. Rename to `resolve` and write a simple `get` action.
@@ -862,7 +863,7 @@ module.exports = function(adapter, opts) {
 
 					// Validating
 					if (value == undefined) {
-						if (field.optional !== true && field.id == null)
+						if (field.required)
 							promises.push(Promise.reject(new ValidationError(`The '${field.name}' field is missing.`))); // TODO
 						return;
 					}

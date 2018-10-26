@@ -37,22 +37,22 @@ module.exports = {
 	settings: {
 		fields: [
 			{ name: "_id", readonly: true, id: true },
-			{ name: "owner", populate: "v1.accounts.populate", set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
+			{ name: "owner", required: true, populate: "v1.accounts.populate", set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
 
-			{ name: "title", type: "string", trim: true },
+			{ name: "title", type: "string", required: true, trim: true },
 			{ name: "slug", type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
-			{ name: "description", type: "string", optional: true },
+			{ name: "description", type: "string" },
 			{ name: "position", type: "number", hidden: true, default: 0 },
 			{ name: "archived", type: "boolean", default: false },
 			{ name: "stars", type: "number", default: 0 },
-			{ name: "labels", type: "array", optional: true },
-			{ name: "members", type: "array", optional: true },
+			{ name: "labels", type: "array" },
+			{ name: "members", type: "array" },
 
-			{ name: "options", type: "object", optional: true },
+			{ name: "options", type: "object" },
 			{ name: "createdAt", type: "date", readonly: true, default: () => Date.now() },
 			{ name: "updatedAt", type: "date", readonly: true, updateSet: () => Date.now() },
-			{ name: "archivedAt", type: "date", optional: true },
-			{ name: "deletedAt", type: "date", optional: true },
+			{ name: "archivedAt", type: "date" },
+			{ name: "deletedAt", type: "date" },
 		],
 		strict: true, // TODO
 		softDelete: true // TODO
