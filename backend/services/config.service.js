@@ -42,13 +42,13 @@ module.exports = {
 		},
 
 		// Fields in responses
-		fields: [
-			"key",
-			"value",
-			"isDefault",
-			"createdAt",
-			"updatedAt"
-		],
+		fields: {
+			key: true,
+			value: true,
+			isDefault: true,
+			createdAt: true,
+			updatedAt: true
+		},
 
 		// Indexes on collection
 		indexes: [

@@ -48,29 +48,29 @@ module.exports = {
 			sendMail: "mail.send"
 		},
 
-		fields: [
-			{ name: "_id", id: true },
-			{ name: "username", type: "string", maxlength: 50, required: true },
-			{ name: "firstName", type: "string", maxlength: 50, required: true },
-			{ name: "lastName", type: "string", maxlength: 50, required: true },
-			{ name: "email", type: "string", maxlength: 100, required: true },
-			{ name: "password", type: "string", minlength: 6, maxlength: 60, hidden: true },
-			{ name: "avatar", type: "string" },
-			{ name: "roles", required: true },
-			{ name: "socialLinks", type: "object" },
-			{ name: "status", type: "number", default: 1 },
-			{ name: "plan", type: "string", required: true },
-			{ name: "verified", type: "boolean", default: false },
-			{ name: "token", type: "string", readonly: true },
-			{ name: "totp.enabled", type: "boolean", default: false },
-			{ name: "passwordless", type: "boolean", default: false },
-			{ name: "passwordlessTokenExpires", hidden: true },
-			{ name: "resetTokenExpires", hidden: true },
-			{ name: "verificationToken", hidden: true },
-			{ name: "createdAt", type: "number", updateable: false, default: Date.now },
-			{ name: "updatedAt", type: "number", readonly: true, updateDefault: Date.now },
-			{ name: "lastLoginAt", type: "number" },
-		]
+		fields: {
+			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
+			username: { type: "string", maxlength: 50, required: true },
+			firstName: { type: "string", maxlength: 50, required: true },
+			lastName: { type: "string", maxlength: 50, required: true },
+			email: { type: "string", maxlength: 100, required: true },
+			password: { type: "string", minlength: 6, maxlength: 60, hidden: true },
+			avatar: { type: "string" },
+			roles: { required: true },
+			socialLinks: { type: "object" },
+			status: { type: "number", default: 1 },
+			plan: { type: "string", required: true },
+			verified: { type: "boolean", default: false },
+			token: { type: "string", readonly: true },
+			"totp.enabled": { type: "boolean", default: false },
+			passwordless: { type: "boolean", default: false },
+			passwordlessTokenExpires: { hidden: true },
+			resetTokenExpires: { hidden: true },
+			verificationToken: { hidden: true },
+			createdAt: { type: "number", updateable: false, default: Date.now },
+			updatedAt: { type: "number", readonly: true, updateDefault: Date.now },
+			lastLoginAt: { type: "number" },
+		}
 	},
 
 	/**
@@ -580,14 +580,14 @@ module.exports = {
 							throw new MoleculerClientError("This social account has been linked to another account.", 400, "ERR_SOCIAL_ACCOUNT_MISMATCH");
 
 						// Same user
-						user.token = await this.generateJWT({ id: user._id.toString() });
+						user.token = await this.getToken(user);
 						return this.transformDocuments(ctx, {}, user);
 
 					} else {
 						// Not found linked account. Create the link
 						user = await this.link(ctx.meta.userID, provider, profile);
 
-						user.token = await this.generateJWT({ id: user._id.toString() });
+						user.token = await this.getToken(user);
 						return this.transformDocuments(ctx, {}, user);
 					}
 
@@ -620,7 +620,7 @@ module.exports = {
 							user = await this.link(user._id, provider, profile);
 						}
 
-						user.token = await this.generateJWT({ id: user._id.toString() });
+						user.token = await this.getToken(user);
 
 						// TODO: Hack to handle wrong "entity._id.toHexString is not a function" error in mongo adapter
 						user._id = this.decodeID(user._id);
@@ -641,7 +641,7 @@ module.exports = {
 						avatar: profile.avatar
 					});
 
-					user = await this.link(user._id, provider, profile);
+					user = await this.link(user.id, provider, profile);
 
 					user.token = await this.getToken(user);
 

@@ -16,7 +16,7 @@ describe("Test Configuration service", () => {
 		}
 	});
 
-	beforeAll(() => broker.start());
+	beforeAll(() =>  broker.start());
 	afterAll(() => broker.stop());
 
 	describe("Test 'migrateConfig' method", () => {

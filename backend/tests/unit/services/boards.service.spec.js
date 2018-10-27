@@ -9,7 +9,7 @@ const FindEntityMiddleware = require("../../../middlewares/FindEntity");
 //const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
 
 describe("Test Boards service", () => {
-	let broker = new ServiceBroker({ logger: true, middlewares: [
+	let broker = new ServiceBroker({ logger: false, middlewares: [
 		FindEntityMiddleware,
 		//CheckPermissionsMiddleware
 	] });

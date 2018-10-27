@@ -154,7 +154,9 @@ module.exports = {
 				if (user) {
 					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, _id: user._id });
 
-					ctx.meta.roles.push(C.ROLE_AUTHENTICATED, ...user.roles);
+					ctx.meta.roles.push(C.ROLE_AUTHENTICATED);
+					if (Array.isArray(user.roles))
+						ctx.meta.roles.push(...user.roles);
 					ctx.meta.token = token;
 					ctx.meta.userID = user._id;
 					// Reduce user fields (it will be transferred to other nodes)

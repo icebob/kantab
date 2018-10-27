@@ -5,6 +5,7 @@ const _ 				= require("lodash");
 const DbService 		= require("../mixins/db.mixin");
 const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
 const ConfigLoader 		= require("../mixins/config.mixin");
+const SecureID 			= require("../mixins/secure-id.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
@@ -20,6 +21,7 @@ module.exports = {
 			"cache.clean.boards",
 			"cache.clean.accounts"
 		]),
+		SecureID(),
 		ConfigLoader([
 		])
 	],
@@ -35,25 +37,23 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
-		fields: [
-			{ name: "_id", readonly: true, id: true },
-			{ name: "owner", required: true, populate: "v1.accounts.populate", set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
-
-			{ name: "title", type: "string", required: true, trim: true },
-			{ name: "slug", type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
-			{ name: "description", type: "string" },
-			{ name: "position", type: "number", hidden: true, default: 0 },
-			{ name: "archived", type: "boolean", default: false },
-			{ name: "stars", type: "number", default: 0 },
-			{ name: "labels", type: "array" },
-			{ name: "members", type: "array" },
-
-			{ name: "options", type: "object" },
-			{ name: "createdAt", type: "date", readonly: true, default: () => Date.now() },
-			{ name: "updatedAt", type: "date", readonly: true, updateSet: () => Date.now() },
-			{ name: "archivedAt", type: "date" },
-			{ name: "deletedAt", type: "date" },
-		],
+		fields: {
+			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
+			owner: { required: true, populate: "v1.accounts.populate", set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
+			title: { type: "string", required: true, trim: true },
+			slug: { type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
+			description: "string",
+			position: { type: "number", hidden: true, default: 0 },
+			archived: { type: "boolean", default: false },
+			stars: { type: "number", default: 0 },
+			labels: { type: "array" },
+			members: { type: "array" },
+			options: { type: "object" },
+			createdAt: { type: "date", readonly: true, default: () => Date.now() },
+			updatedAt: { type: "date", readonly: true, updateSet: () => Date.now() },
+			archivedAt: { type: "date" },
+			deletedAt: { type: "date" },
+		},
 		strict: true, // TODO
 		softDelete: true // TODO
 	},

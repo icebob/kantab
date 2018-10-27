@@ -19,19 +19,27 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  *
  * TODO:
  * 	- [ ] enhanced `fields` with visibility, default value...etc
- * 			{ name: "_id", id: true, type: "string", readonly: true }, // Can't set by user
- *			{ name: "owner", populate: "v1.accounts.populate" }, // Get value from ctx.meta
- * 			{ name: "title", type: "string", trim: true, maxlength: 50, required: true },	// Sanitization & validation
- * 			{ name: "slug", set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter before saving
- * 			{ name: "fullName", get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Virtual/calculated field
- * 			{ name: "password", type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Validation
- * 			{ name: "status", type: "Number", default: 1 } // Optional field with default value
- * 			{ name: "createdAt", type: "Date", updateable: false, default: Date.now },	// Default value with custom function and can't update this field
- * 			{ name: "updatedAt", type: "Date", readonly: true, updateDefault: () => new Date() }, Default value only at updating. It can't writable by user.
- * 			{ name: "roles", type: "Array", permissions: ["administrator", "$owner"] } // Access control by permissions
- * 			{ name: "members", type: "Array", populate: "v1.accounts.populate", readPermissions: ["$owner"] }
+ *      fields: {
+ * 			_id: { id: true, type: "string", readonly: true, secure: true }, // Can't set by user
+ *			owner: { populate: "v1.accounts.populate" }, // Populate via other service
+ * 			title: { type: "string", trim: true, maxlength: 50, required: true },	// Sanitization & validation
+ * 			slug: { set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter before saving
+ * 			fullName: { get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Virtual/calculated field
+ * 			password: { type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Validation
+ * 			status: { type: "Number", default: 1 } // Optional field with default value
+ * 			createdAt: { type: "Date", updateable: false, default: Date.now },	// Default value with custom function and can't update this field
+ * 			updatedAt: { type: "Date", readonly: true, updateDefault: () => new Date() }, Default value only at updating. It can't writable by user.
+ * 			roles: { type: "Array", permissions: ["administrator", "$owner"] } // Access control by permissions
+ * 			members: { type: "Array", populate: "v1.accounts.populate", readPermissions: ["$owner"] }
+ *      }
+ *  - [ ] change fields to object instead of array. So it can be extended by mixins
+ *  - [ ] new attributes for fields
+ * 			- [ ] `columnName`
+ * 			- [ ] `columnType`
  *
+ * 	- [ ] cascase delete. If an entity deleted, delete this entity from other tables too. (in rdbms)
  *  - [x] change optional to required.
+ *  - [ ] rewrite to async/await
  * 	- [ ] review populates
  * 	- [ ] review transform
  * 	- [x] rewrite `get` action. Rename to `resolve` and write a simple `get` action.
@@ -40,6 +48,7 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  * 	- [ ] monorepo with adapters
  * 	- [?] multi collections in a service
  * 	- [ ] useTimestamps option.
+ *  - [ ] `aggregate` action with params: `type: "sum", "avg", "count", "min", "max"` & `field: "price"`
  * 	- [ ] softDelete option with `deletedAt` and `allowDeleted` params in find, list, get, resolve actions.
  *
  * @name moleculer-database
@@ -61,11 +70,8 @@ module.exports = function(adapter, opts) {
 		 */
 		settings: {
 
-			/** @type {Array<String|Object>?} Field filtering list. It must be an `Array`. If the value is `null` or `undefined` doesn't filter the fields of entities. */
+			/** @type {Object?} Field filtering list. It must be an `Object`. If the value is `null` it won't filter the fields of entities. */
 			fields: null,
-
-			/** @type {Array?} Schema for population. [Read more](#populating). */
-			populates: null,
 
 			/** @type {Number} Default page size in `list` action. */
 			pageSize: 10,
@@ -78,10 +84,6 @@ module.exports = function(adapter, opts) {
 
 			/** @type {Boolean} Soft delete mode. If true, doesn't remove the entity, just set the `deletedAt` field. */
 			softDelete: false,
-
-			/** @type {Boolean} Defined & use `createAt` and `updatedAt` fields in entity */
-			useTimestamps: false,
-
 
 		},
 
@@ -408,7 +410,7 @@ module.exports = function(adapter, opts) {
 					})
 
 					.then(json => {
-						if (_.isArray(json) && params.mapping === true) {
+						if (Array.isArray(json) && params.mapping === true) {
 							let res = {};
 							json.forEach((doc, i) => {
 								const id = origDoc[i][this.$primaryField.name];
@@ -446,7 +448,7 @@ module.exports = function(adapter, opts) {
 
 				return Promise.resolve(ctx.entity)
 					.then(entity => this.validateEntity(ctx, entity, changes))
-					.then(entity => this.adapter.updateById(ctx.entity[this.$primaryField.name], { "$set": entity }));
+					.then(entity => this.adapter.updateById(ctx.entityID, { "$set": entity }));
 			}
 		};
 
@@ -629,10 +631,10 @@ module.exports = function(adapter, opts) {
 		},
 
 		/**
-		 * Sanitize context parameters at `find` action.
+		 * Sanitize context parameters.
 		 *
 		 * @param {Context} ctx
-		 * @param {any} params
+		 * @param {Object} params
 		 * @returns {Promise}
 		 */
 		sanitizeParams(ctx, params) {
@@ -695,7 +697,7 @@ module.exports = function(adapter, opts) {
 		getById(id, decoding) {
 			return Promise.resolve()
 				.then(() => {
-					if (_.isArray(id)) {
+					if (Array.isArray(id)) {
 						return this.adapter.findByIds(decoding ? id.map(this.decodeID) : id);
 					} else {
 						return this.adapter.findById(decoding ? this.decodeID(id) : id);
@@ -758,11 +760,11 @@ module.exports = function(adapter, opts) {
 				// Convert entity to JS object
 				.then(docs => docs.map(doc => this.adapter.entityToObject(doc)))
 
-				// Encode IDs
-				.then(docs => Promise.all(docs.map(doc => this.reformFields(ctx, params, doc))))
-
 				// Populate
 				.then(json => (ctx && params.populate) ? this.populateDocs(ctx, json, params.populate) : json)
+
+				// Reform object
+				.then(docs => Promise.all(docs.map(doc => this.reformFields(ctx, params, doc))))
 
 				// Return
 				.then(json => isDoc ? json[0] : json);
@@ -777,7 +779,7 @@ module.exports = function(adapter, opts) {
 		 * @returns {Object}
 		 */
 		reformFields(ctx, params, doc) {
-			// Skip if fields in not defined in settings.
+			// Skip if fields is not defined in settings.
 			if (!this.$fields) return Promise.resolve(doc);
 
 			const wantedFields = params.fields;
@@ -786,28 +788,36 @@ module.exports = function(adapter, opts) {
 				const res = {};
 				const promises = [];
 
-				authorizedFields.forEach(field => {
-					if (_.isString(field)) // TODO: move to `created` lifecycle handler as `this.$fields`
-						field = { name: field };
+				const setValue = (res, field, value) => {
+					// Encode secure ID
+					if (field.primaryKey && field.secure && value != null)
+						value = this.encodeID(value);
 
+					_.set(res, field.name, value);
+				};
+
+				authorizedFields.forEach(field => {
 					// Skip if the field is not wanted
 					if (wantedFields && wantedFields.indexOf(field.name) === -1) return;
 
 					// Skip if hidden
 					if (field.hidden === true) return;
 
+					const value = _.get(doc, field.columnName || field.name);
+
 					// Virtual or formatted field
 					if (_.isFunction(field.get)) {
-						const value = field.get.call(this, _.get(doc, field.name), doc, ctx);
+						const value = field.get.call(this, value, doc, ctx);
 						if (isPromise(value))
-							promises.push(value.then(v => _.set(res, field.name, v)));
+							promises.push(value.then(v => setValue(res, field, v)));
 						else
-							res[field.name] = value;
-					} else {
-						const value = _.get(doc, field.name);
-						if (value !== undefined) {
-							_.set(res, field.name, value);
-						}
+							setValue(res, field, value);
+
+						return;
+					}
+
+					if (value !== undefined) {
+						setValue(res, field, value);
 					}
 				});
 
@@ -863,7 +873,7 @@ module.exports = function(adapter, opts) {
 
 					// Validating
 					if (value == undefined) {
-						if (field.required)
+						if (field.required && isNew)
 							promises.push(Promise.reject(new ValidationError(`The '${field.name}' field is missing.`))); // TODO
 						return;
 					}
@@ -877,13 +887,12 @@ module.exports = function(adapter, opts) {
 
 
 					_.set(entity, field.name, value);
-					_.set(updates, field.name, value);
+
+					// Because the key is the path. Mongo overwrites a nested object if set a nested object
+					updates[field.name] = value;
 				};
 
 				authorizedFields.forEach(field => {
-					if (_.isString(field)) // TODO: move to `created` lifecycle handler as `this.$fields`
-						field = { name: field };
-
 					// Custom formatter
 					if (!isNew && _.isFunction(field.updateSet))
 						return callCustomFn(field, field.updateSet, [_.get(changes, field.name), entity, ctx]);
@@ -936,6 +945,7 @@ module.exports = function(adapter, opts) {
 		 */
 		authorizeFields(ctx, readOnly) {
 			const res = [];
+
 			const promises = _.compact(this.$fields.map(field => {
 
 				if (readOnly && field.readPermissions) {
@@ -1009,7 +1019,7 @@ module.exports = function(adapter, opts) {
 				const resultTransform = (populatedDocs) => {
 					arr.forEach(doc => {
 						let id = doc[field];
-						if (_.isArray(id)) {
+						if (Array.isArray(id)) {
 							let models = _.compact(id.map(id => populatedDocs[id]));
 							doc[field] = models;
 						} else {
@@ -1035,6 +1045,28 @@ module.exports = function(adapter, opts) {
 			return Promise.all(promises).then(() => docs);
 		},
 
+
+		/**
+		 * Encode ID of entity.
+		 *
+		 * @methods
+		 * @param {any} id
+		 * @returns {any}
+		 */
+		encodeID(id) {
+			return id;
+		},
+
+		/**
+		 * Decode ID of entity.
+		 *
+		 * @methods
+		 * @param {any} id
+		 * @returns {any}
+		 */
+		decodeID(id) {
+			return id;
+		}
 	};
 
 	/**
@@ -1047,18 +1079,31 @@ module.exports = function(adapter, opts) {
 
 		this.$fields = null;
 
-		// Process fields
-		if (Array.isArray(this.settings.fields) && this.settings.fields.length > 0) {
-			this.$fields = this.settings.fields.map(field => {
-				// Backward compatibility
-				if (_.isString(field))
-					field = { name: field };
+		if (_.isObject(this.settings.fields)) {
+			this.$fields = _.compact(_.map(this.settings.fields, (value, name) => {
+				// Disabled field
+				if (value === false)
+					return;
 
-				if (field.id === true)
+				// Shorthand format { title: true } => { title: {} }
+				if (value === true)
+					value = {};
+
+				// Shorthand format: { title: "string" } => { title: { type: "string" } }
+				if (_.isString(value))
+					value = { type: value };
+
+				// Copy the properties
+				let field = Object.assign({}, value);
+
+				// Set name of field
+				field.name = name;
+
+				if (field.primaryKey === true)
 					this.$primaryField = field;
 
 				return field;
-			});
+			}));
 		}
 
 		if (!this.$primaryField)

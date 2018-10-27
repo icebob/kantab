@@ -34,16 +34,16 @@ describe("Test Accounts service", () => {
 	beforeAll(() => broker.start());
 	afterAll(() => broker.stop());
 
-	async function unverifiedAccount(_id) {
+	async function unverifiedAccount(id) {
 		await broker.call("v1.accounts.update", {
-			_id,
+			id,
 			verified: false
 		});
 	}
 
-	async function verifiedAccount(_id) {
+	async function verifiedAccount(id) {
 		await broker.call("v1.accounts.update", {
-			_id,
+			id,
 			verified: true
 		});
 	}
@@ -273,7 +273,7 @@ describe("Test Accounts service", () => {
 			const res = await broker.call("v1.accounts.register", user1);
 
 			expect(res).toEqual({
-				_id: expect.any(String),
+				id: expect.any(String),
 				email: "user1@kantab.io",
 				username: "user1",
 				firstName: "User",
@@ -290,7 +290,7 @@ describe("Test Accounts service", () => {
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({ password: expect.any(String) }, res), "welcome");
+			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({ password: expect.any(String) }, res, { _id: res.id, id: undefined }), "welcome");
 		});
 
 		it("should create new user without avatar with verification", async () => {
@@ -300,7 +300,7 @@ describe("Test Accounts service", () => {
 			const res = await broker.call("v1.accounts.register", user2);
 
 			expect(res).toEqual({
-				_id: expect.any(String),
+				id: expect.any(String),
 				email: "user2@kantab.io",
 				username: "user2",
 				firstName: "User",
@@ -319,7 +319,7 @@ describe("Test Accounts service", () => {
 			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
 				password: expect.any(String),
 				verificationToken: expect.any(String),
-			}, res), "activate", { token: expect.any(String) });
+			}, res, { _id: res.id, id: undefined }), "activate", { token: expect.any(String) });
 		});
 
 		it("should throw error if no password & passwordless is not enabled", async () => {
@@ -348,7 +348,7 @@ describe("Test Accounts service", () => {
 			const res = await broker.call("v1.accounts.register", user3);
 
 			expect(res).toEqual({
-				_id: expect.any(String),
+				id: expect.any(String),
 				email: "user3@kantab.io",
 				username: "user3",
 				firstName: "User",
@@ -367,7 +367,7 @@ describe("Test Accounts service", () => {
 			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
 				password: expect.any(String),
 				verificationToken: expect.any(String),
-			}, res), "activate", { token: expect.any(String) });
+			}, res, { _id: res.id, id: undefined }), "activate", { token: expect.any(String) });
 
 			user3VerificationToken = service.sendMail.mock.calls[0][3].token;
 		});
@@ -516,7 +516,7 @@ describe("Test Accounts service", () => {
 			it("should not logged in disabled account", async () => {
 				expect.assertions(4);
 
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 				try {
 					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
@@ -527,7 +527,7 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
 				}
 
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
+				await broker.call("v1.accounts.enable", { id: savedUser.id });
 			});
 
 			it("should not send magic-link email if no password and feature is disabled", async () => {
@@ -558,6 +558,8 @@ describe("Test Accounts service", () => {
 					password: expect.any(String),
 					verified: true,
 					verificationToken: null,
+					_id: savedUser.id,
+					id: undefined
 				}));
 
 				service.sendMagicLink = oldSendMagicLink;
@@ -663,7 +665,7 @@ describe("Test Accounts service", () => {
 					password: expect.any(String),
 					verified: true,
 					verificationToken: null,
-				}));
+				}, { _id: savedUser.id, id: undefined }));
 			});
 
 			it("should not logged in with username if this feature is disabled", async () => {
@@ -694,13 +696,13 @@ describe("Test Accounts service", () => {
 					password: expect.any(String),
 					verified: true,
 					verificationToken: null,
-				}));
+				}, { _id: savedUser.id, id: undefined }));
 			});
 
 			it("should not logged in disabled account", async () => {
 				expect.assertions(4);
 
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 				try {
 					await broker.call("v1.accounts.login", { email: "user5@kantab.io" });
@@ -801,7 +803,7 @@ describe("Test Accounts service", () => {
 				const res = await broker.call("v1.accounts.resolveToken", { token });
 
 				expect(res).toEqual({
-					_id: expect.any(String),
+					id: expect.any(String),
 					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
 					email: "test@kantab.io",
 					username: "test",
@@ -858,7 +860,7 @@ describe("Test Accounts service", () => {
 			it("should throw error if user is not found", async () => {
 				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id }});
 				expect(res).toEqual({
-					_id: expect.any(String),
+					id: expect.any(String),
 					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
 					email: "test@kantab.io",
 					username: "test",
@@ -923,7 +925,7 @@ describe("Test Accounts service", () => {
 
 			it("should throw error if account is disabled", async () => {
 				expect.assertions(4);
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				await broker.call("v1.accounts.disable", { id: savedUser.id });
 				try {
 					await broker.call("v1.accounts.socialLogin", {
 						provider: "google",
@@ -939,7 +941,7 @@ describe("Test Accounts service", () => {
 					expect(err.code).toBe(400);
 					expect(err.type).toBe("ACCOUNT_DISABLED");
 				}
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
+				await broker.call("v1.accounts.enable", { id: savedUser.id });
 			});
 
 			it("should link the profile to an existing account", async () => {
@@ -1044,7 +1046,7 @@ describe("Test Accounts service", () => {
 				});
 
 				expect(res).toEqual({
-					_id: expect.any(String),
+					id: expect.any(String),
 					email: "user7@kantab.io",
 					username: "user7",
 					firstName: "User",
@@ -1083,7 +1085,7 @@ describe("Test Accounts service", () => {
 				service.config["accounts.verification.enabled"] = false;
 
 				savedUser = await broker.call("v1.accounts.register", user);
-				meta = { userID: savedUser._id, user: savedUser };
+				meta = { userID: savedUser.id, user: savedUser };
 			});
 
 			it("should throw error if socialID is assigned to another account", async () => {
@@ -1187,7 +1189,7 @@ describe("Test Accounts service", () => {
 			savedUser = await broker.call("v1.accounts.register", user);
 
 			expect(savedUser).toEqual({
-				_id: expect.any(String),
+				id: expect.any(String),
 				username: "user9",
 				email: "user9@kantab.io",
 				firstName: "User",
@@ -1208,7 +1210,7 @@ describe("Test Accounts service", () => {
 
 		it("should link user to google", async () => {
 			const res = await broker.call("v1.accounts.link", {
-				id: savedUser._id,
+				id: savedUser.id,
 				provider: "google",
 				profile: {
 					socialID: 6000
@@ -1225,7 +1227,7 @@ describe("Test Accounts service", () => {
 
 		it("should link user to facebook", async () => {
 			const res = await broker.call("v1.accounts.link", {
-				id: savedUser._id,
+				id: savedUser.id,
 				provider: "facebook",
 				profile: {
 					socialID: 7000
@@ -1258,7 +1260,7 @@ describe("Test Accounts service", () => {
 		it("should unlink user from google via meta", async () => {
 			const res = await broker.call("v1.accounts.unlink", {
 				provider: "google"
-			}, { meta: { userID: savedUser._id }});
+			}, { meta: { userID: savedUser.id }});
 
 			expect(res).toEqual({
 				...savedUser,
@@ -1271,7 +1273,7 @@ describe("Test Accounts service", () => {
 
 		it("should unlink user from facebook", async () => {
 			const res = await broker.call("v1.accounts.unlink", {
-				id: savedUser._id,
+				id: savedUser.id,
 				provider: "facebook"
 			});
 
@@ -1308,7 +1310,7 @@ describe("Test Accounts service", () => {
 
 		it("should generate passwordless token", async () => {
 			service.sendMail.mockClear();
-			await service.sendMagicLink(new Context(broker), savedUser);
+			await service.sendMagicLink(new Context(broker), { _id: savedUser.id });
 
 			passwordlessToken = service.sendMail.mock.calls[0][3].token;
 
@@ -1344,7 +1346,7 @@ describe("Test Accounts service", () => {
 		});
 
 		it("should throw error if account is disabled", async () => {
-			await broker.call("v1.accounts.disable", { id: savedUser._id });
+			await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 			expect.assertions(4);
 			try {
@@ -1356,7 +1358,7 @@ describe("Test Accounts service", () => {
 				expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
 			}
 
-			await broker.call("v1.accounts.enable", { id: savedUser._id });
+			await broker.call("v1.accounts.enable", { id: savedUser.id });
 		});
 
 		it("should return token if token is valid and not expired", async () => {
@@ -1376,7 +1378,7 @@ describe("Test Accounts service", () => {
 		});
 
 		it("should verify account if it is not verified yet", async () => {
-			await unverifiedAccount(savedUser._id);
+			await unverifiedAccount(savedUser.id);
 
 			const res = await broker.call("v1.accounts.passwordless", { token: passwordlessToken });
 
@@ -1390,7 +1392,7 @@ describe("Test Accounts service", () => {
 
 		it("should throw error if token is expired", async () => {
 			await broker.call("v1.accounts.update", {
-				_id: savedUser._id,
+				id: savedUser.id,
 				passwordlessTokenExpires: Date.now() - 5000
 			});
 
@@ -1450,7 +1452,7 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should throw error if account is not verified", async () => {
-				await unverifiedAccount(savedUser._id);
+				await unverifiedAccount(savedUser.id);
 
 				expect.assertions(4);
 				try {
@@ -1462,11 +1464,11 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ERR_ACCOUNT_NOT_VERIFIED");
 				}
 
-				await verifiedAccount(savedUser._id);
+				await verifiedAccount(savedUser.id);
 			});
 
 			it("should throw error if account is disabled", async () => {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 				expect.assertions(4);
 				try {
@@ -1478,7 +1480,7 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
 				}
 
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
+				await broker.call("v1.accounts.enable", { id: savedUser.id });
 			});
 
 			it("should generate token and call sendMail", async () => {
@@ -1512,7 +1514,7 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should throw error if account is disabled", async () => {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 				expect.assertions(4);
 				try {
@@ -1524,12 +1526,12 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
 				}
 
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
+				await broker.call("v1.accounts.enable", { id: savedUser.id });
 			});
 
 			it("should throw error if token is expired", async () => {
 				await broker.call("v1.accounts.update", {
-					_id: savedUser._id,
+					id: savedUser.id,
 					resetTokenExpires: Date.now() - (3600 * 1000) - 5000
 				});
 
@@ -1544,7 +1546,7 @@ describe("Test Accounts service", () => {
 				}
 
 				await broker.call("v1.accounts.update", {
-					_id: savedUser._id,
+					id: savedUser.id,
 					resetTokenExpires: Date.now() + (3600 * 1000)
 				});
 			});
@@ -1632,7 +1634,7 @@ describe("Test Accounts service", () => {
 		});
 
 		it("should disable account", async () => {
-			const res = await broker.call("v1.accounts.disable", { id: savedUser._id });
+			const res = await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 			expect(res).toEqual({
 				status: 0
@@ -1642,7 +1644,7 @@ describe("Test Accounts service", () => {
 		it("should throw error if account has been already disabled", async () => {
 			expect.assertions(4);
 			try {
-				await broker.call("v1.accounts.disable", { id: savedUser._id });
+				await broker.call("v1.accounts.disable", { id: savedUser.id });
 			} catch (err) {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
@@ -1664,7 +1666,7 @@ describe("Test Accounts service", () => {
 		});
 
 		it("should enable account", async () => {
-			const res = await broker.call("v1.accounts.enable", { id: savedUser._id });
+			const res = await broker.call("v1.accounts.enable", { id: savedUser.id });
 
 			expect(res).toEqual({
 				status: 1
@@ -1674,7 +1676,7 @@ describe("Test Accounts service", () => {
 		it("should throw error if account has been already enabled", async () => {
 			expect.assertions(4);
 			try {
-				await broker.call("v1.accounts.enable", { id: savedUser._id });
+				await broker.call("v1.accounts.enable", { id: savedUser.id });
 			} catch (err) {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");

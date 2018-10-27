@@ -20,7 +20,7 @@ module.exports = function(collection, opts = {}) {
 			mkdir(dir);
 			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`)});
 		} else {
-			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab");
+			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab", { useNewUrlParser: true });
 			// Mongo has an internal reconnect logic
 			opts.autoReconnect = false;
 		}
@@ -38,7 +38,7 @@ module.exports = function(collection, opts = {}) {
 				});
 			},
 
-			encodeID(id) {
+			/*encodeID(id) {
 				return id != null ? id.toString() : null;
 			},
 
@@ -48,6 +48,7 @@ module.exports = function(collection, opts = {}) {
 
 				return id;
 			}
+			*/
 		},
 
 		async afterConnected() {
