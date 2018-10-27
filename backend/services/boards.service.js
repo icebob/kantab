@@ -81,7 +81,7 @@ module.exports = {
 		update: {
 			needEntity: true,
 			permissions: [
-				"boards.",
+				"administrator",
 				"$owner"
 			]
 		},

@@ -9,28 +9,28 @@ const FindEntityMiddleware = require("../../../middlewares/FindEntity");
 //const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
 
 describe("Test Boards service", () => {
-	let broker = new ServiceBroker({ logger: false, middlewares: [
+	let broker = new ServiceBroker({ logger: true, middlewares: [
 		FindEntityMiddleware,
 		//CheckPermissionsMiddleware
 	] });
 
 	// Config service
 	broker.createService(ConfigService);
+	broker.createService({ name: "accounts", version: 1 }); // Mock in case of dependency
 
 	// Boards service
-	debugger;
 	const service = broker.createService(TestService, {});
 
 	beforeAll(() => broker.start());
 	afterAll(() => broker.stop());
 
-	it("check permissions", async () => {
-		expect(broker.findNextActionEndpoint("v1.boards.create").action.permissions).toEqual(["boards:create"]);
-		expect(broker.findNextActionEndpoint("v1.boards.list").action.permissions).toEqual(["boards:read"]);
-		expect(broker.findNextActionEndpoint("v1.boards.find").action.permissions).toEqual(["boards:read"]);
-		expect(broker.findNextActionEndpoint("v1.boards.get").action.permissions).toEqual(["boards:read"]);
-		expect(broker.findNextActionEndpoint("v1.boards.update").action.permissions).toEqual(["administrator", expect.any(Function)]);
-		expect(broker.findNextActionEndpoint("v1.boards.remove").action.permissions).toEqual(["administrator", expect.any(Function)]);
+	it("check permissions", () => {
+		expect(broker.findNextActionEndpoint("v1.boards.create").action.permissions).toEqual(["boards.create"]);
+		expect(broker.findNextActionEndpoint("v1.boards.list").action.permissions).toEqual(["boards.read"]);
+		expect(broker.findNextActionEndpoint("v1.boards.find").action.permissions).toEqual(["boards.read"]);
+		expect(broker.findNextActionEndpoint("v1.boards.get").action.permissions).toEqual(["boards.read", "$owner"]);
+		expect(broker.findNextActionEndpoint("v1.boards.update").action.permissions).toEqual(["administrator", "$owner"]);
+		expect(broker.findNextActionEndpoint("v1.boards.remove").action.permissions).toEqual(["administrator", "$owner"]);
 	});
 	/*
 	describe("Test JWT methods", () => {
