@@ -46,16 +46,16 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
-		fields: [
-			"_id",
-			"name",
-			"description",
-			"permissions",
-			"inherits",
-			"status",
-			"createdAt",
-			"updatedAt"
-		],
+		fields: {
+			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
+			name: { type: "string" },
+			description: { type: "string" },
+			permissions: { type: "array" },
+			inherits: { type: "array" },
+			status: { type: "number", default: 1 },
+			createdAt: { type: "number", updateable: false, default: Date.now },
+			updatedAt: { type: "number", readonly: true, updateDefault: Date.now },
+		},
 
 		permissions: [
 			"boards.create",

@@ -30,14 +30,14 @@ describe("Test Access-Control logic", () => {
 
 			expect(res.length).toBe(2);
 			expect(res).toEqual(expect.arrayContaining([{
-				_id: expect.any(String),
+				id: expect.any(String),
 				createdAt: expect.any(Number),
 				description: "System Administrator",
 				name: "administrator",
 				permissions: ["**"],
 				status: 1
 			}, {
-				_id: expect.any(String),
+				id: expect.any(String),
 				createdAt: expect.any(Number),
 				description: "Registered User",
 				name: "user",
@@ -68,15 +68,15 @@ describe("Test Access-Control logic", () => {
 
 			expect(res).toEqual({
 				...role,
-				_id: expect.any(String)
+				id: expect.any(String)
 			});
 
 			expect(await broker.call("v1.acl.count")).toBe(3);
-			role._id = res._id;
+			role.id = res.id;
 		});
 
 		it("should assign a permission to a role", async () => {
-			const res = await broker.call("v1.acl.assignPermission", { id: role._id, permission: "user.create" });
+			const res = await broker.call("v1.acl.assignPermission", { id: role.id, permission: "user.create" });
 
 			expect(res.permissions).toEqual([
 				"user.list",
@@ -88,7 +88,7 @@ describe("Test Access-Control logic", () => {
 		});
 
 		it("should not assign it again", async () => {
-			const res = await broker.call("v1.acl.assignPermission", { id: role._id, permission: "user.create" });
+			const res = await broker.call("v1.acl.assignPermission", { id: role.id, permission: "user.create" });
 
 			expect(res.permissions).toEqual([
 				"user.list",
@@ -100,7 +100,7 @@ describe("Test Access-Control logic", () => {
 		});
 
 		it("should revoke a permission from a role", async () => {
-			const res = await broker.call("v1.acl.revokePermission", { id: role._id, permission: "user.create" });
+			const res = await broker.call("v1.acl.revokePermission", { id: role.id, permission: "user.create" });
 
 			expect(res.permissions).toEqual([
 				"user.list",
@@ -111,7 +111,7 @@ describe("Test Access-Control logic", () => {
 		});
 
 		it("should not revoke it again", async () => {
-			const res = await broker.call("v1.acl.revokePermission", { id: role._id, permission: "user.create" });
+			const res = await broker.call("v1.acl.revokePermission", { id: role.id, permission: "user.create" });
 
 			expect(res.permissions).toEqual([
 				"user.list",
@@ -122,7 +122,7 @@ describe("Test Access-Control logic", () => {
 		});
 
 		it("should sync permissions with a role", async () => {
-			const res = await broker.call("v1.acl.syncPermissions", { id: role._id, permissions: [
+			const res = await broker.call("v1.acl.syncPermissions", { id: role.id, permissions: [
 				"boards.create",
 				"boards.update",
 				"boards.remove"
