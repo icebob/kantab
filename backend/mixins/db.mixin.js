@@ -51,6 +51,7 @@ module.exports = function(collection, opts = {}) {
 		},
 
 		async afterConnected() {
+			this.logger.info("Connected to database.");
 			/* istanbul ignore next */
 			if (!TESTING) {
 				// Create indexes

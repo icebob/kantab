@@ -18,6 +18,7 @@ describe("Test Boards service", () => {
 	broker.createService(ConfigService);
 
 	// Boards service
+	debugger;
 	const service = broker.createService(TestService, {});
 
 	beforeAll(() => broker.start());
