@@ -20,26 +20,29 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  * TODO:
  * 	- [ ] enhanced `fields` with visibility, default value...etc
  *      fields: {
- * 			_id: { id: true, type: "string", readonly: true, secure: true }, // Can't set by user
- *			owner: { populate: "v1.accounts.populate" }, // Populate via other service
+ * 			id: { id: true, type: "string", readonly: true, secure: true, columnName: "_id" }, // Can't set by user
+ *			owner: { populate: { action: "v1.accounts.resolve", fields: ["id", "name", "avatar"] } }, // Populate via other service
  * 			title: { type: "string", trim: true, maxlength: 50, required: true },	// Sanitization & validation
  * 			slug: { set: (value, entity, ctx) => slug(entity.title) }	// Custom formatter before saving
  * 			fullName: { get: (value, entity, ctx) => entity.firstName + ' ' + entity.lastName }	// Virtual/calculated field
- * 			password: { type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Validation
+ * 			password: { type: "string", hidden: true, validate: (value, entity, ctx) => value.length > 6 },	// Custom validator
  * 			status: { type: "Number", default: 1 } // Optional field with default value
- * 			createdAt: { type: "Date", updateable: false, default: Date.now },	// Default value with custom function and can't update this field
- * 			updatedAt: { type: "Date", readonly: true, updateDefault: () => new Date() }, Default value only at updating. It can't writable by user.
- * 			roles: { type: "Array", permissions: ["administrator", "$owner"] } // Access control by permissions
- * 			members: { type: "Array", populate: "v1.accounts.populate", readPermissions: ["$owner"] }
+ * 			roles: { type: "Array", permissions: ["administrator"] } // Access control by permissions
+ * 			members: { type: "Array", populate: "v1.accounts.resolve", readPermissions: ["$owner"] }
+ * 			postCount: { type: "number", populate(values, entities, ctx) => this.Promise.all(entities.map(async e => e.postCount = await ctx.call("posts.count", { query: { author: e._id } }))) },
+ *			createdAt: { type: "number", readonly: true, setOnCreate: () => Date.now() }, // Set value when entity is created
+ *			updatedAt: { type: "number", readonly: true, setOnUpdate: () => Date.now() }, // Set value when entity is updated
+ *			deletedAt: { type: "number", readonly: true, setOnDelete: () => Date.now() }, // Set value when entity is deleted
  *      }
- *  - [ ] change fields to object instead of array. So it can be extended by mixins
- *  - [ ] new attributes for fields
+ *  - [x] change fields to object instead of array. So it can be extended by mixins
+ *  - [x] new attributes for fields
  * 			- [ ] `columnName`
  * 			- [ ] `columnType`
  *
+ *  - [ ] new set functions: `setOnCreate`, `setOnUpdate`, `setOnDelete`
  * 	- [ ] cascase delete. If an entity deleted, delete this entity from other tables too. (in rdbms)
  *  - [x] change optional to required.
- *  - [ ] rewrite to async/await
+ *  - [x] rewrite to async/await
  * 	- [ ] review populates
  * 	- [ ] review transform
  * 	- [x] rewrite `get` action. Rename to `resolve` and write a simple `get` action.
@@ -47,7 +50,6 @@ const MemoryAdapter = require("moleculer-db").MemoryAdapter;
  * 	- [ ] tenant handling https://github.com/moleculerjs/moleculer-db/pull/5
  * 	- [ ] monorepo with adapters
  * 	- [?] multi collections in a service
- * 	- [ ] useTimestamps option.
  *  - [ ] `aggregate` action with params: `type: "sum", "avg", "count", "min", "max"` & `field: "price"`
  * 	- [ ] softDelete option with `deletedAt` and `allowDeleted` params in find, list, get, resolve actions.
  *
@@ -146,8 +148,8 @@ module.exports = function(adapter, opts) {
 				],
 				query: { type: "object", optional: true }
 			},
-			handler(ctx) {
-				return this.adapter.find(ctx.params);
+			async handler(ctx) {
+				return await this.adapter.find(ctx.params);
 			}
 		};
 
@@ -178,14 +180,14 @@ module.exports = function(adapter, opts) {
 				searchFields: { type: "array", optional: true },
 				query: { type: "object", optional: true }
 			},
-			handler(ctx) {
+			async handler(ctx) {
 				// Remove pagination params
 				if (ctx.params && ctx.params.limit)
 					ctx.params.limit = null;
 				if (ctx.params && ctx.params.offset)
 					ctx.params.offset = null;
 
-				return this.adapter.count(ctx.params);
+				return await this.adapter.count(ctx.params);
 			}
 		};
 
@@ -234,7 +236,7 @@ module.exports = function(adapter, opts) {
 				],
 				query: { type: "object", optional: true }
 			},
-			handler(ctx) {
+			async handler(ctx) {
 				let params = Object.assign({}, ctx.params);
 				let countParams = Object.assign({}, params);
 
@@ -268,9 +270,9 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.create = {
 			visibility: opts.actionVisibility,
-			handler(ctx) {
-				return this.validateEntity(ctx, null, ctx.params)
-					.then(entity => this.adapter.insert(entity));
+			async handler(ctx) {
+				const entity = await this.validateEntity(ctx, null, ctx.params);
+				return await this.adapter.insert(entity);
 			}
 		};
 
@@ -296,17 +298,12 @@ module.exports = function(adapter, opts) {
 					{ type: "array", optional: true }
 				]
 			},
-			handler(ctx) {
-				return Promise.resolve(ctx.params.entity)
-					.then(entity => {
-						if (Array.isArray(entity)) {
-							return this.validateEntity(ctx, null, ctx.params.entity)
-								.then(entities => this.adapter.insertMany(entities));
-						} else {
-							return this.validateEntity(ctx, null, ctx.params.entity)
-								.then(entity => this.adapter.insert(entity));
-						}
-					});
+			async handler(ctx) {
+				const entity = await this.validateEntity(ctx, null, ctx.params.entity);
+				if (Array.isArray(entity))
+					return await this.adapter.insertMany(entity);
+				else
+					return await this.adapter.insert(entity);
 			}
 		};
 
@@ -395,37 +392,23 @@ module.exports = function(adapter, opts) {
 				],
 				mapping: { type: "boolean", optional: true }
 			},
-			handler(ctx) {
-				let params = ctx.params;
-				let id = params.id;
-
-				let origDoc;
-				return this.getById(id, true)
-					.then(doc => {
-						if (!doc)
-							return Promise.reject(new EntityNotFoundError(id));
-
-						origDoc = doc;
-						return this.transformDocuments(ctx, ctx.params, doc);
-					})
-
-					.then(json => {
-						if (Array.isArray(json) && params.mapping === true) {
-							let res = {};
-							json.forEach((doc, i) => {
-								const id = origDoc[i][this.$primaryField.name];
-								res[id] = doc;
-							});
-
-							return res;
-						}
-						return json;
+			async handler(ctx) {
+				const doc = ctx.entity;
+				const json = await this.transformDocuments(ctx, ctx.params, doc);
+				if (Array.isArray(json) && ctx.params.mapping === true) {
+					let res = {};
+					json.forEach((doc, i) => {
+						const id = ctx.entity[i][this.$primaryField.name];
+						res[id] = doc;
 					});
 
+					return res;
+				}
+				return json;
 			}
 		};
 
-		schema.hooks.before.populate = ["sanitizeFindHook"];
+		schema.hooks.before.populate = ["sanitizeFindHook", "findEntity", "entityNotFoundHook"];
 		// TODO: schema.hooks.after.populate = ["transformHook, "mappingHook"];
 	}
 
@@ -442,13 +425,12 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.update = {
 			visibility: opts.actionVisibility,
-			handler(ctx) {
+			async handler(ctx) {
 				let changes = Object.assign({}, ctx.params);
 				delete changes[this.$primaryField.name];
 
-				return Promise.resolve(ctx.entity)
-					.then(entity => this.validateEntity(ctx, entity, changes))
-					.then(entity => this.adapter.updateById(ctx.entityID, { "$set": entity }));
+				const entity = await this.validateEntity(ctx, ctx.entity, changes);
+				return await this.adapter.updateById(ctx.entityID, { "$set": entity });
 			}
 		};
 
@@ -459,7 +441,7 @@ module.exports = function(adapter, opts) {
 	if (opts.createActions === true || opts.createActions.replace === true) {
 		/**
 		 * Replace an entity by ID.
-		 * > After replace, clear the cache & call lifecycle events.
+		 * > After replacing, clear the cache & call lifecycle events.
 		 *
 		 * @actions
 		 *
@@ -469,13 +451,14 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.replace = {
 			visibility: opts.actionVisibility,
-			handler(ctx) {
+			async handler(ctx) {
 				let entity = ctx.params;
 
 				// TODO: implement replace in adapters
-				return this.adapter.collection.findOneAndUpdate({
+				const res = await this.adapter.collection.findOneAndUpdate({
 					[this.$primaryField.name]: this.stringToObjectID(ctx.entity[this.$primaryField.name])
-				}, entity, { returnNewDocument : true }).then(res => res.value);
+				}, entity, { returnNewDocument : true });
+				return res.value;
 			}
 		};
 
@@ -499,8 +482,8 @@ module.exports = function(adapter, opts) {
 			params: {
 				id: { type: "any" }
 			},
-			handler(ctx) {
-				return this.adapter.removeById(ctx.entity[this.$primaryField.name]);
+			async handler(ctx) {
+				return await this.adapter.removeById(ctx.entityID);
 			}
 		};
 
@@ -516,18 +499,18 @@ module.exports = function(adapter, opts) {
 		/**
 		 * Connect to database.
 		 */
-		connect() {
-			return this.adapter.connect().then(() => {
-				// Call an 'afterConnected' handler in schema
-				if (_.isFunction(this.schema.afterConnected)) {
-					try {
-						return this.schema.afterConnected.call(this);
-					} catch(err) {
-					/* istanbul ignore next */
-						this.logger.error("afterConnected error!", err);
-					}
+		async connect() {
+			await this.adapter.connect();
+
+			// Call an 'afterConnected' handler in schema
+			if (_.isFunction(this.schema.afterConnected)) {
+				try {
+					return await this.schema.afterConnected.call(this);
+				} catch(err) {
+				/* istanbul ignore next */
+					this.logger.error("afterConnected error!", err);
 				}
-			});
+			}
 		},
 
 		/**
@@ -556,11 +539,12 @@ module.exports = function(adapter, opts) {
 		 * @param {*} docs
 		 * @returns
 		 */
-		transformHook(ctx, docs) {
-			if (ctx.action.rawName == "list")
-				return this.transformDocuments(ctx, ctx.params, docs[0]).then(res => [res, docs[1]]);
-			else
-				return this.transformDocuments(ctx, ctx.params, docs);
+		async transformHook(ctx, docs) {
+			if (ctx.action.rawName == "list") {
+				const res = await this.transformDocuments(ctx, ctx.params, docs[0]);
+				return [res, docs[1]];
+			}
+			return await this.transformDocuments(ctx, ctx.params, docs);
 		},
 
 		/**
@@ -570,23 +554,21 @@ module.exports = function(adapter, opts) {
 		 * @param {*} [docs, total]
 		 * @returns
 		 */
-		pagingHook(ctx, [docs, total]) {
+		async pagingHook(ctx, [docs, total]) {
 			const params = ctx.params;
-			return this.transformDocuments(ctx, params, docs)
-				.then(docs => {
-					return {
-						// Rows
-						rows: docs,
-						// Total rows
-						total: total,
-						// Page
-						page: params.page,
-						// Page size
-						pageSize: params.pageSize,
-						// Total pages
-						totalPages: Math.floor((total + params.pageSize - 1) / params.pageSize)
-					};
-				});
+			const rows = await this.transformDocuments(ctx, params, docs);
+			return {
+				// Rows
+				rows,
+				// Total rows
+				total: total,
+				// Page
+				page: params.page,
+				// Page size
+				pageSize: params.pageSize,
+				// Total pages
+				totalPages: Math.floor((total + params.pageSize - 1) / params.pageSize)
+			};
 		},
 
 		/**
@@ -596,8 +578,9 @@ module.exports = function(adapter, opts) {
 		 * @param {*} json
 		 * @returns
 		 */
-		changedHook(ctx, json) {
-			return this.entityChanged(ctx.action.rawName + "d", json, ctx).then(() => json);
+		async changedHook(ctx, json) {
+			await this.entityChanged(ctx.action.rawName + "d", json, ctx);
+			return json;
 		},
 
 		/**
@@ -606,15 +589,15 @@ module.exports = function(adapter, opts) {
 		 * @param {Context} ctx
 		 * @returns
 		 */
-		findEntity(ctx) {
+		async findEntity(ctx) {
 			let id = ctx.params[this.$primaryField.name];
 			if (id == null)
 				id = ctx.params.id;
 
 			if (id != null) {
 				ctx.entityID = id;
-				return this.getById(id, true)
-					.then(entity => ctx.entity = entity);
+				const entity = await this.getById(id, true);
+				ctx.entity = entity;
 			}
 			return null;
 		},
@@ -694,15 +677,11 @@ module.exports = function(adapter, opts) {
 		 * @param {Boolean} decoding - Need to decode IDs.
 		 * @returns {Object|Array<Object>} Found entity(ies).
 		 */
-		getById(id, decoding) {
-			return Promise.resolve()
-				.then(() => {
-					if (Array.isArray(id)) {
-						return this.adapter.findByIds(decoding ? id.map(this.decodeID) : id);
-					} else {
-						return this.adapter.findById(decoding ? this.decodeID(id) : id);
-					}
-				});
+		async getById(id, decoding) {
+			if (Array.isArray(id))
+				return await this.adapter.findByIds(decoding ? id.map(this.decodeID) : id);
+
+			return await this.adapter.findById(decoding ? this.decodeID(id) : id);
 		},
 
 		/**
@@ -713,13 +692,11 @@ module.exports = function(adapter, opts) {
 		 * @param {Context} ctx
 		 * @returns {Promise}
 		 */
-		entityChanged(type, json, ctx) {
-			return this.clearCache().then(() => {
-				const eventName = `entity${_.capitalize(type)}`;
-				if (this.schema[eventName] != null) {
-					return this.schema[eventName].call(this, json, ctx);
-				}
-			});
+		async entityChanged(type, json, ctx) {
+			await this.clearCache();
+			const eventName = `entity${_.capitalize(type)}`;
+			if (this.schema[eventName] != null)
+				return await this.schema[eventName].call(this, json, ctx);
 		},
 
 		/**
@@ -728,11 +705,10 @@ module.exports = function(adapter, opts) {
 		 * @methods
 		 * @returns {Promise}
 		 */
-		clearCache() {
+		async clearCache() {
 			this.broker.broadcast(`cache.clean.${this.name}`);
 			if (this.broker.cacher)
 				this.broker.cacher.clean(`${this.name}.*`);
-			return Promise.resolve();
 		},
 
 		/**
@@ -742,7 +718,7 @@ module.exports = function(adapter, opts) {
 		 * @param {Object} 			Params
 		 * @returns {Array|Object}
 		 */
-		transformDocuments(ctx, params, docs) {
+		async transformDocuments(ctx, params, docs) {
 			let isDoc = false;
 			if (!Array.isArray(docs)) {
 				if (_.isObject(docs)) {
@@ -755,19 +731,17 @@ module.exports = function(adapter, opts) {
 				}
 			}
 
-			return Promise.resolve(docs)
+			// Convert entity to JS object
+			const json = docs.map(doc => this.adapter.entityToObject(doc));
 
-				// Convert entity to JS object
-				.then(docs => docs.map(doc => this.adapter.entityToObject(doc)))
+			// Populate
+			const populated = (ctx && params.populate) ? await this.populateDocs(ctx, json, params.populate) : json;
 
-				// Populate
-				.then(json => (ctx && params.populate) ? this.populateDocs(ctx, json, params.populate) : json)
+			// Reform object
+			const res = await Promise.all(populated.map(doc => this.reformFields(ctx, params, doc)));
 
-				// Reform object
-				.then(docs => Promise.all(docs.map(doc => this.reformFields(ctx, params, doc))))
-
-				// Return
-				.then(json => isDoc ? json[0] : json);
+			// Return
+			return isDoc ? res[0] : res;
 		},
 
 		/**
@@ -778,51 +752,51 @@ module.exports = function(adapter, opts) {
 		 * @param {Object} doc
 		 * @returns {Object}
 		 */
-		reformFields(ctx, params, doc) {
+		async reformFields(ctx, params, doc) {
 			// Skip if fields is not defined in settings.
 			if (!this.$fields) return Promise.resolve(doc);
 
 			const wantedFields = params.fields;
-			return this.authorizeFields(ctx, true).then(authorizedFields => {
+			const authorizedFields = await this.authorizeFields(ctx, true);
 
-				const res = {};
-				const promises = [];
+			const res = {};
+			const promises = [];
 
-				const setValue = (res, field, value) => {
-					// Encode secure ID
-					if (field.primaryKey && field.secure && value != null)
-						value = this.encodeID(value);
+			const setValue = (res, field, value) => {
+				// Encode secure ID
+				if (field.primaryKey && field.secure && value != null)
+					value = this.encodeID(value);
 
-					_.set(res, field.name, value);
-				};
+				_.set(res, field.name, value);
+			};
 
-				authorizedFields.forEach(field => {
-					// Skip if the field is not wanted
-					if (wantedFields && wantedFields.indexOf(field.name) === -1) return;
+			authorizedFields.forEach(field => {
+				// Skip if the field is not wanted
+				if (wantedFields && wantedFields.indexOf(field.name) === -1) return;
 
-					// Skip if hidden
-					if (field.hidden === true) return;
+				// Skip if hidden
+				if (field.hidden === true) return;
 
-					const value = _.get(doc, field.columnName || field.name);
+				const value = _.get(doc, field.columnName || field.name);
 
-					// Virtual or formatted field
-					if (_.isFunction(field.get)) {
-						const value = field.get.call(this, value, doc, ctx);
-						if (isPromise(value))
-							promises.push(value.then(v => setValue(res, field, v)));
-						else
-							setValue(res, field, value);
-
-						return;
-					}
-
-					if (value !== undefined) {
+				// Virtual or formatted field
+				if (_.isFunction(field.get)) {
+					const value = field.get.call(this, value, doc, ctx);
+					if (isPromise(value))
+						promises.push(value.then(v => setValue(res, field, v)));
+					else
 						setValue(res, field, value);
-					}
-				});
 
-				return Promise.all(promises).then(() => res);
+					return;
+				}
+
+				if (value !== undefined) {
+					setValue(res, field, value);
+				}
 			});
+
+			await Promise.all(promises);
+			return res;
 		},
 
 		/**
@@ -833,7 +807,7 @@ module.exports = function(adapter, opts) {
 		 * @param {Object} changes
 		 * @returns {Object} validated entity
 		 */
-		validateEntity(ctx, entity, changes) {
+		async validateEntity(ctx, entity, changes) {
 			const isNew = !entity;
 			entity = entity || {};
 
@@ -844,95 +818,95 @@ module.exports = function(adapter, opts) {
 				return entity;
 			}
 
-			return this.authorizeFields(ctx, true).then(authorizedFields => {
+			const authorizedFields = await this.authorizeFields(ctx, true);
 
-				const updates = {};
-				const promises = [];
+			const updates = {};
+			const promises = [];
 
-				const callCustomFn = (field, fn, args) => {
-					const value = fn.apply(this, args);
-					if (isPromise(value))
-						promises.push(value.then(v => setValue(field, v)));
-					else
-						setValue(field, value);
-				};
-
-				const setValue = (field, value) => {
-					// Sanitizing
-					if (field.trim) {
-						if (field.trim === true)
-							value = value.trim();
-						else if (field.trim === "right")
-							value = value.trimRight();
-						else if (field.trim === "left")
-							value = value.trimLeft();
-					}
-
-					// TODO: more sanitization
-					// - lowercase, uppercase, ...etc
-
-					// Validating
-					if (value == undefined) {
-						if (field.required && isNew)
-							promises.push(Promise.reject(new ValidationError(`The '${field.name}' field is missing.`))); // TODO
-						return;
-					}
-
-					/**
-					 * TODO:
-					 * 	- custom validate fn
-					 *  - min, max for number
-					 *  - pattern for string
-					 */
-
-
-					_.set(entity, field.name, value);
-
-					// Because the key is the path. Mongo overwrites a nested object if set a nested object
-					updates[field.name] = value;
-				};
-
-				authorizedFields.forEach(field => {
-					// Custom formatter
-					if (!isNew && _.isFunction(field.updateSet))
-						return callCustomFn(field, field.updateSet, [_.get(changes, field.name), entity, ctx]);
-					else if (_.isFunction(field.set))
-						return callCustomFn(field, field.set, [_.get(changes, field.name), entity, ctx]);
-
-					// Get new value
-					let value = _.get(changes, field.name);
-
-					if (value !== undefined) {
-						// Skip if readonly field
-						if (field.readonly) return;
-
-						// Skip if not allowed to update the field
-						if (!isNew && field.updateable === false) return;
-					}
-
-					// Get previous value
-					const prevValue = _.get(entity, field.name);
-
-					// Skip if update and field is not defined but has previous value.
-					if (!isNew && value == undefined && prevValue !== undefined) return;
-
-					// Handle default value if new entity
-					if (value == undefined) {
-						const defaultValue = isNew ? field.default : field.updateDefault;
-						if (defaultValue !== undefined) {
-							if (_.isFunction(defaultValue))
-								return callCustomFn(field, defaultValue, [_.get(changes, field.name), entity, ctx]);
-
-							value = defaultValue;
-						}
-					}
-
-					// Set new value to entity
+			const callCustomFn = (field, fn, args) => {
+				const value = fn.apply(this, args);
+				if (isPromise(value))
+					promises.push(value.then(v => setValue(field, v)));
+				else
 					setValue(field, value);
-				});
+			};
 
-				return Promise.all(_.compact(promises)).then(() => updates);
+			const setValue = (field, value) => {
+				// Sanitizing
+				if (field.trim) {
+					if (field.trim === true)
+						value = value.trim();
+					else if (field.trim === "right")
+						value = value.trimRight();
+					else if (field.trim === "left")
+						value = value.trimLeft();
+				}
+
+				// TODO: more sanitization
+				// - lowercase, uppercase, ...etc
+
+				// Validating
+				if (value == undefined) {
+					if (field.required && isNew)
+						promises.push(Promise.reject(new ValidationError(`The '${field.name}' field is missing.`))); // TODO
+					return;
+				}
+
+				/**
+				 * TODO:
+				 * 	- custom validate fn
+				 *  - min, max for number
+				 *  - pattern for string
+				 */
+
+
+				_.set(entity, field.name, value);
+
+				// Because the key is the path. Mongo overwrites a nested object if set a nested object
+				updates[field.name] = value;
+			};
+
+			authorizedFields.forEach(field => {
+				// Custom formatter
+				if (!isNew && _.isFunction(field.updateSet))
+					return callCustomFn(field, field.updateSet, [_.get(changes, field.name), entity, ctx]);
+				else if (_.isFunction(field.set))
+					return callCustomFn(field, field.set, [_.get(changes, field.name), entity, ctx]);
+
+				// Get new value
+				let value = _.get(changes, field.name);
+
+				if (value !== undefined) {
+					// Skip if readonly field
+					if (field.readonly) return;
+
+					// Skip if not allowed to update the field
+					if (!isNew && field.updateable === false) return;
+				}
+
+				// Get previous value
+				const prevValue = _.get(entity, field.name);
+
+				// Skip if update and field is not defined but has previous value.
+				if (!isNew && value == undefined && prevValue !== undefined) return;
+
+				// Handle default value if new entity
+				if (value == undefined) {
+					const defaultValue = isNew ? field.default : field.updateDefault;
+					if (defaultValue !== undefined) {
+						if (_.isFunction(defaultValue))
+							return callCustomFn(field, defaultValue, [_.get(changes, field.name), entity, ctx]);
+
+						value = defaultValue;
+					}
+				}
+
+				// Set new value to entity
+				setValue(field, value);
 			});
+
+			await Promise.all(_.compact(promises));
+			return updates;
 		},
 
 		/**
@@ -943,7 +917,7 @@ module.exports = function(adapter, opts) {
 		 * @param {Boolean} readOnly
 		 * @returns {Array}
 		 */
-		authorizeFields(ctx, readOnly) {
+		async authorizeFields(ctx, readOnly) {
 			const res = [];
 
 			const promises = _.compact(this.$fields.map(field => {
@@ -961,7 +935,8 @@ module.exports = function(adapter, opts) {
 				res.push(field);
 			}));
 
-			return Promise.all(promises).then(() => res);
+			await Promise.all(promises);
+			return res;
 		},
 
 		/**
@@ -983,12 +958,12 @@ module.exports = function(adapter, opts) {
 		 * @param {Array}			populateFields
 		 * @returns	{Promise}
 		 */
-		populateDocs(ctx, docs, populateFields) {
+		async populateDocs(ctx, docs, populateFields) {
 			if (!this.settings.populates || !Array.isArray(populateFields) || populateFields.length == 0)
-				return Promise.resolve(docs);
+				return docs;
 
 			if (docs == null || !_.isObject(docs) || !Array.isArray(docs))
-				return Promise.resolve(docs);
+				return docs;
 
 			let promises = [];
 			_.forIn(this.settings.populates, (rule, field) => {
@@ -1042,7 +1017,8 @@ module.exports = function(adapter, opts) {
 				}
 			});
 
-			return Promise.all(promises).then(() => docs);
+			await Promise.all(promises);
+			return docs;
 		},
 
 
