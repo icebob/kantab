@@ -39,7 +39,10 @@ module.exports = {
 	settings: {
 		fields: {
 			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
-			owner: { required: true, populate: "v1.accounts.populate", set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
+			owner: { required: true, populate: {
+				action: "v1.accounts.resolve",
+				fields: ["id", "username", "firstName", "lastName", "avatar"]
+			}, set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
 			title: { type: "string", required: true, trim: true },
 			slug: { type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
 			description: "string",
@@ -49,10 +52,10 @@ module.exports = {
 			labels: { type: "array" },
 			members: { type: "array" },
 			options: { type: "object" },
-			createdAt: { type: "date", readonly: true, default: () => Date.now() },
-			updatedAt: { type: "date", readonly: true, updateSet: () => Date.now() },
+			createdAt: { type: "date", readonly: true, setOnCreate: () => Date.now() },
+			updatedAt: { type: "date", readonly: true, setOnUpdate: () => Date.now() },
 			archivedAt: { type: "date" },
-			deletedAt: { type: "date" },
+			deletedAt: { type: "date", setOnDelete: () => Date.now() },
 		},
 		strict: true, // TODO
 		softDelete: true // TODO

@@ -398,7 +398,8 @@ module.exports = function(adapter, opts) {
 				if (Array.isArray(json) && ctx.params.mapping === true) {
 					let res = {};
 					json.forEach((doc, i) => {
-						const id = ctx.entity[i][this.$primaryField.name];
+						// TODO const id = ctx.entity[i][this.$primaryField.name];
+						const id = json[i][this.$primaryField.name];
 						res[id] = doc;
 					});
 
@@ -408,8 +409,8 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.populate = ["sanitizeFindHook", "findEntity", "entityNotFoundHook"];
-		// TODO: schema.hooks.after.populate = ["transformHook, "mappingHook"];
+		schema.hooks.before.resolve = ["sanitizeFindHook", "findEntity", "entityNotFoundHook"];
+		// TODO: schema.hooks.after.resolve = ["transformHook, "mappingHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.update === true) {
@@ -529,99 +530,7 @@ module.exports = function(adapter, opts) {
 		 * @param {Context} ctx
 		 */
 		sanitizeFindHook(ctx) {
-			ctx.params = this.sanitizeParams(ctx, ctx.params);
-		},
-
-		/**
-		 *
-		 *
-		 * @param {Context} ctx
-		 * @param {*} docs
-		 * @returns
-		 */
-		async transformHook(ctx, docs) {
-			if (ctx.action.rawName == "list") {
-				const res = await this.transformDocuments(ctx, ctx.params, docs[0]);
-				return [res, docs[1]];
-			}
-			return await this.transformDocuments(ctx, ctx.params, docs);
-		},
-
-		/**
-		 *
-		 *
-		 * @param {Context} ctx
-		 * @param {*} [docs, total]
-		 * @returns
-		 */
-		async pagingHook(ctx, [docs, total]) {
-			const params = ctx.params;
-			const rows = await this.transformDocuments(ctx, params, docs);
-			return {
-				// Rows
-				rows,
-				// Total rows
-				total: total,
-				// Page
-				page: params.page,
-				// Page size
-				pageSize: params.pageSize,
-				// Total pages
-				totalPages: Math.floor((total + params.pageSize - 1) / params.pageSize)
-			};
-		},
-
-		/**
-		 *
-		 *
-		 * @param {Context} ctx
-		 * @param {*} json
-		 * @returns
-		 */
-		async changedHook(ctx, json) {
-			await this.entityChanged(ctx.action.rawName + "d", json, ctx);
-			return json;
-		},
-
-		/**
-		 *
-		 *
-		 * @param {Context} ctx
-		 * @returns
-		 */
-		async findEntity(ctx) {
-			let id = ctx.params[this.$primaryField.name];
-			if (id == null)
-				id = ctx.params.id;
-
-			if (id != null) {
-				ctx.entityID = id;
-				const entity = await this.getById(id, true);
-				ctx.entity = entity;
-			}
-			return null;
-		},
-
-		/**
-		 *
-		 *
-		 * @param {Context} ctx
-		 * @returns
-		 */
-		entityNotFoundHook(ctx) {
-			if (!ctx.entity)
-				return Promise.reject(new EntityNotFoundError(ctx.entityID));
-		},
-
-		/**
-		 * Sanitize context parameters.
-		 *
-		 * @param {Context} ctx
-		 * @param {Object} params
-		 * @returns {Promise}
-		 */
-		sanitizeParams(ctx, params) {
-			let p = Object.assign({}, params);
+			let p = Object.assign({}, ctx.params);
 
 			// Convert from string to number
 			if (typeof(p.limit) === "string")
@@ -666,7 +575,93 @@ module.exports = function(adapter, opts) {
 			if (this.settings.maxLimit > 0 && p.limit > this.settings.maxLimit)
 				p.limit = this.settings.maxLimit;
 
-			return p;
+			ctx.params = p;
+		},
+
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @param {*} docs
+		 * @returns
+		 */
+		async transformHook(ctx, docs) {
+			if (ctx.action.rawName == "list") {
+				const res = await this.transformDocuments(ctx, ctx.params, docs[0]);
+				return [res, docs[1]];
+			}
+			return await this.transformDocuments(ctx, ctx.params, docs);
+		},
+
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @param {*} [docs, total]
+		 * @returns
+		 */
+		async pagingHook(ctx, [docs, total]) {
+			const params = ctx.params;
+			const rows = await this.transformDocuments(ctx, params, docs);
+			return {
+				// Rows
+				rows,
+				// Total rows
+				total: total,
+				// Page
+				page: params.page,
+				// Page size
+				pageSize: params.pageSize,
+				// Total pages
+				totalPages: Math.floor((total + params.pageSize - 1) / params.pageSize)
+			};
+		},
+
+		/**
+		 * Clear the cache & call entity lifecycle events
+		 *
+		 * @param {Context} ctx
+		 * @param {*} json
+		 * @returns
+		 */
+		async changedHook(ctx, json) {
+			const type = ctx.action.rawName + "d";
+			await this.clearCache();
+			const eventName = `entity${_.capitalize(type)}`;
+			if (this.schema[eventName] != null)
+				await this.schema[eventName].call(this, json, ctx);
+
+			return json;
+		},
+
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @returns
+		 */
+		async findEntity(ctx) {
+			let id = ctx.params[this.$primaryField.name];
+			if (id == null)
+				id = ctx.params.id;
+
+			if (id != null) {
+				ctx.entityID = id;
+				const entity = await this.getById(id, true);
+				ctx.entity = entity;
+			}
+			return null;
+		},
+
+		/**
+		 *
+		 *
+		 * @param {Context} ctx
+		 * @returns
+		 */
+		entityNotFoundHook(ctx) {
+			if (!ctx.entity)
+				return Promise.reject(new EntityNotFoundError(ctx.entityID));
 		},
 
 		/**
@@ -685,21 +680,6 @@ module.exports = function(adapter, opts) {
 		},
 
 		/**
-		 * Clear the cache & call entity lifecycle events
-		 *
-		 * @param {String} type
-		 * @param {Object|Array|Number} json
-		 * @param {Context} ctx
-		 * @returns {Promise}
-		 */
-		async entityChanged(type, json, ctx) {
-			await this.clearCache();
-			const eventName = `entity${_.capitalize(type)}`;
-			if (this.schema[eventName] != null)
-				return await this.schema[eventName].call(this, json, ctx);
-		},
-
-		/**
 		 * Clear cached entities
 		 *
 		 * @methods
@@ -712,52 +692,19 @@ module.exports = function(adapter, opts) {
 		},
 
 		/**
-		 * Transform the fetched documents
-		 *
-		 * @param {Array|Object} 	docs
-		 * @param {Object} 			Params
-		 * @returns {Array|Object}
-		 */
-		async transformDocuments(ctx, params, docs) {
-			let isDoc = false;
-			if (!Array.isArray(docs)) {
-				if (_.isObject(docs)) {
-					isDoc = true;
-					docs = [docs];
-				}
-				else {
-					// It's a number value (like count) or anything else.
-					return Promise.resolve(docs);
-				}
-			}
-
-			// Convert entity to JS object
-			const json = docs.map(doc => this.adapter.entityToObject(doc));
-
-			// Populate
-			const populated = (ctx && params.populate) ? await this.populateDocs(ctx, json, params.populate) : json;
-
-			// Reform object
-			const res = await Promise.all(populated.map(doc => this.reformFields(ctx, params, doc)));
-
-			// Return
-			return isDoc ? res[0] : res;
-		},
-
-		/**
 		 *
 		 *
 		 * @param {Context} ctx
 		 * @param {Object?} params
 		 * @param {Object} doc
+		 * @param {Array<Object>} allFields
 		 * @returns {Object}
 		 */
-		async reformFields(ctx, params, doc) {
+		async reformFields(ctx, params, doc, allFields) {
 			// Skip if fields is not defined in settings.
 			if (!this.$fields) return Promise.resolve(doc);
 
 			const wantedFields = params.fields;
-			const authorizedFields = await this.authorizeFields(ctx, true);
 
 			const res = {};
 			const promises = [];
@@ -770,7 +717,7 @@ module.exports = function(adapter, opts) {
 				_.set(res, field.name, value);
 			};
 
-			authorizedFields.forEach(field => {
+			allFields.forEach(field => {
 				// Skip if the field is not wanted
 				if (wantedFields && wantedFields.indexOf(field.name) === -1) return;
 
@@ -951,26 +898,72 @@ module.exports = function(adapter, opts) {
 		},
 
 		/**
+		 * Transform the fetched documents
+		 *
+		 * @param {Array|Object} 	docs
+		 * @param {Object} 			Params
+		 * @returns {Array|Object}
+		 */
+		async transformDocuments(ctx, params, docs) {
+			let isDoc = false;
+			if (!Array.isArray(docs)) {
+				if (_.isObject(docs)) {
+					isDoc = true;
+					docs = [docs];
+				}
+				else {
+					// It's a number value (like count) or anything else.
+					return Promise.resolve(docs);
+				}
+			}
+
+			// Convert entity to JS object
+			let json = docs.map(doc => this.adapter.entityToObject(doc));
+
+			// Reforming & populating if fields is defined in settings.
+			if (this.$fields) {
+
+				// Get authorized fields
+				const authorizedFields = await this.authorizeFields(ctx, true);
+
+				// Populate
+				if (ctx && params.populate)
+					json = await this.populateDocs(ctx, json, params.populate, authorizedFields);
+
+				// Reform object
+				json = await Promise.all(json.map(doc => this.reformFields(ctx, params, doc, authorizedFields)));
+			}
+
+			// Return
+			return isDoc ? json[0] : json;
+		},
+
+		/**
 		 * Populate documents.
 		 *
 		 * @param {Context} 		ctx
 		 * @param {Array|Object} 	docs
 		 * @param {Array}			populateFields
+		 * @param {Array<Object>} 	allFields
 		 * @returns	{Promise}
 		 */
-		async populateDocs(ctx, docs, populateFields) {
-			if (!this.settings.populates || !Array.isArray(populateFields) || populateFields.length == 0)
+		async populateDocs(ctx, docs, populateFields, allFields) {
+			if (!Array.isArray(populateFields) || populateFields.length == 0)
 				return docs;
 
 			if (docs == null || !_.isObject(docs) || !Array.isArray(docs))
 				return docs;
 
 			let promises = [];
-			_.forIn(this.settings.populates, (rule, field) => {
+			allFields.forEach(field => {
 
-				if (populateFields.indexOf(field) === -1)
+				if (field.populate == null)
+					return; //Skip
+
+				if (populateFields.indexOf(field.name) === -1)
 					return; // skip
 
+				let rule = field.populate;
 				// if the rule is a function, save as a custom handler
 				if (_.isFunction(rule)) {
 					rule = {
@@ -989,27 +982,30 @@ module.exports = function(adapter, opts) {
 				let arr = Array.isArray(docs) ? docs : [docs];
 
 				// Collect IDs from field of docs (flatten, compact & unique list)
-				let idList = _.uniq(_.flattenDeep(_.compact(arr.map(doc => doc[field]))));
+				// TODO handle `get`
+				let idList = _.uniq(_.flattenDeep(_.compact(arr.map(doc => _.get(doc, field.name)))));
 				// Replace the received models according to IDs in the original docs
 				const resultTransform = (populatedDocs) => {
+					if (populatedDocs == null) return;
+
 					arr.forEach(doc => {
-						let id = doc[field];
+						let id = _.get(doc, field.name);
 						if (Array.isArray(id)) {
-							let models = _.compact(id.map(id => populatedDocs[id]));
-							doc[field] = models;
+							_.set(doc, field.name, _.compact(id.map(id => populatedDocs[id])));
 						} else {
-							doc[field] = populatedDocs[id];
+							_.set(doc, field.name, populatedDocs[id]);
 						}
 					});
 				};
 
 				if (rule.handler) {
-					promises.push(rule.handler.call(this, idList, arr, rule, ctx));
+					promises.push(rule.handler.call(this, idList, arr, ctx, rule));
 				} else if (idList.length > 0) {
 					// Call the target action & collect the promises
 					const params = Object.assign({
 						id: idList,
 						mapping: true,
+						fields: rule.fields,
 						populate: rule.populate
 					}, rule.params || {});
 
