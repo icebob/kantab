@@ -462,8 +462,8 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.update = ["findEntity", "entityNotFoundHook"];
-		schema.hooks.after.update = ["transformHook", "changedHook"];
+		schema.hooks.before.replace = ["findEntity", "entityNotFoundHook"];
+		schema.hooks.after.replace = ["transformHook", "changedHook"];
 	}
 
 	if (opts.createActions === true || opts.createActions.remove === true) {
@@ -487,8 +487,8 @@ module.exports = function(adapter, opts) {
 			}
 		};
 
-		schema.hooks.before.update = ["findEntity", "entityNotFoundHook"];
-		schema.hooks.after.update = ["transformHook", "changedHook"];
+		schema.hooks.before.remove = ["findEntity", "entityNotFoundHook"];
+		schema.hooks.after.remove = ["transformHook", "changedHook"];
 	}
 
 	/**
