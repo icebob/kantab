@@ -152,15 +152,15 @@ module.exports = {
 				// Verify JWT token
 				const user = await ctx.call("v1.accounts.resolveToken", { token });
 				if (user) {
-					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, _id: user._id });
+					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, id: user.id });
 
 					ctx.meta.roles.push(C.ROLE_AUTHENTICATED);
 					if (Array.isArray(user.roles))
 						ctx.meta.roles.push(...user.roles);
 					ctx.meta.token = token;
-					ctx.meta.userID = user._id;
+					ctx.meta.userID = user.id;
 					// Reduce user fields (it will be transferred to other nodes)
-					return _.pick(user, ["_id", "email", "username", "firstName", "lastName", "avatar"]);
+					return _.pick(user, ["id", "email", "username", "firstName", "lastName", "avatar"]);
 				}
 				return null;
 			}

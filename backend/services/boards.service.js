@@ -42,7 +42,7 @@ module.exports = {
 			owner: { required: true, populate: {
 				action: "v1.accounts.resolve",
 				fields: ["id", "username", "firstName", "lastName", "avatar"]
-			}, set: (value, entity, ctx) => entity.owner || ctx.meta.user._id },
+			}, set: (value, entity, ctx) => entity.owner || ctx.meta.user.id },
 			title: { type: "string", required: true, trim: true },
 			slug: { type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
 			description: "string",
