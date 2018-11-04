@@ -93,10 +93,51 @@ module.exports = {
 };
 
 
+const fs = require("fs");
+const { clearRequireCache } = require("moleculer").Utils;
 function detectDependencyGraph(broker) {
 	let mainModule = process.mainModule;
 
 	processModule(broker, mainModule);
+
+	const dependencies = {};
+
+	broker.services.forEach(svc => {
+		if (Array.isArray(svc.__dependencies)) {
+			svc.__dependencies.forEach(fName => {
+				let item = dependencies[fName];
+				if (!item) {
+					item = {
+						services: []
+					};
+					dependencies[fName] = item;
+				}
+
+				if (item.services.indexOf(svc) === -1)
+					item.services.push(svc);
+			});
+		}
+	});
+
+	console.log(" ");
+
+	Object.keys(dependencies).forEach(fName => {
+		const item = dependencies[fName];
+
+		console.log(`Watch ${fName}... (services: ${item.services.length})`);
+		const watcher = fs.watch(fName, (eventType, filename) => {
+			broker.logger.info(`The ${fName} is changed. (Type: ${eventType})`);
+
+			//watcher.close();
+
+			clearRequireCache(fName);
+
+			if (Array.isArray(item.services)) {
+				item.services.forEach(svc => broker.hotReloadService(svc));
+			}
+		});
+	});
+
 }
 
 const path = require("path");
