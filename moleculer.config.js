@@ -80,6 +80,8 @@ module.exports = {
 		if (process.env.TEST_E2E) {
 			require("./tests/e2e/bootstrap")(broker);
 		}
+
+		detectDependencyGraph(broker);
 	},
 
 	// Called after broker stopped.
@@ -89,3 +91,52 @@ module.exports = {
 
 	replCommands: null
 };
+
+
+function detectDependencyGraph(broker) {
+	let mainModule = process.mainModule;
+
+	processModule(broker, mainModule);
+}
+
+const path = require("path");
+const cache = new Map();
+function processModule(broker, mod, service = null, level = 0) {
+	const fName = mod.filename;
+
+	// Skip node_modules files
+	if (service && fName.indexOf("node_modules") !== -1)
+		return;
+
+	// Cache node_modules files to avoid cyclic dependencies
+	if (fName.indexOf("node_modules") !== -1) {
+		if (cache.get(fName))
+			return;
+
+		cache.set(fName, mod);
+	}
+
+	let serviceRoot = false;
+	if (!service) {
+		service = broker.services.find(svc => svc.__filename == fName);
+		if (service)
+			serviceRoot = true;
+	}
+
+	if (service) {
+		if (!service.__dependencies)
+			service.__dependencies = [];
+		service.__dependencies.push(fName);
+
+		const relPath = path.relative(path.resolve("."), fName);
+
+		if (serviceRoot)
+			console.log(`\n${" ".repeat(level * 2)} SERVICE: ${service.name} -> ${relPath}`);
+		else
+			console.log(`${" ".repeat(level * 2)} ${relPath}`);
+	}
+
+	if (mod.children && mod.children.length > 0) {
+		mod.children.forEach(m => processModule(broker, m, service, service ? level + 1 : 0));
+	}
+}
