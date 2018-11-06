@@ -16,7 +16,9 @@
     "test:backend": "jest -c jest.backend.config.js --coverage --no-cache",
     "test:frontend": "vue-cli-service test:unit",
     "test:e2e": "cross-env TEST_E2E=run MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
-    "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "dc:up": "docker-compose up --build -d",
+    "dc:down": "docker-compose down"
   },
   "keywords": [
     "microservices",
@@ -86,11 +88,13 @@
     "moleculer-mail": "1.2.1",
     "moleculer-web": "0.8.2",
     "moment": "2.22.2",
+    "nats": "^1.0.1",
     "passport": "0.4.0",
     "passport-facebook": "2.1.1",
     "passport-github": "1.1.0",
     "passport-google-oauth20": "1.0.0",
     "pug": "2.0.3",
+    "redis": "^2.8.0",
     "speakeasy": "2.0.0",
     "uid-generator": "1.0.0"
   },

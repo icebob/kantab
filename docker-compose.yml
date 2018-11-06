@@ -4,8 +4,7 @@ services:
 
   api:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -24,8 +23,7 @@ services:
 
   accounts:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -38,8 +36,7 @@ services:
 
   acl:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -52,8 +49,7 @@ services:
 
   boards:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -66,8 +62,7 @@ services:
 
   card-activities:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -80,8 +75,7 @@ services:
 
   card-attachments:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -94,8 +88,7 @@ services:
 
   card-checklists:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -108,8 +101,7 @@ services:
 
   cards:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -122,8 +114,7 @@ services:
 
   config:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -136,8 +127,7 @@ services:
 
   lists:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -150,8 +140,7 @@ services:
 
   mail:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
@@ -164,8 +153,7 @@ services:
 
   metrics:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
     image: kantab
     restart: unless-stopped
     env_file: docker-compose.env
