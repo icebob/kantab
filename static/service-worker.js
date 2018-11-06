@@ -11,10 +11,10 @@
  * See https://goo.gl/2aRDsh
  */
 
-importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox-sw.js");
+importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/precache-manifest.ac98ffbca23f07a43d5bae28af3d7300.js"
+  "/precache-manifest.2be0ccc119ef7d94f21ede089e6fce2f.js"
 );
 
 workbox.core.setCacheNameDetails({prefix: "kantab"});
