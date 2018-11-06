@@ -38,6 +38,7 @@ Desired features & modules:
 - [ ] Caching with tags
 - [ ] Metrics & monitoring
 - [x] Unit test & E2E test with Jest, Cypress
+- [ ] Docker files
 
 ## NPM Scripts
 
