@@ -39,3 +39,20 @@ Desired features & modules:
 - [ ] Metrics & monitoring
 - [x] Unit test & E2E test with Jest, Cypress
 
+## NPM Scripts
+
+- `dev`: Start development mode (load all services locally)
+- `start`: Start production mode (don't load any services, use `SERVICES` env variable)
+- `now-start`: Start production on now.sh
+- `cli`: Start a CLI and connect to production
+- `build`: Build frontend code
+- `lint`: Run ESLint
+- `deps`: Check & update NPM dependencies
+- `ci`: Run continuous backend test mode
+- `ci:e2e`: Run continuous E2E test mode 
+- `test`: Run all tests (backend, frontend, E2E)
+- `test:backend`: Run backend tests
+- `test:frontend`: Run frontend tests
+- `test:e2e`: Run E2E tests
+- `dc:up`: Start the stack with Docker Compose
+- `dc:down`: Stop the stack with Docker Compose
