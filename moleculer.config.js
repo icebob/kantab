@@ -124,7 +124,7 @@ function detectDependencyGraph(broker) {
 	Object.keys(dependencies).forEach(fName => {
 		const item = dependencies[fName];
 
-		console.log(`Watch ${fName}... (services: ${item.services.length})`);
+		//console.log(`Watch ${fName}... (services: ${item.services.length})`);
 		const watcher = fs.watch(fName, (eventType, filename) => {
 			broker.logger.info(`The ${fName} is changed. (Type: ${eventType})`);
 
@@ -171,10 +171,11 @@ function processModule(broker, mod, service = null, level = 0) {
 
 		const relPath = path.relative(path.resolve("."), fName);
 
-		if (serviceRoot)
+		/*if (serviceRoot)
 			console.log(`\n${" ".repeat(level * 2)} SERVICE: ${service.name} -> ${relPath}`);
 		else
 			console.log(`${" ".repeat(level * 2)} ${relPath}`);
+		*/
 	}
 
 	if (mod.children && mod.children.length > 0) {

@@ -1,9 +1,9 @@
-[![Moleculer](https://img.shields.io/badge/Powered%20by-Moleculer-green.svg?colorB=0e83cd)](https://moleculer.services)
-[![Build Status](https://travis-ci.org/icebob/kantab.svg?branch=master)](https://travis-ci.org/icebob/kantab)
-[![Coverage Status](https://coveralls.io/repos/github/icebob/kantab/badge.svg?branch=master)](https://coveralls.io/github/icebob/kantab?branch=master)
+[![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)](https://moleculer.services)
+[![Build Status](https://badgen.net/travis/icebob/kantab/master)](https://travis-ci.org/icebob/kantab)
+[![Coverage Status](https://badgen.net/coveralls/c/github/icebob/kantab/master)](https://coveralls.io/github/icebob/kantab?branch=master)
 
 # KanTab
-KanTab is a kanban board application. Powered by Moleculer &amp; Vue.
+KanTab is a kanban board application with microservices. Powered by Moleculer &amp; Vue.
 
 ![Screenshot](https://user-images.githubusercontent.com/306521/47039154-865d9100-d183-11e8-85c9-4cfc571ac8a5.png)
 
@@ -16,6 +16,7 @@ Desired features & modules:
 - [x] MongoDB
 - [x] Central configuration
 - [x] Global REST API
+- [ ] Swagger API docs
 - [ ] GraphQL endpoint
 - [x] Full authentication
     - [x] Login
@@ -33,7 +34,6 @@ Desired features & modules:
 - [x] ACL/RBAC (user roles & permissions)
 - [ ] I18N
 - [ ] Websocket
-- [ ] Plans & payments
 - [ ] Plugin system
 - [ ] Caching with tags
 - [ ] Metrics & monitoring

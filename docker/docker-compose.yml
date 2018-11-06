@@ -4,30 +4,195 @@ services:
 
   api:
     build:
-      context: .
+      context: ..
+      dockerfile: docker/Dockerfile
     image: kantab
+    restart: unless-stopped
     env_file: docker-compose.env
     environment:
       SERVICES: api
       PORT: 3000
     labels:
-      - "traefik.enable=true"   
-      - "traefik.backend=api"
+      - "traefik.enable=true"
+      - "traefik.backend=kantab"
       - "traefik.port=3000"
       - "traefik.frontend.entryPoints=http"
       - "traefik.frontend.rule=PathPrefix:/"
+    depends_on:
+      - nats
+      - redis
 
-  greeter:
+  accounts:
     build:
-      context: .
+      context: ..
+      dockerfile: docker/Dockerfile
     image: kantab
+    restart: unless-stopped
     env_file: docker-compose.env
     environment:
-      SERVICES: greeter
+      SERVICES: accounts
+    depends_on:
+      - nats
+      - redis
+      - mongo
 
+  acl:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: acl
+    depends_on:
+      - nats
+      - redis
+      - mongo
 
+  boards:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: boards
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  card-activities:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: card.activities
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  card-attachments:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: card.attachments
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  card-checklists:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: card.checklists
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  cards:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: cards
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  config:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: config
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  lists:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: lists
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  mail:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: mail
+    depends_on:
+      - nats
+      - redis
+      - mongo
+
+  metrics:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kantab
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: metrics
+    depends_on:
+      - nats
+      - redis
+
+  # NATS for transporter
+  nats:
+    image: nats:1.3.0
+
+  # Redis for caching
+  redis:
+    image: redis:5.0.0-alpine
+
+  # Database store
+  mongo:
+    image: mongo:3.2
+    command: mongod --smallfiles --oplogSize 128
+    volumes:
+      - db:/data/db
+
+  # Reverse proxy for API server
   traefik:
-    image: traefik
+    image: traefik:1.7.4
     command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
     ports:
       - "3000:80"
@@ -35,3 +200,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /dev/null:/traefik.toml
+
+
+volumes:
+  data:
+    driver: local
+  db:
+    driver: local
