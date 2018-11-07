@@ -2,5 +2,7 @@
 	"welcomeTo": "Welcome to {{app.title}}",
 
 	"SignIn": "Sign In",
-	"SignUp": "Sign Up"
+	"SignUp": "Sign Up",
+
+    "About": "About"
 }

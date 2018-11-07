@@ -7,6 +7,9 @@ import "es6-promise/auto";
 
 import Vue from "vue";
 
+// --- I18NEXT ---
+import VueI18Next from "./i18next.js";
+
 // --- VUE-ROUTER ---
 import router from "./router";
 
@@ -43,9 +46,14 @@ Vue.config.productionTip = false;
 // --- APP ---
 import App from "./App";
 
-// --- BOOTSTRAP ---
-new Vue({
-	router,
-	store,
-	render: h => h(App),
-}).$mount("#app");
+Vue.use(VueI18Next, () => {
+
+	// --- BOOTSTRAP ---
+	new Vue({
+		router,
+		store,
+		render: h => h(App),
+	}).$mount("#app");
+
+});
+
