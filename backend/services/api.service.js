@@ -2,32 +2,12 @@
 
 const ApiGateway 		= require("moleculer-web");
 const _ 				= require("lodash");
-const path 				= require("path");
 const helmet 			= require("helmet");
 const cookie 			= require("cookie");
 const C 				= require("../constants");
 
-const i18next 			= require("i18next");
-const i18nextFs 		= require("i18next-node-fs-backend");
-
 const PassportMixin 	= require("../mixins/passport.mixin");
-
-function setPath(object, path, newValue) {
-	let stack;
-	if (typeof path !== "string") stack = [].concat(path);
-	if (typeof path === "string") stack = path.split(".");
-
-	while(stack.length > 1) {
-		let key = stack.shift();
-		if (key.indexOf("###") > -1) key = key.replace(/###/g, ".");
-		if (!object[key]) object[key] = {};
-		object = object[key];
-	}
-
-	let key = stack.shift();
-	if (key.indexOf("###") > -1) key = key.replace(/###/g, ".");
-	object[key] = newValue;
-}
+const I18NextMixin 		= require("../mixins/i18next.mixin");
 
 /**
  * Initialize Webpack middleware in development
@@ -62,48 +42,27 @@ function initWebpackMiddlewares() {
 	];
 }
 
-i18next
-	.use(i18nextFs)
-	.init({
-		//debug: true,
-		fallbackLng: "en",
-		whitelist: ["en", "hu"],
-		ns: ["common", "errors"],
-		defaultNS: "common",
-		load: "all",
-		saveMissing: true, //config.isDevMode(),
-		saveMissingTo: "all", // "fallback", "current", "all"
 
-		backend: {
-			// path where resources get loaded from
-			loadPath: path.join(".", "locales", "{{lng}}", "{{ns}}.json"),
-
-			// path to post missing resources
-			addPath: path.join(".", "locales", "{{lng}}", "{{ns}}.missing.json"),
-
-			// jsonIndent to use when storing json files
-			jsonIndent: 4
-		}
-	}, function(err, t) {
-		if (err)
-			console.warn(err);
-	});
 
 module.exports = {
 	name: "api",
 	version: 1,
 
-	mixins: [ApiGateway, PassportMixin({
-		routePath: "/auth",
-		localAuthAlias: "v1.accounts.login",
-		successRedirect: "/",
-		providers: {
-			google: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
-			facebook: process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET,
-			github: process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET,
-			twitter: false
-		}
-	})],
+	mixins: [
+		ApiGateway,
+		PassportMixin({
+			routePath: "/auth",
+			localAuthAlias: "v1.accounts.login",
+			successRedirect: "/",
+			providers: {
+				google: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+				facebook: process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET,
+				github: process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET,
+				twitter: false
+			}
+		}),
+		I18NextMixin()
+	],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
 	settings: {
@@ -142,53 +101,6 @@ module.exports = {
 					json: { limit: "2MB" },
 					urlencoded: { extended: true, limit: "2MB" }
 				},
-			},
-
-			/**
-			 * I18Next routes
-			 */
-			{
-				path: "/locales",
-
-				aliases: {
-					// multiload backend route
-					"GET /": (req, res) => {
-						let resources = {};
-
-						let languages = req.query["lng"] ? req.query["lng"].split(" ") : [];
-						let namespaces = req.query["ns"] ? req.query["ns"].split(" ") : [];
-
-						// extend ns
-						namespaces.forEach(ns => {
-							if (i18next.options.ns && i18next.options.ns.indexOf(ns) < 0) i18next.options.ns.push(ns);
-						});
-
-						i18next.services.backendConnector.load(languages, namespaces, function() {
-							languages.forEach(lng => namespaces.forEach(ns => setPath(resources, [lng, ns], i18next.getResourceBundle(lng, ns))));
-
-							res.setHeader("Content-Type", "application/json; charset=utf-8");
-							res.end(JSON.stringify(resources));
-						});
-					},
-
-					// missing keys
-					"POST /": (req, res) => {
-						let lng = req.query["lng"];
-						let ns = req.query["ns"];
-
-						for (let m in req.body) {
-							if (m != "_t")
-								i18next.services.backendConnector.saveMissing([lng], ns, m, req.body[m]);
-						}
-						res.end("ok");
-					},
-				},
-
-				bodyParsers: {
-					urlencoded: true
-				},
-
-				mappingPolicy: "restrict",
 			},
 
 			/**

@@ -32,19 +32,19 @@ Desired features & modules:
     - [x] Two-factor authentication
     - [ ] LDAP
 - [x] ACL/RBAC (user roles & permissions)
-- [ ] I18N
+- [x] I18N
 - [ ] Websocket
 - [ ] Plugin system
 - [ ] Caching with tags
 - [ ] Metrics & monitoring
 - [x] Unit test & E2E test with Jest, Cypress
-- [ ] Docker files
+- [x] Docker files
 
 ## NPM Scripts
 
 - `dev`: Start development mode (load all services locally)
 - `start`: Start production mode (don't load any services, use `SERVICES` env variable)
-- `now-start`: Start production on now.sh
+- `now-start`: Start production preview on now.sh (with NeDB. TODO: change it to mLab.com)
 - `cli`: Start a CLI and connect to production
 - `build`: Build frontend code
 - `lint`: Run ESLint

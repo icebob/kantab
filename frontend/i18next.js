@@ -58,7 +58,7 @@ function install(Vue, callback) {
 
 			moment.locale(i18next.language);
 
-			console.log("I18Next initialized! Language: " + i18next.language);
+			console.log(`I18Next initialized! Language: ${i18next.language}, Date format: ${moment().format("LLL")}`);
 
 			if (callback)
 				return callback(i18next, t);
