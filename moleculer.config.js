@@ -1,5 +1,7 @@
 "use strict";
 
+const _ = require("lodash");
+
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
 	namespace: "",
@@ -121,6 +123,14 @@ function detectDependencyGraph(broker) {
 
 	console.log(" ");
 
+	const needToReload = new Set();
+
+	const reloadServices = _.debounce(() => {
+		needToReload.forEach(svc => broker.hotReloadService(svc));
+		needToReload.clear();
+	}, 500);
+
+
 	Object.keys(dependencies).forEach(fName => {
 		const item = dependencies[fName];
 
@@ -133,11 +143,11 @@ function detectDependencyGraph(broker) {
 			clearRequireCache(fName);
 
 			if (Array.isArray(item.services)) {
-				item.services.forEach(svc => broker.hotReloadService(svc));
+				item.services.forEach(svc => needToReload.add(svc));
 			}
+			reloadServices();
 		});
 	});
-
 }
 
 const path = require("path");

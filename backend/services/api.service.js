@@ -8,6 +8,7 @@ const C 				= require("../constants");
 
 const PassportMixin 	= require("../mixins/passport.mixin");
 const I18NextMixin 		= require("../mixins/i18next.mixin");
+const GraphQLMixin 		= require("../mixins/graphql.mixin");
 
 /**
  * Initialize Webpack middleware in development
@@ -49,7 +50,10 @@ module.exports = {
 	version: 1,
 
 	mixins: [
+		// Gateway
 		ApiGateway,
+
+		// Passport
 		PassportMixin({
 			routePath: "/auth",
 			localAuthAlias: "v1.accounts.login",
@@ -61,7 +65,12 @@ module.exports = {
 				twitter: false
 			}
 		}),
-		I18NextMixin()
+
+		// I18N
+		I18NextMixin(),
+
+		// GraphQL
+		GraphQLMixin()
 	],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
