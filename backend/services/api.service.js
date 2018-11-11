@@ -10,6 +10,9 @@ const PassportMixin 	= require("../mixins/passport.mixin");
 const I18NextMixin 		= require("../mixins/i18next.mixin");
 const GraphQLMixin 		= require("../mixins/graphql.mixin");
 
+const Kind						= require("graphql/language").Kind;
+const { makeExecutableSchema }	= require("graphql-tools");
+
 /**
  * Initialize Webpack middleware in development
  */
@@ -70,7 +73,29 @@ module.exports = {
 		I18NextMixin(),
 
 		// GraphQL
-		GraphQLMixin()
+		GraphQLMixin({
+
+			typeDefs: `
+				scalar Date
+			`,
+
+			resolvers: {
+				Date: {
+					__parseValue(value) {
+						return new Date(value); // value from the client
+					},
+					__serialize(value) {
+						return value.getTime(); // value sent to the client
+					},
+					__parseLiteral(ast) {
+						if (ast.kind === Kind.INT)
+							return parseInt(ast.value, 10); // ast value is always in string format
+
+						return null;
+					}
+				}
+			}
+		})
 	],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html

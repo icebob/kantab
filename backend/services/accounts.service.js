@@ -70,6 +70,20 @@ module.exports = {
 			createdAt: { type: "number", updateable: false, default: Date.now },
 			updatedAt: { type: "number", readonly: true, updateDefault: Date.now },
 			lastLoginAt: { type: "number" },
+		},
+
+		graphql: {
+			type: `
+				type User {
+					id: String!,
+					username: String!,
+					firstName: String!,
+					lastName: String!,
+					email: String,
+					avatar: String,
+					status: Int
+				}
+			`,
 		}
 	},
 
@@ -82,13 +96,19 @@ module.exports = {
 			visibility: C.VISIBILITY_PROTECTED
 		},
 		list: {
-			visibility: C.VISIBILITY_PROTECTED
+			visibility: C.VISIBILITY_PROTECTED,
 		},
 		find: {
-			visibility: C.VISIBILITY_PROTECTED
+			visibility: C.VISIBILITY_PROTECTED,
+			graphql: {
+				query: "users(limit: Int, offset: Int, sort: String): [User]"
+			}
 		},
 		get: {
-			visibility: C.VISIBILITY_PROTECTED
+			visibility: C.VISIBILITY_PROTECTED,
+			graphql: {
+				query: "user(id: String): User"
+			}
 		},
 		update: {
 			visibility: C.VISIBILITY_PROTECTED

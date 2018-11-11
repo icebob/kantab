@@ -58,7 +58,47 @@ module.exports = {
 			deletedAt: { type: "date", setOnDelete: () => Date.now() },
 		},
 		strict: true, // TODO
-		softDelete: true // TODO
+		softDelete: true, // TODO
+
+		graphql: {
+			query: `
+				boards(limit: Int, offset: Int, sort: String): [Board]
+				board(id: String!): Board
+			`,
+
+			type: `
+				type Board {
+					id: String!,
+					title: String!,
+					slug: String,
+					description: String,
+					owner: User,
+					createdAt: Float
+				}
+			`,
+			mutation: `
+				createBoard(title: String!, description: String): Board
+			`,
+			resolvers: {
+				Query: {
+					boards: {
+						action: "find",
+						params: {
+							populate: ["owner"]
+						}
+					},
+					board: {
+						action: "get",
+						params: {
+							populate: ["owner"]
+						}
+					}
+				},
+				Mutation: {
+					createBoard: "create"
+				}
+			},
+		}
 	},
 
 	/**
