@@ -1,5 +1,6 @@
 "use strict";
 
+const { MoleculerClientError } = require("moleculer").Errors;
 const { runHttpQuery, convertNodeHttpToRequest } = require("apollo-server-core");
 const url = require("url");
 
@@ -34,6 +35,13 @@ module.exports = function graphqlMoleculer(options) {
 		}
 
 		try {
+
+			if (query && query.length > 2000) {
+				// None of our app's queries are this long
+				// Probably indicates someone trying to send an overly expensive query
+				throw new MoleculerClientError("Query too large.", 400, "QUERY_TOO_LARGE");
+			}
+
 			const { graphqlResponse, responseInit } = await runHttpQuery([req, res], {
 				method: req.method,
 				options,
@@ -44,6 +52,7 @@ module.exports = function graphqlMoleculer(options) {
 			setHeaders(res, responseInit.headers);
 
 			return graphqlResponse;
+
 		} catch (error) {
 			if ("HttpQueryError" === error.name && error.headers) {
 				setHeaders(res, error.headers);
@@ -53,7 +62,8 @@ module.exports = function graphqlMoleculer(options) {
 				error.statusCode = 500;
 			}
 
-			res.statusCode = error.statusCode;
+			// TODO
+			res.statusCode = error.statusCode || error.code || 500;
 			res.end(error.message);
 
 			return undefined;

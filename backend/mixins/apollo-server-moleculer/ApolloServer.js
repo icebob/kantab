@@ -108,9 +108,7 @@ class ApolloServer extends ApolloServerBase {
 		let handled = false;
 		const url = req.url.split("?")[0];
 		if (url === this.graphqlPath) {
-			const graphqlHandler = moleculerApollo(() => {
-				return this.createGraphQLServerOptions(req, res);
-			});
+			const graphqlHandler = moleculerApollo(() => this.createGraphQLServerOptions(req, res));
 			const responseData = await graphqlHandler(req, res);
 			send(res, 200, responseData);
 			handled = true;
@@ -128,4 +126,3 @@ class ApolloServer extends ApolloServerBase {
 	}
 }
 exports.ApolloServer = ApolloServer;
-//# sourceMappingURL=ApolloServer.js.map
