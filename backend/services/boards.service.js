@@ -152,7 +152,7 @@ module.exports = {
 		 * Internal method to check the owner of entity. (called from CheckPermission middleware)
 		 *
 		 * @param {Context} ctx
-		 * @returns {Boolean}
+		 * @returns {Promise<Boolean>}
 		 */
 		async isEntityOwner(ctx) {
 			return !!(ctx.entity && ctx.entity.owner == ctx.meta.userID);
@@ -163,7 +163,6 @@ module.exports = {
 	 * Service created lifecycle event handler
 	 */
 	created() {
-
 	},
 
 	/**

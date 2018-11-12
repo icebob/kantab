@@ -39,6 +39,22 @@ module.exports = {
 		],
 		"no-mixed-spaces-and-tabs": [
 			"warn"
+		],
+		"space-before-function-paren": [
+			"warn",
+			{
+				"anonymous": "always",
+				"named": "never",
+				"asyncArrow": "always"
+			}
+		],
+		"object-curly-spacing": [
+			"warn",
+			"always",
+			{
+				"objectsInObjects": false,
+				"arraysInObjects": false
+			}
 		]
 	},
 	parserOptions: {

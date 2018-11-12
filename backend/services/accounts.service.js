@@ -791,7 +791,7 @@ module.exports = {
 		 * Generate a JWT token from user entity.
 		 *
 		 * @param {Object} payload
-		 * @param {String|Number} expiresIn
+		 * @param {String|Number} [expiresIn]
 		 */
 		generateJWT(payload, expiresIn) {
 			return new this.Promise((resolve, reject) => {
@@ -932,7 +932,7 @@ module.exports = {
 		 *
 		 * @param {String} secret
 		 * @param {String} token
-		 * @returns {Boolean}
+		 * @returns {Promise<Boolean>}
 		 */
 		async verify2FA(secret, token) {
 			return speakeasy.totp.verify({
@@ -946,7 +946,7 @@ module.exports = {
 		 * Generate a TOTP token
 		 *
 		 * @param {String} secret
-		 * @returns {String}
+		 * @returns {Promise<String>}
 		 */
 		async generate2FaToken(secret) {
 			return speakeasy.totp({
