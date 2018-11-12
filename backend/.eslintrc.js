@@ -42,18 +42,14 @@ module.exports = {
 		"space-before-function-paren": [
 			"warn",
 			{
-				"anonymous": "always",
+				"anonymous": "never",
 				"named": "never",
 				"asyncArrow": "always"
 			}
 		],
 		"object-curly-spacing": [
 			"warn",
-			"always",
-			{
-				"objectsInObjects": false,
-				"arraysInObjects": false
-			}
+			"always"
 		]
     }
 };
