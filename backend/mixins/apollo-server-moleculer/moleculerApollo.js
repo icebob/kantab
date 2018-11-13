@@ -9,9 +9,6 @@ function setHeaders(res, headers) {
 	Object.keys(headers).forEach(header => res.setHeader(header, headers[header]));
 }
 
-// Build and return an async function that passes incoming GraphQL requests
-// over to Apollo Server for processing, then fires the results/response back
-// using Micro's `send` functionality.
 module.exports = function graphqlMoleculer(options) {
 	if (!options) {
 		throw new Error("Apollo Server requires options.");

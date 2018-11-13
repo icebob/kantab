@@ -24,10 +24,18 @@ module.exports = function(mixinOptions) {
 		},
 
 		methods: {
+			/**
+			 *
+			 */
 			invalidateGraphQLSchema() {
 				shouldUpdateSchema = true;
 			},
 
+			/**
+			 *
+			 * @param {*} serviceName
+			 * @param {*} resolvers
+			 */
 			createActionResolvers(serviceName, resolvers) {
 				const res = {};
 				_.forIn(resolvers, (r, name) => {
@@ -43,12 +51,22 @@ module.exports = function(mixinOptions) {
 				return res;
 			},
 
+			/**
+			 *
+			 * @param {*} actionName
+			 * @param {*} params
+			 */
 			createActionResolver(actionName, params) {
 				return async (root, args, context) => {
-					return await context.ctx.call(actionName, _.merge(args, params));
+					return await context.ctx.call(actionName, _.defaultsDeep(args, params, {
+						$root: root ? root.id : null
+					}));
 				};
 			},
 
+			/**
+			 *
+			 */
 			generateGraphQLSchema() {
 				try {
 					let typeDefs = [];
@@ -85,11 +103,11 @@ module.exports = function(mixinOptions) {
 									mutations.push(globalDef.mutation);
 								}
 
-								if (globalDef.resolvers && globalDef.resolvers.Query)
-									resolvers.Query = _.merge(resolvers.Query || {}, this.createActionResolvers(serviceName, globalDef.resolvers.Query));
-
-								if (globalDef.resolvers && globalDef.resolvers.Mutation)
-									resolvers.Mutation = _.merge(resolvers.Mutation || {}, this.createActionResolvers(serviceName, globalDef.resolvers.Mutation));
+								if (globalDef.resolvers) {
+									_.forIn(globalDef.resolvers, (r, name) => {
+										resolvers[name] = _.merge(resolvers[name] || {}, this.createActionResolvers(serviceName, r));
+									});
+								}
 							}
 
 							// --- COMPILE ACTION-LEVEL DEFINITIONS ---
@@ -227,7 +245,7 @@ module.exports = function(mixinOptions) {
 		},
 
 		started() {
-			this.logger.info(`🚀 GraphQL server ready at http://localhost:4000${mixinOptions.routePath}`);
+			this.logger.info(`🚀 GraphQL server is available at ${mixinOptions.routePath}`);
 		}
 	};
 };

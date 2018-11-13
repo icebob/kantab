@@ -81,9 +81,22 @@ module.exports = {
 					lastName: String!,
 					email: String,
 					avatar: String,
-					status: Int
+					status: Int,
+
+					boards(limit: Int, offset: Int, sort: String): [Board]
 				}
 			`,
+			resolvers: {
+				User: {
+					boards: {
+						action: "userBoards",
+						// TODO
+						rootParams: {
+							"id": "query.owner"
+						}
+					}
+				}
+			}
 		}
 	},
 
@@ -296,7 +309,7 @@ module.exports = {
 				const res = await this.adapter.updateById(user._id, { $set: {
 					verified: true,
 					verificationToken: null
-				}});
+				} });
 
 				// Send welcome email
 				this.sendMail(ctx, res, "welcome");
@@ -322,7 +335,7 @@ module.exports = {
 
 				const res = await this.adapter.updateById(user._id, { $set: {
 					status: 0
-				}});
+				} });
 
 				return {
 					status: res.status
@@ -345,7 +358,7 @@ module.exports = {
 
 				const res = await this.adapter.updateById(user._id, { $set: {
 					status: 1
-				}});
+				} });
 
 				return {
 					status: res.status
@@ -380,7 +393,7 @@ module.exports = {
 				if (!user.verified) {
 					await this.adapter.updateById(user._id, { $set: {
 						verified: true
-					}});
+					} });
 				}
 
 				return {
@@ -416,7 +429,7 @@ module.exports = {
 				await this.adapter.updateById(user._id, { $set: {
 					resetToken: token,
 					resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
-				}});
+				} });
 
 				// Send a passwordReset email
 				this.sendMail(ctx, user, "reset-password", { token });
@@ -453,7 +466,7 @@ module.exports = {
 					verified: true,
 					resetToken: null,
 					resetTokenExpires: null
-				}});
+				} });
 
 				// Send password-changed email
 				this.sendMail(ctx, user, "password-changed");
@@ -689,7 +702,7 @@ module.exports = {
 					await this.adapter.updateById(ctx.meta.userID, { $set: {
 						"totp.enabled": false,
 						"totp.secret": secret.base32
-					}});
+					} });
 
 					const otpauthURL = speakeasy.otpauthURL({
 						secret: secret.ascii,
@@ -709,7 +722,7 @@ module.exports = {
 
 					await this.adapter.updateById(ctx.meta.userID, { $set: {
 						"totp.enabled": true,
-					}});
+					} });
 
 					return true;
 				}
@@ -739,7 +752,7 @@ module.exports = {
 				await this.adapter.updateById(ctx.meta.userID, { $set: {
 					"totp.enabled": false,
 					"totp.secret": null,
-				}});
+				} });
 
 				return true;
 			}
@@ -766,6 +779,27 @@ module.exports = {
 				const token = this.generate2FaToken(secret);
 
 				return { token };
+			}
+		},
+
+		userBoards: {
+			params: {
+				limit: { type: "number", integer: true, min: 0, optional: true, convert: true },
+				offset: { type: "number", integer: true, min: 0, optional: true, convert: true },
+				sort: { type: "string", optional: true },
+			},
+			async handler(ctx) {
+				const res = await ctx.call("v1.boards.find", {
+					limit: ctx.params.limit,
+					offset: ctx.params.offset,
+					sort: ctx.params.sort,
+					query: {
+						owner: ctx.params.$root
+					},
+					populate: ["owner"]
+				});
+
+				return res;
 			}
 		}
 
@@ -829,7 +863,7 @@ module.exports = {
 				[`socialLinks.${provider}`]: profile.socialID,
 				verified: true, // if not verified yet via email
 				verificationToken: null
-			}});
+			} });
 		},
 
 		/**
@@ -838,7 +872,7 @@ module.exports = {
 		async unlink(id, provider) {
 			return await this.adapter.updateById(id, { $unset: {
 				[`socialLinks.${provider}`]: 1
-			}});
+			} });
 		},
 
 		/**
@@ -853,7 +887,7 @@ module.exports = {
 			const usr = await this.adapter.updateById(user._id, { $set: {
 				passwordlessToken: token,
 				passwordlessTokenExpires: Date.now() + 3600 * 1000 // 1 hour
-			}});
+			} });
 
 			return await this.sendMail(ctx, usr, "magic-link", { token });
 		},

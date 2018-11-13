@@ -36,7 +36,7 @@ function initWebpackMiddlewares() {
 			noInfo: true,
 			publicPath: config.output.publicPath,
 			headers: { "Access-Control-Allow-Origin": "*" },
-			stats: {colors: true}
+			stats: { colors: true }
 		}),
 
 		// Webpack hot replacement
@@ -95,7 +95,7 @@ module.exports = {
 					}
 				}
 			}
-		})
+		}),
 	],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
