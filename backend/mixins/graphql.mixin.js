@@ -214,10 +214,11 @@ module.exports = function(mixinOptions) {
 				aliases: {
 					// multiload backend route
 					"/"(req, res) {
+						// Call the previously generated handler
 						if (!shouldUpdateSchema && this.graphqlHandler)
 							return this.graphqlHandler(req, res);
 
-						// Create new server & handler
+						// Create new server & regenerate GraphQL schema
 						this.logger.info("♻ Recreate Apollo GraphQL server and regenerate GraphQL schema...");
 
 						try {
@@ -228,10 +229,8 @@ module.exports = function(mixinOptions) {
 
 
 							// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
-							const apolloServer = new ApolloServer({
+							this.apolloServer = new ApolloServer({
 								schema,
-								//typeDefs: schema.typeDefs,
-								//resolvers: schema.resolvers,
 								context: ({ req }) => {
 									return {
 										ctx: req.$ctx,
@@ -241,7 +240,9 @@ module.exports = function(mixinOptions) {
 								},
 							});
 
-							this.graphqlHandler = apolloServer.createHandler();
+							this.graphqlHandler = this.apolloServer.createHandler();
+							this.graphqlSchema = schema;
+
 							shouldUpdateSchema = false;
 
 							// Call the newly created handler
