@@ -791,27 +791,6 @@ module.exports = {
 			}
 		},
 
-		/*userBoards: {
-			params: {
-				limit: { type: "number", integer: true, min: 0, optional: true, convert: true },
-				offset: { type: "number", integer: true, min: 0, optional: true, convert: true },
-				sort: { type: "string", optional: true },
-			},
-			async handler(ctx) {
-				const res = await ctx.call("v1.boards.find", {
-					limit: ctx.params.limit,
-					offset: ctx.params.offset,
-					sort: ctx.params.sort,
-					query: {
-						owner: ctx.params.$root
-					},
-					populate: ["owner"]
-				});
-
-				return res;
-			}
-		}*/
-
 	},
 
 	/**
