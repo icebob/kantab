@@ -1,0 +1,33 @@
+type Board {
+  id: String!
+  title: String!
+  slug: String
+  description: String
+  owner: User
+  createdAt: Float
+}
+
+scalar Date
+
+type Mutation {
+  createBoard(title: String!, description: String): Board
+}
+
+type Query {
+  users(limit: Int, offset: Int, sort: String): [User]
+  user(id: String): User
+  boards(limit: Int, offset: Int, sort: String): [Board]
+  board(id: String!): Board
+}
+
+type User {
+  id: String!
+  username: String!
+  firstName: String!
+  lastName: String!
+  email: String
+  avatar: String
+  status: Int
+  boards(limit: Int, offset: Int, sort: String): [Board]
+  boardCount: Int
+}

@@ -1,10 +1,11 @@
 "use strict";
 
 const _ 						= require("lodash");
+const fs						= require("fs");
 
 const { MoleculerServerError } 	= require("moleculer").Errors;
 const { ApolloServer } 			= require("./apollo-server-moleculer");
-const { makeExecutableSchema, mergeSchemas }	= require("graphql-tools");
+const { makeExecutableSchema }	= require("graphql-tools");
 const { printSchema } 			= require("graphql");
 
 module.exports = function(mixinOptions) {
@@ -223,6 +224,8 @@ module.exports = function(mixinOptions) {
 							const schema = this.generateGraphQLSchema();
 
 							this.logger.debug(printSchema(schema));
+							fs.writeFileSync("./schema.gql", printSchema(schema), "utf8");
+
 
 							// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
 							const apolloServer = new ApolloServer({
