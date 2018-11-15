@@ -75,22 +75,31 @@ module.exports = {
 		graphql: {
 			type: `
 				type User {
-					id: String!,
-					username: String!,
-					firstName: String!,
-					lastName: String!,
-					email: String,
-					avatar: String,
-					status: Int,
+					id: String!
+					username: String!
+					firstName: String!
+					lastName: String!
+					email: String
+					avatar: String
+					status: Int
 
 					boards(limit: Int, offset: Int, sort: String): [Board]
+					boardCount: Int
 				}
 			`,
 			resolvers: {
 				User: {
 					boards: {
-						action: "userBoards",
-						// TODO
+						action: "v1.boards.find",
+						rootParams: {
+							"id": "query.owner"
+						},
+						params: {
+							populate: ["owner"]
+						}
+					},
+					boardCount: {
+						action: "v1.boards.count",
 						rootParams: {
 							"id": "query.owner"
 						}
@@ -782,7 +791,7 @@ module.exports = {
 			}
 		},
 
-		userBoards: {
+		/*userBoards: {
 			params: {
 				limit: { type: "number", integer: true, min: 0, optional: true, convert: true },
 				offset: { type: "number", integer: true, min: 0, optional: true, convert: true },
@@ -801,7 +810,7 @@ module.exports = {
 
 				return res;
 			}
-		}
+		}*/
 
 	},
 

@@ -33,6 +33,18 @@ module.exports = function(mixinOptions) {
 
 			/**
 			 *
+			 * @param {String} service
+			 * @param {String} action
+			 */
+			getResolverActionName(service, action) {
+				if (action.indexOf(".") === -1)
+					return `${service}.${action}`;
+				else
+					return action;
+			},
+
+			/**
+			 *
 			 * @param {*} serviceName
 			 * @param {*} resolvers
 			 */
@@ -40,11 +52,10 @@ module.exports = function(mixinOptions) {
 				const res = {};
 				_.forIn(resolvers, (r, name) => {
 					if (_.isString(r)) {
-						// Create action resolver
-						res[name] = this.createActionResolver(`${serviceName}.${r}`);
+						res[name] = this.createActionResolver(this.getResolverActionName(serviceName, r));
 					}
 					else if (_.isObject(r)) {
-						res[name] = this.createActionResolver(`${serviceName}.${r.action}`, r.params);
+						res[name] = this.createActionResolver(this.getResolverActionName(serviceName, r.action), r);
 					}
 				});
 
@@ -53,14 +64,22 @@ module.exports = function(mixinOptions) {
 
 			/**
 			 *
-			 * @param {*} actionName
-			 * @param {*} params
+			 * @param {String} actionName
+			 * @param {Object?} def
 			 */
-			createActionResolver(actionName, params) {
+			createActionResolver(actionName, def) {
+				let params, rootKeys;
+				if (def) {
+					params = def.params;
+					if (def.rootParams)
+						rootKeys = Object.keys(def.rootParams);
+				}
 				return async (root, args, context) => {
-					return await context.ctx.call(actionName, _.defaultsDeep(args, params, {
-						$root: root ? root.id : null
-					}));
+					const p = {};
+					if (root && rootKeys) {
+						rootKeys.forEach(k => _.set(p, def.rootParams[k], _.get(root, k)));
+					}
+					return await context.ctx.call(actionName, _.defaultsDeep(args, p, params));
 				};
 			},
 
