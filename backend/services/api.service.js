@@ -9,12 +9,12 @@ const C 				= require("../constants");
 const PassportMixin 	= require("../mixins/passport.mixin");
 const I18NextMixin 		= require("../mixins/i18next.mixin");
 const GraphQLMixin 		= require("../mixins/graphql.mixin");
+const OpenApiMixin 		= require("../mixins/openapi.mixin");
 
-const Kind						= require("graphql/language").Kind;
-const { makeExecutableSchema }	= require("graphql-tools");
+const { GraphQLError } 				= require("graphql");
+const Kind							= require("graphql/language").Kind;
 
 const depthLimit 					= require("graphql-depth-limit");
-const { GraphQLError } 				= require("graphql");
 const { createComplexityLimitRule } = require("graphql-validation-complexity");
 
 /**
@@ -121,6 +121,8 @@ module.exports = {
 				]
 			}
 		}),
+
+		OpenApiMixin()
 	],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html

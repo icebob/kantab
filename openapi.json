@@ -1,0 +1,112 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "kantab API Documentation",
+        "version": "0.1.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:4000/api/v1",
+            "description": "Development server"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "Board": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "5bf18691fe972d2464a7ba14"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Test board"
+                    },
+                    "slug": {
+                        "type": "string",
+                        "example": "test_board"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Test board description"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/boards": {
+            "get": {
+                "description": "List boards",
+                "tags": [
+                    "boards"
+                ],
+                "operationId": "v1.boards.get",
+                "responses": {
+                    "200": {
+                        "description": "Board",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Board"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new board",
+                "tags": [
+                    "boards"
+                ],
+                "operationId": "v1.boards.create",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "example": {
+                                "title": "New board",
+                                "description": "My new board"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created board",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Board"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "security": [],
+    "tags": [
+        {
+            "name": "boards",
+            "description": "Boards operations"
+        }
+    ],
+    "externalDocs": []
+}

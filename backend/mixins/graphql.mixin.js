@@ -275,7 +275,7 @@ module.exports = function(mixinOptions) {
 		},
 
 		started() {
-			this.logger.info(`🚀 GraphQL server is available at ${mixinOptions.routePath}`);
+			this.logger.info(`🚀 GraphQL server is available at ${mixinOptions.routeOptions.path}`);
 		}
 	};
 };

@@ -14,7 +14,7 @@ function send(res, statusCode, data, responseType = "application/json") {
 		ctx.meta.$responseType = responseType;
 
 	const service = res.$service;
-	service.sendResponse(res.$ctx, res.$route, null, res, data, {});
+	service.sendResponse(res.$ctx, res.$route, null, res, data);
 }
 
 class ApolloServer extends ApolloServerBase {
@@ -48,7 +48,7 @@ class ApolloServer extends ApolloServerBase {
 				handled = await this.handleGraphqlRequestsWithServer({ req, res });
 
 			if (!handled)
-				send(res, 404, null);
+				send(res, 404, "Not found", "text/plain");
 		};
 	}
 
@@ -106,7 +106,7 @@ class ApolloServer extends ApolloServerBase {
 	// Handle incoming GraphQL requests using Apollo Server.
 	async handleGraphqlRequestsWithServer({ req, res, }) {
 		let handled = false;
-		const url = req.url.split("?")[0];
+		const url = req.originalUrl.split("?")[0];
 		if (url === this.graphqlPath) {
 			const graphqlHandler = moleculerApollo(() => this.createGraphQLServerOptions(req, res));
 			const responseData = await graphqlHandler(req, res);

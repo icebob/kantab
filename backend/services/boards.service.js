@@ -81,6 +81,38 @@ module.exports = {
 					}
 				}
 			},
+		},
+
+		openapi: {
+			// https://swagger.io/specification/#componentsObject
+			components: {
+				schemas: {
+					Board: {
+						required: ["id", "title"],
+						type: "object",
+						properties: {
+							id: { type: "string", example: "5bf18691fe972d2464a7ba14" },
+							title: { type: "string", example: "Test board" },
+							slug: { type: "string", example: "test_board" },
+							description: { type: "string", example: "Test board description" },
+						}
+					},
+					Boards: {
+						type: "array",
+						items: {
+							$ref: "#/components/schemas/Pet"
+						}
+					}
+				}
+			},
+
+			// https://swagger.io/specification/#tagObject
+			tags: [
+				{
+					name: "boards",
+					description: "Boards operations"
+				}
+			],
 		}
 	},
 
@@ -89,6 +121,41 @@ module.exports = {
 	 */
 	actions: {
 		create: {
+			docs: {
+				// https://swagger.io/specification/#operationObject
+				description: "Create a new board",
+				tags: ["boards"],
+				requestBody: {
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									title: { type: "string" },
+									description: { type: "string" }
+								}
+							},
+							example: {
+								title: "New board",
+								description: "My new board"
+							}
+						}
+					}
+				},
+				responses: {
+					"200": {
+						description: "Created board",
+						content: {
+							"application/json": {
+								schema: {
+									"$ref": "#/components/schemas/Board"
+								}
+							}
+						}
+					}
+				}
+
+			},
 			permissions: ["boards.create"],
 			graphql: {
 				mutation: "createBoard(title: String!, description: String): Board"
@@ -98,6 +165,26 @@ module.exports = {
 			permissions: ["boards.read"]
 		},
 		find: {
+			docs: {
+				description: "List boards",
+				tags: ["boards"],
+				operationId: "v1.boards.find",
+				responses: {
+					"200": {
+						description: "Boards",
+						content: {
+							"application/json": {
+								schema: {
+									type: "array",
+									items: {
+										"$ref": "#/components/schemas/Boards"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
 			permissions: ["boards.read"],
 			graphql: {
 				query: "boards(limit: Int, offset: Int, sort: String): [Board]"
