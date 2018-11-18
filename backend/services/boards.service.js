@@ -73,15 +73,12 @@ module.exports = {
 			`,
 			resolvers: {
 				Board: {
-					owner(parent, args, context) {
-						return context.ctx.call("v1.accounts.get", { id: parent.owner });
-					}/*
 					owner: {
 						action: "v1.accounts.get",
 						rootParams: {
 							"owner": "id"
 						}
-					}*/
+					}
 				}
 			},
 		}

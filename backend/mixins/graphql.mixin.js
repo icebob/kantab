@@ -220,7 +220,7 @@ module.exports = function(mixinOptions) {
 
 			const route = _.defaultsDeep(mixinOptions.routeOptions, {
 				aliases: {
-					// multiload backend route
+
 					"/"(req, res) {
 						// Call the previously generated handler
 						if (!shouldUpdateSchema && this.graphqlHandler)
