@@ -11,7 +11,9 @@ const { printSchema } 			= require("graphql");
 module.exports = function(mixinOptions) {
 
 	mixinOptions = _.defaultsDeep(mixinOptions, {
-		routePath: "/graphql",
+		routeOptions: {
+			path: "/graphql",
+		},
 		schema: null
 	});
 
@@ -20,19 +22,18 @@ module.exports = function(mixinOptions) {
 	return {
 		events: {
 			"$services.changed"() { this.invalidateGraphQLSchema(); },
-			//"$node.connected"() { this.invalidateGraphQLSchema(); },
-			//"$node.disconnected"() { this.invalidateGraphQLSchema(); },
 		},
 
 		methods: {
 			/**
-			 *
+			 * Invalidate the generated GraphQL schema
 			 */
 			invalidateGraphQLSchema() {
 				shouldUpdateSchema = true;
 			},
 
 			/**
+			 * Get action name for resolver
 			 *
 			 * @param {String} service
 			 * @param {String} action
@@ -45,9 +46,9 @@ module.exports = function(mixinOptions) {
 			},
 
 			/**
-			 *
-			 * @param {*} serviceName
-			 * @param {*} resolvers
+			 * Create resolvers for actions
+			 * @param {String} serviceName
+			 * @param {Object} resolvers
 			 */
 			createActionResolvers(serviceName, resolvers) {
 				const res = {};
@@ -55,8 +56,10 @@ module.exports = function(mixinOptions) {
 					if (_.isString(r)) {
 						res[name] = this.createActionResolver(this.getResolverActionName(serviceName, r));
 					}
-					else if (_.isObject(r)) {
+					else if (_.isPlainObject(r)) {
 						res[name] = this.createActionResolver(this.getResolverActionName(serviceName, r.action), r);
+					} else {
+						res[name] = r;
 					}
 				});
 
@@ -64,6 +67,7 @@ module.exports = function(mixinOptions) {
 			},
 
 			/**
+			 * Create resolver for action
 			 *
 			 * @param {String} actionName
 			 * @param {Object?} def
@@ -80,18 +84,24 @@ module.exports = function(mixinOptions) {
 					if (root && rootKeys) {
 						rootKeys.forEach(k => _.set(p, def.rootParams[k], _.get(root, k)));
 					}
-					return await context.ctx.call(actionName, _.defaultsDeep(args, p, params));
+					try {
+						return await context.ctx.call(actionName, _.defaultsDeep(args, p, params));
+					} catch(err) {
+						if (err && err.ctx)
+							delete err.ctx; // Avoid circular JSON
+
+						throw err;
+					}
 				};
 			},
 
 			/**
-			 *
+			 * Generate GraphQL Schema
 			 */
 			generateGraphQLSchema() {
 				try {
 					let typeDefs = [];
-					let resolvers = {
-					};
+					let resolvers = {};
 
 					if (mixinOptions.typeDefs)
 						typeDefs.push(mixinOptions.typeDefs);
@@ -208,9 +218,7 @@ module.exports = function(mixinOptions) {
 			this.apolloServer = null;
 			this.graphqlHandler = null;
 
-			const route = {
-				path: mixinOptions.routePath,
-
+			const route = _.defaultsDeep(mixinOptions.routeOptions, {
 				aliases: {
 					// multiload backend route
 					"/"(req, res) {
@@ -228,8 +236,7 @@ module.exports = function(mixinOptions) {
 							fs.writeFileSync("./schema.gql", printSchema(schema), "utf8");
 
 
-							// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
-							this.apolloServer = new ApolloServer({
+							this.apolloServer = new ApolloServer(_.defaultsDeep(mixinOptions.serverOptions, {
 								schema,
 								context: ({ req }) => {
 									return {
@@ -237,8 +244,8 @@ module.exports = function(mixinOptions) {
 										service: req.$service,
 										params: req.$params,
 									};
-								},
-							});
+								}
+							}));
 
 							this.graphqlHandler = this.apolloServer.createHandler();
 							this.graphqlSchema = schema;
@@ -261,7 +268,7 @@ module.exports = function(mixinOptions) {
 					json: true,
 					urlencoded: { extended: true }
 				},
-			};
+			});
 
 			// Add route
 			this.settings.routes.unshift(route);

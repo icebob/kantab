@@ -61,11 +61,6 @@ module.exports = {
 		softDelete: true, // TODO
 
 		graphql: {
-			query: `
-				boards(limit: Int, offset: Int, sort: String): [Board]
-				board(id: String!): Board
-			`,
-
 			type: `
 				type Board {
 					id: String!,
@@ -76,26 +71,17 @@ module.exports = {
 					createdAt: Float
 				}
 			`,
-			mutation: `
-				createBoard(title: String!, description: String): Board
-			`,
 			resolvers: {
-				Query: {
-					boards: {
-						action: "find",
-						params: {
-							populate: ["owner"]
+				Board: {
+					owner(parent, args, context) {
+						return context.ctx.call("v1.accounts.get", { id: parent.owner });
+					}/*
+					owner: {
+						action: "v1.accounts.get",
+						rootParams: {
+							"owner": "id"
 						}
-					},
-					board: {
-						action: "get",
-						params: {
-							populate: ["owner"]
-						}
-					}
-				},
-				Mutation: {
-					createBoard: "create"
+					}*/
 				}
 			},
 		}
@@ -106,20 +92,29 @@ module.exports = {
 	 */
 	actions: {
 		create: {
-			permissions: ["boards.create"]
+			permissions: ["boards.create"],
+			graphql: {
+				mutation: "createBoard(title: String!, description: String): Board"
+			}
 		},
 		list: {
 			permissions: ["boards.read"]
 		},
 		find: {
-			permissions: ["boards.read"]
+			permissions: ["boards.read"],
+			graphql: {
+				query: "boards(limit: Int, offset: Int, sort: String): [Board]"
+			}
 		},
 		get: {
 			needEntity: true,
 			permissions: [
 				"boards.read",
 				"$owner"
-			]
+			],
+			graphql: {
+				query: "board(id: String!): Board"
+			}
 		},
 		update: {
 			needEntity: true,

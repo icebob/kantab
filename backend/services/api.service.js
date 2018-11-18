@@ -13,6 +13,10 @@ const GraphQLMixin 		= require("../mixins/graphql.mixin");
 const Kind						= require("graphql/language").Kind;
 const { makeExecutableSchema }	= require("graphql-tools");
 
+const depthLimit 					= require("graphql-depth-limit");
+const { GraphQLError } 				= require("graphql");
+const { createComplexityLimitRule } = require("graphql-validation-complexity");
+
 /**
  * Initialize Webpack middleware in development
  */
@@ -94,6 +98,27 @@ module.exports = {
 						return null;
 					}
 				}
+			},
+
+			routeOptions: {
+				authentication: true,
+				cors: true,
+			},
+
+			// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
+			serverOptions: {
+				tracing: false,
+
+				validationRules: [
+					depthLimit(10),
+					createComplexityLimitRule(1000, {
+						createError(cost, documentNode) {
+							const error = new GraphQLError("custom error", [documentNode]);
+							error.meta = { cost };
+							return error;
+						}
+					})
+				]
 			}
 		}),
 	],

@@ -815,8 +815,10 @@ module.exports = function(adapter, opts) {
 
 			authorizedFields.forEach(field => {
 				// Custom formatter
-				if (!isNew && _.isFunction(field.updateSet))
-					return callCustomFn(field, field.updateSet, [_.get(changes, field.name), entity, ctx]);
+				if (isNew && _.isFunction(field.setOnCreate))
+					return callCustomFn(field, field.setOnCreate, [_.get(changes, field.name), entity, ctx]);
+				else if (!isNew && _.isFunction(field.setOnUpdate))
+					return callCustomFn(field, field.setOnUpdate, [_.get(changes, field.name), entity, ctx]);
 				else if (_.isFunction(field.set))
 					return callCustomFn(field, field.set, [_.get(changes, field.name), entity, ctx]);
 
@@ -839,7 +841,7 @@ module.exports = function(adapter, opts) {
 
 				// Handle default value if new entity
 				if (value == undefined) {
-					const defaultValue = isNew ? field.default : field.updateDefault;
+					const defaultValue = field.default;
 					if (defaultValue !== undefined) {
 						if (_.isFunction(defaultValue))
 							return callCustomFn(field, defaultValue, [_.get(changes, field.name), entity, ctx]);

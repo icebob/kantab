@@ -9,13 +9,19 @@ type Board {
 
 scalar Date
 
+type LoginToken {
+  token: String!
+}
+
 type Mutation {
+  login(email: String!, password: String, token: String): LoginToken
   createBoard(title: String!, description: String): Board
 }
 
 type Query {
   users(limit: Int, offset: Int, sort: String): [User]
   user(id: String): User
+  me: User
   boards(limit: Int, offset: Int, sort: String): [Board]
   board(id: String!): Board
 }

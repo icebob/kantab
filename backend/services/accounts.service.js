@@ -86,6 +86,10 @@ module.exports = {
 					boards(limit: Int, offset: Int, sort: String): [Board]
 					boardCount: Int
 				}
+
+				type LoginToken {
+					token: String!
+				}
 			`,
 			resolvers: {
 				User: {
@@ -93,9 +97,6 @@ module.exports = {
 						action: "v1.boards.find",
 						rootParams: {
 							"id": "query.owner"
-						},
-						params: {
-							populate: ["owner"]
 						}
 					},
 					boardCount: {
@@ -184,6 +185,9 @@ module.exports = {
 		me: {
 			cache: {
 				keys: ["#userID"]
+			},
+			graphql: {
+				query: "me: User"
 			},
 			async handler(ctx) {
 				if (!ctx.meta.userID) {
@@ -527,6 +531,9 @@ module.exports = {
 				email: { type: "string", optional: false },
 				password: { type: "string", optional: true },
 				token: { type: "string", optional: true }
+			},
+			graphql: {
+				mutation: "login(email: String!, password: String, token: String): LoginToken"
 			},
 			async handler(ctx) {
 				let query;

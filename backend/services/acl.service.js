@@ -251,7 +251,7 @@ module.exports = {
 		async syncPermissions(role, permissions) {
 			return await this.adapter.updateById(role._id, { $set: {
 				permissions: permissions
-			}});
+			} });
 		},
 
 		/**
@@ -264,7 +264,7 @@ module.exports = {
 			return await this.memoize("permissions", roleNames, async () => {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
-				const roles = await this.adapter.find({ query: { name: { $in: roleNames }}});
+				const roles = await this.adapter.find({ query: { name: { $in: roleNames } } });
 				const permissions = await this.Promise.map(roles, async role => {
 					let res = role.permissions ? Array.from(role.permissions) : [];
 
@@ -290,7 +290,7 @@ module.exports = {
 			let res = Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
 			if (!res) {
 				// Check inherits
-				const entities = await this.adapter.find({ query: { name: { $in: roleNames } }});
+				const entities = await this.adapter.find({ query: { name: { $in: roleNames } } });
 				if (Array.isArray(entities) && entities.length > 0) {
 					const inherits = _.uniq(_.compact(_.flattenDeep(entities.map(entity => entity.inherits))));
 					if (inherits.length > 0)
@@ -369,11 +369,11 @@ module.exports = {
 					name: "user",
 					description: "Registered User",
 					permissions: [
-						"board:create",
-						"board:read",
-						"board:update",
-						"board:remove",
-						"cards:create"
+						"boards.create",
+						"boards.read",
+						"boards.update",
+						"boards.remove",
+						"cards.create"
 					],
 					status: 1,
 					createdAt: Date.now(),
