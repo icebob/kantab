@@ -39,8 +39,6 @@ module.exports = function(mixinOptions) {
 			 */
 			generateOpenAPISchema() {
 				try {
-					//return makeExecutableSchema({ typeDefs, resolvers });
-
 					const res = _.defaultsDeep(mixinOptions.schema, {
 						openapi: "3.0.1",
 
@@ -60,78 +58,10 @@ module.exports = function(mixinOptions) {
 
 						// https://swagger.io/specification/#componentsObject
 						components: {
-							schemas: {
-								Board: {
-									type: "object",
-									properties: {
-										id: { type: "string", example: "5bf18691fe972d2464a7ba14" },
-										title: { type: "string", example: "Test board" },
-										slug: { type: "string", example: "test_board" },
-										description: { type: "string", example: "Test board description" },
-									}
-								}
-							}
 						},
 
 						// https://swagger.io/specification/#pathsObject
 						paths: {
-							"/boards": {
-								"get": {
-									description: "List boards",
-									tags: ["boards"],
-									operationId: "v1.boards.get",
-									responses: {
-										"200": {
-											description: "Board",
-											content: {
-												"application/json": {
-													schema: {
-														type: "array",
-														items: {
-															"$ref": "#/components/schemas/Board"
-														}
-													}
-												}
-											}
-										}
-									}
-								},
-								"post": {
-									// https://swagger.io/specification/#operationObject
-									description: "Create a new board",
-									tags: ["boards"],
-									operationId: "v1.boards.create",
-									requestBody: {
-										content: {
-											"application/json": {
-												schema: {
-													type: "object",
-													properties: {
-														title: { type: "string" },
-														description: { type: "string" }
-													}
-												},
-												example: {
-													title: "New board",
-													description: "My new board"
-												}
-											}
-										}
-									},
-									responses: {
-										"200": {
-											description: "Created board",
-											content: {
-												"application/json": {
-													schema: {
-														"$ref": "#/components/schemas/Board"
-													}
-												}
-											}
-										}
-									}
-								}
-							}
 						},
 
 						// https://swagger.io/specification/#securityRequirementObject
@@ -147,6 +77,34 @@ module.exports = function(mixinOptions) {
 
 						// https://swagger.io/specification/#externalDocumentationObject
 						externalDocs: []
+					});
+
+					const services = this.broker.registry.getServiceList({ withActions: true });
+					services.forEach(service => {
+
+						// --- COMPILE SERVICE-LEVEL DEFINITIONS ---
+						if (service.settings.openapi) {
+							_.merge(res, service.settings.openapi);
+						}
+
+						// --- COMPILE ACTION-LEVEL DEFINITIONS ---
+						_.forIn(service.actions, action => {
+							if (action.openapi) {
+								if (_.isObject(action.openapi)) {
+									let def = _.cloneDeep(action.openapi);
+									let method, routePath;
+									if (def.$path) {
+										const p = def.$path.split(" ");
+										method = p[0].toLowerCase();
+										routePath = p[1];
+										delete def.$path;
+									}
+
+									_.set(res.paths, [routePath, method], def);
+								}
+							}
+						});
+
 					});
 
 					return res;

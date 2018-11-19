@@ -100,7 +100,22 @@ module.exports = {
 					Boards: {
 						type: "array",
 						items: {
-							$ref: "#/components/schemas/Pet"
+							$ref: "#/components/schemas/Board"
+						}
+					},
+					BoardList: {
+						type: "object",
+						properties: {
+							total: { type: "integer", example: 50 },
+							page: { type: "integer", example: 1 },
+							pageSize: { type: "integer", example: 10 },
+							totalPages: { type: "integer", example: 5 },
+							rows: {
+								type: "array",
+								items: {
+									$ref: "#/components/schemas/Board"
+								}
+							}
 						}
 					}
 				}
@@ -121,10 +136,12 @@ module.exports = {
 	 */
 	actions: {
 		create: {
-			docs: {
+			openapi: {
+				$path: "POST /board",
 				// https://swagger.io/specification/#operationObject
 				description: "Create a new board",
 				tags: ["boards"],
+				operationId: "v1.boards.create",
 				requestBody: {
 					content: {
 						"application/json": {
@@ -162,11 +179,112 @@ module.exports = {
 			}
 		},
 		list: {
+			openapi: {
+				$path: "GET /boards",
+				description: "List boards with pages",
+				tags: ["boards"],
+				operationId: "v1.boards.list",
+				parameters: [
+					{
+						in: "query",
+						name: "page",
+						schema: {
+							type: "integer"
+						},
+						example: 1,
+						required: false,
+						description: "Page number"
+					},
+					{
+						in: "query",
+						name: "pageSize",
+						schema: {
+							type: "integer"
+						},
+						example: 10,
+						required: false,
+						description: "Page size"
+					},
+					{
+						in: "query",
+						name: "sort",
+						schema: {
+							type: "string"
+						},
+						example: "title,-createdAt",
+						required: false,
+						description: "Sorting"
+					},
+					{
+						in: "query",
+						name: "fields",
+						schema: {
+							type: "string"
+						},
+						example: "title,description, owner",
+						required: false,
+						description: "Filtered fields"
+					},
+					{
+						in: "query",
+						name: "populate",
+						schema: {
+							type: "string"
+						},
+						example: "owner",
+						required: false,
+						description: "Populated fields"
+					},
+					{
+						in: "query",
+						name: "search",
+						schema: {
+							type: "string"
+						},
+						required: false,
+						description: "Search text"
+					},
+					{
+						in: "query",
+						name: "searchFields",
+						schema: {
+							type: "string"
+						},
+						required: false,
+						description: "Fields for searching"
+					},
+					{
+						in: "query",
+						name: "query",
+						schema: {
+							type: "object"
+						},
+						required: false,
+						description: "Custom query"
+					},
+				],
+				responses: {
+					"200": {
+						description: "Boards",
+						content: {
+							"application/json": {
+								schema: {
+									type: "array",
+									items: {
+										"$ref": "#/components/schemas/BoardList"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
 			permissions: ["boards.read"]
 		},
 		find: {
-			docs: {
-				description: "List boards",
+			openapi: {
+				$path: "GET /boards/find",
+				description: "Find boards",
 				tags: ["boards"],
 				operationId: "v1.boards.find",
 				responses: {
@@ -191,6 +309,37 @@ module.exports = {
 			}
 		},
 		get: {
+			openapi: {
+				$path: "GET /boards/{id}",
+				// https://swagger.io/specification/#operationObject
+				description: "Get a board by ID",
+				tags: ["boards"],
+				operationId: "v1.boards.get",
+				parameters: [
+					{
+						in: "path",
+						name: "id",
+						schema: {
+							type: "string"
+						},
+						example: "5bf18691fe972d2464a7ba14",
+						required: true,
+						description: "Board ID"
+					}
+				],
+				responses: {
+					"200": {
+						description: "Found board",
+						content: {
+							"application/json": {
+								schema: {
+									"$ref": "#/components/schemas/Board"
+								}
+							}
+						}
+					}
+				}
+			},
 			needEntity: true,
 			permissions: [
 				"boards.read",
@@ -201,6 +350,54 @@ module.exports = {
 			}
 		},
 		update: {
+			openapi: {
+				$path: "PUT /boards/{id}",
+				// https://swagger.io/specification/#operationObject
+				description: "Update a board by ID",
+				tags: ["boards"],
+				operationId: "v1.boards.update",
+				parameters: [
+					{
+						in: "path",
+						name: "id",
+						schema: {
+							type: "string"
+						},
+						example: "5bf18691fe972d2464a7ba14",
+						required: true,
+						description: "Board ID"
+					}
+				],
+				requestBody: {
+					content: {
+						"application/json": {
+							schema: {
+								type: "object",
+								properties: {
+									title: { type: "string" },
+									description: { type: "string" }
+								}
+							},
+							example: {
+								title: "New board",
+								description: "My new board"
+							}
+						}
+					}
+				},
+				responses: {
+					"200": {
+						description: "Found board",
+						content: {
+							"application/json": {
+								schema: {
+									"$ref": "#/components/schemas/Board"
+								}
+							}
+						}
+					}
+				}
+			},
 			needEntity: true,
 			permissions: [
 				"administrator",
@@ -208,6 +405,37 @@ module.exports = {
 			]
 		},
 		remove: {
+			openapi: {
+				$path: "DELETE /boards/{id}",
+				// https://swagger.io/specification/#operationObject
+				description: "Delete a board by ID",
+				tags: ["boards"],
+				operationId: "v1.boards.remove",
+				parameters: [
+					{
+						in: "path",
+						name: "id",
+						schema: {
+							type: "string"
+						},
+						example: "5bf18691fe972d2464a7ba14",
+						required: true,
+						description: "Board ID"
+					}
+				],
+				responses: {
+					"200": {
+						description: "Found board",
+						content: {
+							"application/json": {
+								schema: {
+									"$ref": "#/components/schemas/Board"
+								}
+							}
+						}
+					}
+				}
+			},
 			needEntity: true,
 			permissions: [
 				"administrator",
