@@ -233,7 +233,9 @@ module.exports = function(mixinOptions) {
 							const schema = this.generateGraphQLSchema();
 
 							this.logger.debug(printSchema(schema));
-							fs.writeFileSync("./schema.gql", printSchema(schema), "utf8");
+
+							if (process.env.NODE_ENV != "production")
+								fs.writeFileSync("./schema.gql", printSchema(schema), "utf8");
 
 
 							this.apolloServer = new ApolloServer(_.defaultsDeep(mixinOptions.serverOptions, {

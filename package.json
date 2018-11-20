@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "moleculer-runner --env --repl --hot backend/services",
     "start": "moleculer-runner --env",
-    "now-start": "cross-env NEDB_FOLDER=data moleculer-runner --env backend/services",
+    "now-start": "cross-env NEDB_FOLDER=data NODE_ENV=production moleculer-runner --env backend/services",
     "cli": "moleculer connect --ns kantab-prod nats://localhost:4222",
     "build": "vue-cli-service build",
     "lint": "eslint backend && vue-cli-service lint",

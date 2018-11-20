@@ -135,7 +135,8 @@ module.exports = function(mixinOptions) {
 								shouldUpdateSchema = false;
 
 								this.logger.debug(schema);
-								fs.writeFileSync("./openapi.json", JSON.stringify(schema, null, 4), "utf8");
+								if (process.env.NODE_ENV != "production")
+									fs.writeFileSync("./openapi.json", JSON.stringify(schema, null, 4), "utf8");
 							} catch(err) {
 								this.logger.warn(err);
 								this.sendError(req, res, err);
