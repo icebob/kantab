@@ -16,8 +16,8 @@ Desired features & modules:
 - [x] MongoDB
 - [x] Central configuration
 - [x] Global REST API
-- [ ] Swagger API docs
-- [ ] GraphQL endpoint
+- [x] Swagger API docs
+- [x] GraphQL endpoint
 - [x] Full authentication
     - [x] Login
     - [x] Sign Up
@@ -44,7 +44,7 @@ Desired features & modules:
 
 - `dev`: Start development mode (load all services locally)
 - `start`: Start production mode (don't load any services, use `SERVICES` env variable)
-- `now-start`: Start production preview on now.sh (with NeDB. TODO: change it to mLab.com)
+- `now-start`: Start production preview on now.sh
 - `cli`: Start a CLI and connect to production
 - `build`: Build frontend code
 - `lint`: Run ESLint
