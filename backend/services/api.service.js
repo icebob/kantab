@@ -107,8 +107,12 @@ module.exports = {
 
 			// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
 			serverOptions: {
-				tracing: false,
+				tracing: true,
 				introspection: true,
+
+				engine: {
+					apiKey: process.env.APOLLO_ENGINE_KEY
+				},
 
 				validationRules: [
 					depthLimit(10),

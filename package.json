@@ -8,6 +8,7 @@
     "now-start": "cross-env NODE_ENV=production moleculer-runner --env backend/services",
     "cli": "moleculer connect --ns kantab-prod nats://localhost:4222",
     "build": "vue-cli-service build",
+    "now-build": "echo \"Skip build\"",
     "lint": "eslint backend && vue-cli-service lint",
     "deps": "npm-check -u",
     "postdeps": "npm test",
@@ -44,7 +45,6 @@
     "@vue/cli-service": "3.1.4",
     "@vue/eslint-config-airbnb": "4.0.0",
     "@vue/test-utils": "1.0.0-beta.20",
-    "apollo-server-core": "2.2.2",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "10.0.1",
     "babel-jest": "23.6.0",
@@ -81,6 +81,7 @@
   "dependencies": {
     "@apollographql/apollo-upload-server": "5.0.3",
     "@apollographql/graphql-playground-html": "1.6.4",
+    "apollo-server-core": "2.2.2",
     "accept": "3.1.3",
     "axios": "0.18.0",
     "bcrypt": "3.0.2",
