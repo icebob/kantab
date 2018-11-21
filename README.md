@@ -7,6 +7,9 @@ KanTab is a kanban board application with microservices. Powered by Moleculer &a
 
 ![Screenshot](https://user-images.githubusercontent.com/306521/47039154-865d9100-d183-11e8-85c9-4cfc571ac8a5.png)
 
+## Demo
+Live demo on now.sh: https://kantab.now.sh/
+
 ## Tech stack
 Desired features & modules:
 
