@@ -3,6 +3,7 @@
 const ApiGateway 		= require("moleculer-web");
 const _ 				= require("lodash");
 const helmet 			= require("helmet");
+const fs 				= require("fs");
 const cookie 			= require("cookie");
 const C 				= require("../constants");
 
@@ -249,5 +250,12 @@ module.exports = {
 				cb(err);
 			}
 		},
+	},
+
+	events: {
+		"graphql.schema.updated"({ schema }) {
+			this.logger.info("Generated GraphQL schema:\n\n" + schema);
+			fs.writeFileSync("./schema.gql", schema, "utf8");
+		}
 	}
 };
