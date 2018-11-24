@@ -8,7 +8,7 @@ const C 				= require("../constants");
 
 const PassportMixin 	= require("../mixins/passport.mixin");
 const I18NextMixin 		= require("../mixins/i18next.mixin");
-const GraphQLMixin 		= require("../mixins/graphql.mixin");
+const { ApolloService } = require("moleculer-apollo-server");
 const OpenApiMixin 		= require("../mixins/openapi.mixin");
 
 const { GraphQLError } 				= require("graphql");
@@ -77,7 +77,7 @@ module.exports = {
 		I18NextMixin(),
 
 		// GraphQL
-		GraphQLMixin({
+		ApolloService({
 
 			typeDefs: `
 				scalar Date
