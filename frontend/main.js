@@ -20,6 +20,10 @@ import store from "./store";
 import { sync } from "vuex-router-sync";
 sync(store, router);
 
+// --- SOCKET.IO CLIENT ---
+import VueWebsocket from "vue-websocket";
+Vue.use(VueWebsocket);
+
 // --- SERVICE WORKER ---
 import "./registerServiceWorker";
 

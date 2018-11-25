@@ -11,6 +11,7 @@ const PassportMixin 	= require("../mixins/passport.mixin");
 const I18NextMixin 		= require("../mixins/i18next.mixin");
 const { ApolloService } = require("moleculer-apollo-server");
 const OpenApiMixin 		= require("../mixins/openapi.mixin");
+const SocketIOMixin		= require("moleculer-io");
 
 const { GraphQLError } 				= require("graphql");
 const Kind							= require("graphql/language").Kind;
@@ -128,7 +129,10 @@ module.exports = {
 			}
 		}),
 
-		OpenApiMixin()
+		OpenApiMixin(),
+
+		// Socket.IO handler
+		SocketIOMixin
 	],
 
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
