@@ -36,7 +36,7 @@ Desired features & modules:
     - [ ] LDAP
 - [x] ACL/RBAC (user roles & permissions)
 - [x] I18N
-- [ ] Websocket
+- [x] Websocket
 - [ ] Plugin system
 - [ ] Caching with tags
 - [ ] Metrics & monitoring
