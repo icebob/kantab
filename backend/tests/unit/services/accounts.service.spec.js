@@ -142,7 +142,7 @@ describe("Test Accounts service", () => {
 				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $set: {
 					passwordlessToken: expect.any(String),
 					passwordlessTokenExpires: expect.any(Number)
-				}});
+				} });
 			});
 		});
 
@@ -813,8 +813,10 @@ describe("Test Accounts service", () => {
 					plan: "free",
 					roles: ["user"],
 					createdAt: expect.any(Number),
-					updatedAt: expect.any(Number),
 					socialLinks: {},
+					totp: {
+						enabled: false
+					},
 					status: 1,
 					verified: true
 				});
@@ -835,14 +837,14 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should throw error if user is not found", async () => {
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: 1 }});
+				const res = await broker.call("v1.accounts.me", null, { meta: { userID: 1 } });
 				expect(res).toBeNull();
 			});
 
 			it("should throw error if account is not activated", async () => {
 				await unverifiedAccount(savedUser._id);
 
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id }});
+				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id } });
 				expect(res).toBeNull();
 
 				await verifiedAccount(savedUser._id);
@@ -851,14 +853,14 @@ describe("Test Accounts service", () => {
 			it("should throw error if account is disabled", async () => {
 				await broker.call("v1.accounts.disable", { id: savedUser._id });
 
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id }});
+				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id } });
 				expect(res).toBeNull();
 
 				await broker.call("v1.accounts.enable", { id: savedUser._id });
 			});
 
-			it("should throw error if user is not found", async () => {
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id }});
+			it("should return user after enabling", async () => {
+				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id } });
 				expect(res).toEqual({
 					id: expect.any(String),
 					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
@@ -870,8 +872,10 @@ describe("Test Accounts service", () => {
 					plan: "free",
 					roles: ["user"],
 					createdAt: expect.any(Number),
-					updatedAt: expect.any(Number),
 					socialLinks: {},
+					totp: {
+						enabled: false
+					},
 					status: 1,
 					verified: true
 				});
@@ -1260,7 +1264,7 @@ describe("Test Accounts service", () => {
 		it("should unlink user from google via meta", async () => {
 			const res = await broker.call("v1.accounts.unlink", {
 				provider: "google"
-			}, { meta: { userID: savedUser.id }});
+			}, { meta: { userID: savedUser.id } });
 
 			expect(res).toEqual({
 				...savedUser,

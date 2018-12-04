@@ -42,11 +42,11 @@ describe("Test Access-Control logic", () => {
 				description: "Registered User",
 				name: "user",
 				permissions: [
-					"board:create",
-					"board:read",
-					"board:update",
-					"board:remove",
-					"cards:create",
+					"boards.create",
+					"boards.read",
+					"boards.update",
+					"boards.remove",
+					"cards.create",
 				],
 				status: 1
 			}]));
@@ -126,7 +126,7 @@ describe("Test Access-Control logic", () => {
 				"boards.create",
 				"boards.update",
 				"boards.remove"
-			]});
+			] });
 
 			expect(res.permissions).toEqual([
 				"boards.create",
@@ -201,39 +201,39 @@ describe("Test Access-Control logic", () => {
 		});
 
 		it("should find the good permissions with single role", async () => {
-			expect(await broker.call("v1.acl.can", { roles: ["boards-reader"], permission: "boards.list"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-reader"], permission: "boards.get"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-reader"], permission: "boards.create"})).toBe(false);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-reader"], permission: "boards.list" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-reader"], permission: "boards.get" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-reader"], permission: "boards.create" })).toBe(false);
 
-			expect(await broker.call("v1.acl.can", { roles: ["boards-writer"], permission: "boards.list"})).toBe(false);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-writer"], permission: "boards.create"})).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-writer"], permission: "boards.list" })).toBe(false);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-writer"], permission: "boards.create" })).toBe(true);
 
-			expect(await broker.call("v1.acl.can", { roles: ["boards-admin"], permission: "boards.list"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-admin"], permission: "boards.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-admin"], permission: "users.create"})).toBe(false);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-admin"], permission: "boards.list" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-admin"], permission: "boards.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-admin"], permission: "users.create" })).toBe(false);
 
-			expect(await broker.call("v1.acl.can", { roles: ["users-admin"], permission: "users.list"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["users-admin"], permission: "users.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["users-admin"], permission: "boards.create"})).toBe(false);
+			expect(await broker.call("v1.acl.can", { roles: ["users-admin"], permission: "users.list" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["users-admin"], permission: "users.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["users-admin"], permission: "boards.create" })).toBe(false);
 
-			expect(await broker.call("v1.acl.can", { roles: ["manager"], permission: "users.list"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["manager"], permission: "users.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["manager"], permission: "boards.create"})).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["manager"], permission: "users.list" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["manager"], permission: "users.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["manager"], permission: "boards.create" })).toBe(true);
 
-			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "users.list"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "users.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "boards.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "every.thing"})).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "users.list" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "users.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "boards.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["administrator"], permission: "every.thing" })).toBe(true);
 		});
 
 		it("should find the good permissions with multiple roles", async () => {
 
-			expect(await broker.call("v1.acl.can", { roles: ["boards-reader", "boards-writer"], permission: "boards.list"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-reader", "boards-writer"], permission: "boards.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["boards-reader", "boards-writer"], permission: "users.create"})).toBe(false);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-reader", "boards-writer"], permission: "boards.list" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-reader", "boards-writer"], permission: "boards.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["boards-reader", "boards-writer"], permission: "users.create" })).toBe(false);
 
-			expect(await broker.call("v1.acl.can", { roles: ["users-admin", "administrator"], permission: "boards.create"})).toBe(true);
-			expect(await broker.call("v1.acl.can", { roles: ["users-admin", "administrator"], permission: "every.thing"})).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["users-admin", "administrator"], permission: "boards.create" })).toBe(true);
+			expect(await broker.call("v1.acl.can", { roles: ["users-admin", "administrator"], permission: "every.thing" })).toBe(true);
 		});
 
 		it("should find the good permissions with hasAccess action", async () => {
