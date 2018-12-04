@@ -29,7 +29,8 @@
 			"program": "${workspaceRoot}/node_modules/moleculer/bin/moleculer-runner.js",
 			"cwd": "${workspaceRoot}",
 			"env": {
-				"TEST_E2E": "true"
+				"TEST_E2E": "true",
+				"MONGO_URI": "mongodb://localhost/kantab-e2e"
 			},
 			"args": [
 				"--env",
