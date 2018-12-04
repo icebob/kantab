@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require("lodash");
+const { inspect } = require("util");
 
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
@@ -9,8 +10,8 @@ module.exports = {
 
 	logger: process.env.TEST_E2E !== "run",
 	logLevel: "info",
-	logFormatter: "default",
-	logObjectPrinter: null,
+	logFormatter: "short",
+	logObjectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 }),
 
 	serializer: "JSON",
 
