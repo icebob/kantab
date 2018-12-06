@@ -23,6 +23,7 @@ type Query {
   user(id: String): User
   me: User
   boards(limit: Int, offset: Int, sort: String): [Board]
+  boardCount: Int
   board(id: String!): Board
 }
 

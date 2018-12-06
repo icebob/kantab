@@ -37,6 +37,8 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
+		rest: true,
+
 		fields: {
 			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
 			owner: { required: true, populate: {
@@ -282,6 +284,7 @@ module.exports = {
 			permissions: ["boards.read"]
 		},
 		find: {
+			rest: "GET /find",
 			openapi: {
 				$path: "GET /boards/find",
 				description: "Find boards",
@@ -306,6 +309,31 @@ module.exports = {
 			permissions: ["boards.read"],
 			graphql: {
 				query: "boards(limit: Int, offset: Int, sort: String): [Board]"
+			}
+		},
+		count: {
+			rest: "GET /count",
+			openapi: {
+				$path: "GET /boards/count",
+				description: "Number of boards",
+				tags: ["boards"],
+				operationId: "v1.boards.count",
+				responses: {
+					"200": {
+						description: "Number of boards",
+						content: {
+							"application/json": {
+								schema: {
+									type: "number"
+								}
+							}
+						}
+					}
+				}
+			},
+			permissions: ["boards.read"],
+			graphql: {
+				query: "boardsCount: Int"
 			}
 		},
 		get: {

@@ -151,18 +151,19 @@ module.exports = {
 				path: "/api",
 
 				whitelist: [
-				// Access to any actions in all services under "/api" URL
-					"**"
+					"v1.boards.**"
 				],
+
+				etag: true,
 
 				camelCaseNames: true,
 
 				authentication: true,
 				//authorization: true,
 
-				aliases: {
-					"REST /v1/boards": "v1.boards"
-				},
+				autoAliases: true,
+
+				aliases: {},
 
 				// Disable to call not-mapped actions
 				//mappingPolicy: "restrict",

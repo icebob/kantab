@@ -146,7 +146,7 @@ module.exports = function(mixinOptions) {
 						const ctx = req.$ctx;
 						ctx.meta.responseType = "application/json";
 
-						return this.sendResponse(ctx, req.$route, req, res, schema);
+						return this.sendResponse(req, res, schema);
 					}
 				},
 

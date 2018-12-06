@@ -97,6 +97,27 @@
                 }
             }
         },
+        "/boards/count": {
+            "get": {
+                "description": "Number of boards",
+                "tags": [
+                    "boards"
+                ],
+                "operationId": "v1.boards.count",
+                "responses": {
+                    "200": {
+                        "description": "Number of boards",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/boards": {
             "get": {
                 "description": "List boards with pages",
@@ -141,7 +162,7 @@
                         "schema": {
                             "type": "string"
                         },
-                        "example": "title,description",
+                        "example": "title,description, owner",
                         "required": false,
                         "description": "Filtered fields"
                     },

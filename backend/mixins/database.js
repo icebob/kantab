@@ -214,6 +214,7 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.list = {
 			visibility: opts.actionVisibility,
+			rest: "GET /",
 			cache: {
 				keys: ["populate", "fields", "page", "pageSize", "sort", "search", "searchFields", "query"]
 			},
@@ -270,6 +271,7 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.create = {
 			visibility: opts.actionVisibility,
+			rest: "POST /",
 			async handler(ctx) {
 				const entity = await this.validateEntity(ctx, null, ctx.params);
 				return await this.adapter.insert(entity);
@@ -329,6 +331,7 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.get = {
 			visibility: opts.actionVisibility,
+			rest: "GET /:id",
 			cache: {
 				keys: ["id", "populate", "fields"]
 			},
@@ -426,6 +429,7 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.update = {
 			visibility: opts.actionVisibility,
+			rest: "PATCH /:id",
 			async handler(ctx) {
 				let changes = Object.assign({}, ctx.params);
 				delete changes[this.$primaryField.name];
@@ -452,6 +456,7 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.replace = {
 			visibility: opts.actionVisibility,
+			rest: "PUT /:id",
 			async handler(ctx) {
 				let entity = ctx.params;
 
@@ -480,6 +485,7 @@ module.exports = function(adapter, opts) {
 		 */
 		schema.actions.remove = {
 			visibility: opts.actionVisibility,
+			rest: "DELETE /:id",
 			params: {
 				id: { type: "any" }
 			},
