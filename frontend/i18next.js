@@ -47,12 +47,7 @@ function install(Vue, callback) {
 				*/
 			}
 
-		}, (err, t) => {
-			if (err) {
-				console.error("Unable to initialize I18Next", err);
-				return err;
-			}
-
+		}).then(t => {
 			Vue.prototype.$lang = i18next.language;
 			Vue.prototype.$t = t;
 
@@ -62,6 +57,9 @@ function install(Vue, callback) {
 
 			if (callback)
 				return callback(i18next, t);
+		}).catch(err => {
+			console.error("Unable to initialize I18Next", err);
+			return err;
 		});
 
 	// Register as a filter

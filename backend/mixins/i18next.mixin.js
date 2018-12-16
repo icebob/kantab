@@ -53,10 +53,7 @@ module.exports = function(mixinOptions) {
 				// jsonIndent to use when storing json files
 				jsonIndent: 4
 			}
-		}, function(err, t) {
-			if (err)
-				console.warn(err);
-		});
+		}).catch(err => console.warn(err));
 
 	return {
 

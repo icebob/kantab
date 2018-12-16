@@ -151,7 +151,8 @@ module.exports = {
 				path: "/api",
 
 				whitelist: [
-					"v1.boards.**"
+					"v1.boards.**",
+					"v1.accounts.**"
 				],
 
 				etag: true,

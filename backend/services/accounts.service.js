@@ -44,6 +44,8 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
+		rest: true,
+
 		actions: {
 			sendMail: "mail.send"
 		},
@@ -136,6 +138,9 @@ module.exports = {
 		update: {
 			visibility: C.VISIBILITY_PROTECTED
 		},
+		replace: {
+			visibility: C.VISIBILITY_PROTECTED
+		},
 		remove: {
 			visibility: C.VISIBILITY_PROTECTED
 		},
@@ -186,6 +191,7 @@ module.exports = {
 			cache: {
 				keys: ["#userID"]
 			},
+			rest: true,
 			graphql: {
 				query: "me: User"
 			},
@@ -230,6 +236,7 @@ module.exports = {
 				lastName: { type: "string", min: 2 },
 				avatar: { type: "string", optional: true },
 			},
+			rest: true,
 			async handler(ctx) {
 				if (!this.config["accounts.signup.enabled"])
 					throw new MoleculerClientError("Sign up is not available.", 400, "ERR_SIGNUP_DISABLED");
@@ -314,6 +321,7 @@ module.exports = {
 			params: {
 				token: { type: "string" }
 			},
+			rest: true,
 			async handler(ctx) {
 				const user = await this.adapter.findOne({ verificationToken: ctx.params.token });
 				if (!user)
@@ -386,6 +394,7 @@ module.exports = {
 			params: {
 				token: { type: "string" }
 			},
+			rest: true,
 			async handler(ctx) {
 				if (!this.config["accounts.passwordless.enabled"])
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
@@ -422,6 +431,7 @@ module.exports = {
 			params: {
 				email: { type: "email" }
 			},
+			rest: true,
 			async handler(ctx) {
 				const token = this.generateToken();
 
@@ -459,6 +469,7 @@ module.exports = {
 				token: { type: "string" },
 				password: { type: "string", min: 8 }
 			},
+			rest: true,
 			async handler(ctx) {
 				// Check the token & expires
 				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
@@ -532,6 +543,7 @@ module.exports = {
 				password: { type: "string", optional: true },
 				token: { type: "string", optional: true }
 			},
+			rest: true,
 			graphql: {
 				mutation: "login(email: String!, password: String, token: String): LoginToken"
 			},
@@ -706,6 +718,7 @@ module.exports = {
 			params: {
 				token: { type: "string", optional: true }
 			},
+			rest: true,
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
 				const user = await this.adapter.findById(ctx.meta.userID);
@@ -752,6 +765,7 @@ module.exports = {
 			params: {
 				token: "string"
 			},
+			rest: true,
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
 				const user = await this.adapter.findById(ctx.meta.userID);
