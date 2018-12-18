@@ -1,6 +1,5 @@
 "use strict";
 
-const _ = require("lodash");
 const { inspect } = require("util");
 
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
@@ -71,6 +70,7 @@ module.exports = {
 	middlewares: [
 		require("./backend/middlewares/CheckPermissions"),
 		require("./backend/middlewares/FindEntity"),
+		require("./backend/middlewares/EnhancedHotReload"),
 	],
 
 	// Called after broker created.
@@ -83,8 +83,6 @@ module.exports = {
 		if (process.env.TEST_E2E) {
 			require("./tests/e2e/bootstrap")(broker);
 		}
-
-		detectDependencyGraph(broker);
 	},
 
 	// Called after broker stopped.
@@ -96,100 +94,3 @@ module.exports = {
 };
 
 
-const fs = require("fs");
-const { clearRequireCache } = require("moleculer").Utils;
-function detectDependencyGraph(broker) {
-	let mainModule = process.mainModule;
-
-	processModule(broker, mainModule);
-
-	const dependencies = {};
-
-	broker.services.forEach(svc => {
-		if (Array.isArray(svc.__dependencies)) {
-			svc.__dependencies.forEach(fName => {
-				let item = dependencies[fName];
-				if (!item) {
-					item = {
-						services: []
-					};
-					dependencies[fName] = item;
-				}
-
-				if (item.services.indexOf(svc) === -1)
-					item.services.push(svc);
-			});
-		}
-	});
-
-	console.log(" ");
-
-	const needToReload = new Set();
-
-	const reloadServices = _.debounce(() => {
-		needToReload.forEach(svc => broker.hotReloadService(svc));
-		needToReload.clear();
-	}, 500);
-
-
-	Object.keys(dependencies).forEach(fName => {
-		const item = dependencies[fName];
-
-		//console.log(`Watch ${fName}... (services: ${item.services.length})`);
-		const watcher = fs.watch(fName, (eventType, filename) => {
-			broker.logger.info(`The ${fName} is changed. (Type: ${eventType})`);
-
-			//watcher.close();
-
-			clearRequireCache(fName);
-
-			if (Array.isArray(item.services)) {
-				item.services.forEach(svc => needToReload.add(svc));
-			}
-			reloadServices();
-		});
-	});
-}
-
-const path = require("path");
-const cache = new Map();
-function processModule(broker, mod, service = null, level = 0) {
-	const fName = mod.filename;
-
-	// Skip node_modules files
-	if (service && fName.indexOf("node_modules") !== -1)
-		return;
-
-	// Cache node_modules files to avoid cyclic dependencies
-	if (fName.indexOf("node_modules") !== -1) {
-		if (cache.get(fName))
-			return;
-
-		cache.set(fName, mod);
-	}
-
-	let serviceRoot = false;
-	if (!service) {
-		service = broker.services.find(svc => svc.__filename == fName);
-		if (service)
-			serviceRoot = true;
-	}
-
-	if (service) {
-		if (!service.__dependencies)
-			service.__dependencies = [];
-		service.__dependencies.push(fName);
-
-		const relPath = path.relative(path.resolve("."), fName);
-
-		/*if (serviceRoot)
-			console.log(`\n${" ".repeat(level * 2)} SERVICE: ${service.name} -> ${relPath}`);
-		else
-			console.log(`${" ".repeat(level * 2)} ${relPath}`);
-		*/
-	}
-
-	if (mod.children && mod.children.length > 0) {
-		mod.children.forEach(m => processModule(broker, m, service, service ? level + 1 : 0));
-	}
-}

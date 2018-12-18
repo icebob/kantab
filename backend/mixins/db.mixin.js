@@ -18,7 +18,7 @@ module.exports = function(collection, opts = {}) {
 		if (process.env.NEDB_FOLDER) {
 			const dir = path.resolve(process.env.NEDB_FOLDER);
 			mkdir(dir);
-			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`)});
+			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`) });
 		} else {
 			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab", { useNewUrlParser: true });
 			// Mongo has an internal reconnect logic
