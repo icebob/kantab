@@ -1,6 +1,7 @@
 "use strict";
 
 const { MoleculerClientError } = require("moleculer").Errors;
+const C = require("../constants");
 
 module.exports = {
 
