@@ -19,6 +19,9 @@ const cache = new Map();
 	- moleculer.config.js változásakor broker.restart
  */
 
+let projectFiles = new Map();
+let prevProjectFiles = new Map();
+
 /**
  * Detect service dependency graph & watch all dependent files & services.
  *
@@ -26,62 +29,110 @@ const cache = new Map();
  */
 function watchProjectFiles(broker) {
 
+	cache.clear();
+	prevProjectFiles = projectFiles;
+	projectFiles = new Map();
+
 	// Read the main module
 	const mainModule = process.mainModule;
 
 	// Process the whole module tree
 	processModule(broker, mainModule);
 
-	// Collect all dependent files
-	const dependencies = {};
-
-	broker.services.forEach(svc => {
-		if (Array.isArray(svc.__dependencies)) {
-			svc.__dependencies.forEach(fName => {
-				let item = dependencies[fName];
-				if (!item) {
-					item = {
-						services: [],
-						files: []
-					};
-					dependencies[fName] = item;
-				}
-
-				if (item.services.indexOf(svc) === -1)
-					item.services.push(svc);
-			});
-		}
-	});
-
-	console.log(" ");
-
 	const needToReload = new Set();
 
 	const reloadServices = _.debounce(() => {
 		needToReload.forEach(svc => broker.hotReloadService(svc));
 		needToReload.clear();
+
+		//Recall processing
+		watchProjectFiles(broker);
 	}, 500);
 
+	broker.logger.info("Watching the following project files:");
+	projectFiles.forEach((watchItem, fName) => {
+		const relPath = path.relative(process.cwd(), fName);
+		if (watchItem.brokerRestart)
+			broker.logger.info(`  ${relPath}: restart broker`);
+		else if (watchItem.allServices)
+			broker.logger.info(`  ${relPath}: reload all services`);
+		else if (watchItem.services.length > 0)
+			broker.logger.info(`  ${relPath}: reload ${watchItem.services.length} service(s)`);
 
-	Object.keys(dependencies).forEach(fName => {
-		const item = dependencies[fName];
+		if (watchItem.others)
+			broker.logger.info("    Others:", watchItem.others);
 
-		console.log(`Watch ${fName}... (services: ${item.services.length})`);
-		const watcher = fs.watch(fName, (eventType, filename) => {
-			broker.logger.info(`The ${fName} is changed. (Type: ${eventType})`);
+		watchItem.watcher = fs.watch(fName, async (eventType) => {
+			broker.logger.info(`The '${fName}' is changed. (Type: ${eventType})`);
 
-			//watcher.close();
-
-			// TODO clear the full dependency path cache
-			broker.logger.info(`Clear '${fName}' cached module.`);
 			clearRequireCache(fName);
 
-			if (Array.isArray(item.services)) {
-				item.services.forEach(svc => needToReload.add(svc));
+			if (watchItem.others) {
+				watchItem.others.forEach(f => clearRequireCache(f));
 			}
-			reloadServices();
+
+			if (watchItem.brokerRestart) {
+				broker.logger.info("Stop all file watcher & restart broker...");
+				stopAllFileWatcher();
+				broker.restart();
+
+			} else if (watchItem.allServices) {
+				broker.logger.info(`  ${fName}: reload all services`);
+				broker.services.forEach(svc => {
+					if (svc.__filename)
+						needToReload.add(svc);
+				});
+				reloadServices();
+
+			} else if (watchItem.services.length > 0) {
+				broker.logger.info(`  ${fName}: reload ${watchItem.services.length} service(s)`);
+				broker.services.forEach(svc => {
+					if (watchItem.services.indexOf(svc.fullName) !== -1)
+						needToReload.add(svc);
+				});
+				reloadServices();
+			}
 		});
 	});
+
+	prevProjectFiles.forEach((prevWatchItem, fName) => {
+		const relPath = path.relative(process.cwd(), fName);
+
+		if (!projectFiles.has(fName)) {
+			broker.logger.info("  Remove unused dependency:", relPath);
+
+			// Close previous watcher
+			if (prevWatchItem.watcher) {
+				prevWatchItem.watcher.close();
+				prevWatchItem.watcher = null;
+			}
+		}
+	});
+}
+
+function stopAllFileWatcher() {
+	projectFiles.forEach((watchItem) => {
+		if (watchItem.watcher) {
+			watchItem.watcher.close();
+			watchItem.watcher = null;
+		}
+	});
+}
+
+function getWatchItem(fName) {
+	let watchItem = projectFiles.get(fName);
+	if (watchItem)
+		return watchItem;
+
+	watchItem = {
+		services: [],
+		allServices: false,
+		brokerRestart: false,
+		others: null
+	};
+	projectFiles.set(fName, watchItem);
+
+	return watchItem;
 }
 
 /**
@@ -107,34 +158,22 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 		cache.set(fName, mod);
 	}
 
-	let serviceRoot = false;
 	if (!service) {
 		service = broker.services.find(svc => svc.__filename == fName);
-		if (service)
-			serviceRoot = true;
 	}
 
 	if (service) {
-		if (!service.__dependencies)
-			service.__dependencies = [];
-		service.__dependencies.push(fName);
-
-		const relPath = path.relative(path.resolve("."), fName);
-
-		if (serviceRoot)
-			console.log(`\n${" ".repeat(level * 2)} SERVICE: ${service.name} -> ${relPath}`, "Parents: ", parents);
-		else
-			console.log(`${" ".repeat(level * 2)} ${relPath}`, "Parents: ", parents);
+		const watchItem = getWatchItem(fName);
+		watchItem.services.push(service.fullName);
+		watchItem.others = parents;
+		watchItem.prev = false;
 
 	} else {
 		if (parents) {
-			console.log("Common dependency:", path.relative(path.resolve("."), fName), "Parents: ", parents);
-			// Add it to all services
-			broker.services.filter(svc => !!svc.__filename).forEach(svc => {
-				if (!svc.__dependencies)
-					svc.__dependencies = [];
-				svc.__dependencies.push(fName);
-			});
+			const watchItem = getWatchItem(fName);
+			watchItem.allServices = true;
+			watchItem.others = parents;
+			watchItem.prev = false;
 		}
 	}
 
@@ -143,6 +182,9 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 			parents = parents ? parents.concat([fName]) : [fName];
 		} else if (fName.endsWith("moleculer.config.js")) {
 			parents = [];
+			// const watchItem = getWatchItem(fName);
+			// watchItem.brokerRestart = true;
+			// watchItem.prev = false;
 		} else if (parents) {
 			parents.push(fName);
 		}
@@ -156,11 +198,11 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 module.exports = {
 	// After broker created
 	created(broker) {
-		broker.restart = async function() {
+		/*broker.restart = async function() {
 			broker.logger.info("Restarting ServiceBroker...");
 			await broker.stop();
 			await broker.start();
-		}.bind(broker);
+		}.bind(broker);*/
 	},
 
 	// After broker started
