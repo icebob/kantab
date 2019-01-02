@@ -172,12 +172,12 @@ services:
 
   # Redis for caching
   redis:
-    image: redis:5.0.0-alpine
+    image: redis:5.0.3-alpine
     restart: unless-stopped
 
   # Database store
   mongo:
-    image: mongo:3.2
+    image: mongo:3.4.18
     command: mongod --smallfiles --oplogSize 128
     volumes:
       - db:/data/db
@@ -185,7 +185,7 @@ services:
 
   # Reverse proxy for API server
   traefik:
-    image: traefik:1.7.4
+    image: traefik:1.7.6
     command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
     ports:
       - "3000:80"
@@ -197,7 +197,7 @@ services:
 
   # Prometheus for metrics
   prometheus:
-    image: prom/prometheus:v2.2.1
+    image: prom/prometheus:v2.6.0
     volumes:
       - ./monitoring/prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
@@ -215,7 +215,7 @@ services:
 
   # Alert manager for Prometheus
   alertmanager:
-    image: prom/alertmanager
+    image: prom/alertmanager:v0.15.3
     ports:
       - 9093:9093
     volumes:
@@ -227,7 +227,7 @@ services:
 
   # Grafana UI
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:5.4.2
     depends_on:
       - prometheus
     ports:
