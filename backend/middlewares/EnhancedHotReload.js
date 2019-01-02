@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require("fs");
+const chalk = require("chalk");
 const path = require("path");
 const _ = require("lodash");
 
@@ -10,13 +11,9 @@ const cache = new Map();
 
 /*
 	TODO:
-	- a processModule már töltse is fel a dependencies object-et.
-	- tárolja el, hogy ha változik miket kell cacheből törölni, melyik service-eket kell hotReload-olni, és kell-e broker restart-ot csinálni.
-	- changes után ha megvolt az újratöltés, akkor megint be kéne járnia a modulokat, ugyanis elképzelhető, hogy új függőség jött be, vagy éppen tűnt el.
-	  szóval ilyenkor törölni kéne a watch-olásokat és újra felvenni. Vagy maradhat a régi watch, de ha a fájl törlődik akkor a watcher-t is törölni kell.
-	  Ha pedig új jön, akkor ahhoz új watch kell. Szóval a watcher-t a dependencies-be is lehetne tárolni. Újrafuttatásnál flag-el jelölni, hogy maradhat-e a watch.
-	  Ha másodjára már nem lett hozzáadva, akkor a flag alapján a régi dependency-ket törölni watch-ot megszűntetni.
-	- moleculer.config.js változásakor broker.restart
+	- meg kell várni a következő ráfuttatással amíg a hotReload lefut
+	  mert így hamarabb bejárja, pedig az előző service-t még le sem állította
+	  és az újonnan bejött új függőségeket nem találja meg.
  */
 
 let projectFiles = new Map();
@@ -42,14 +39,32 @@ function watchProjectFiles(broker) {
 	const needToReload = new Set();
 
 	const reloadServices = _.debounce(() => {
+		broker.logger.info(chalk.bgMagenta.white.bold(`Reload ${needToReload.size} service(s)`));
+
 		needToReload.forEach(svc => broker.hotReloadService(svc));
 		needToReload.clear();
 
-		//Recall processing
-		watchProjectFiles(broker);
+		// Recall processing (TODO: wait for hotReload)
+		setTimeout(() => watchProjectFiles(broker), 2000);
 	}, 500);
 
-	broker.logger.info("Watching the following project files:");
+
+	prevProjectFiles.forEach((prevWatchItem, fName) => {
+		// const relPath = path.relative(process.cwd(), fName);
+
+		//if (!projectFiles.has(fName)) {
+		//	broker.logger.info("  Remove unused dependency:", relPath);
+
+		// Close previous watcher
+		if (prevWatchItem.watcher) {
+			prevWatchItem.watcher.close();
+			prevWatchItem.watcher = null;
+		}
+		//}
+	});
+
+	broker.logger.info("");
+	broker.logger.info(chalk.yellow.bold("Watching the following project files:"));
 	projectFiles.forEach((watchItem, fName) => {
 		const relPath = path.relative(process.cwd(), fName);
 		if (watchItem.brokerRestart)
@@ -57,27 +72,28 @@ function watchProjectFiles(broker) {
 		else if (watchItem.allServices)
 			broker.logger.info(`  ${relPath}: reload all services`);
 		else if (watchItem.services.length > 0)
-			broker.logger.info(`  ${relPath}: reload ${watchItem.services.length} service(s)`);
+			broker.logger.info(`  ${relPath}: reload ${watchItem.services.length} service(s):`, watchItem.services);
 
-		if (watchItem.others)
+		if (watchItem.others.length > 0)
 			broker.logger.info("    Others:", watchItem.others);
 
 		watchItem.watcher = fs.watch(fName, async (eventType) => {
-			broker.logger.info(`The '${fName}' is changed. (Type: ${eventType})`);
+			const relPath = path.relative(process.cwd(), fName);
+			broker.logger.info(chalk.magenta.bold(`The '${relPath}' file is changed. (Event: ${eventType})`));
 
 			clearRequireCache(fName);
 
-			if (watchItem.others) {
+			if (watchItem.others.length > 0) {
 				watchItem.others.forEach(f => clearRequireCache(f));
 			}
 
 			if (watchItem.brokerRestart) {
-				broker.logger.info("Stop all file watcher & restart broker...");
+				/*broker.logger.info(chalk.bgMagenta.white.bold("Action: Stop all file watcher & restart broker..."));
 				stopAllFileWatcher();
 				broker.restart();
+				*/
 
 			} else if (watchItem.allServices) {
-				broker.logger.info(`  ${fName}: reload all services`);
 				broker.services.forEach(svc => {
 					if (svc.__filename)
 						needToReload.add(svc);
@@ -85,7 +101,6 @@ function watchProjectFiles(broker) {
 				reloadServices();
 
 			} else if (watchItem.services.length > 0) {
-				broker.logger.info(`  ${fName}: reload ${watchItem.services.length} service(s)`);
 				broker.services.forEach(svc => {
 					if (watchItem.services.indexOf(svc.fullName) !== -1)
 						needToReload.add(svc);
@@ -95,19 +110,6 @@ function watchProjectFiles(broker) {
 		});
 	});
 
-	prevProjectFiles.forEach((prevWatchItem, fName) => {
-		const relPath = path.relative(process.cwd(), fName);
-
-		if (!projectFiles.has(fName)) {
-			broker.logger.info("  Remove unused dependency:", relPath);
-
-			// Close previous watcher
-			if (prevWatchItem.watcher) {
-				prevWatchItem.watcher.close();
-				prevWatchItem.watcher = null;
-			}
-		}
-	});
 }
 
 function stopAllFileWatcher() {
@@ -128,7 +130,7 @@ function getWatchItem(fName) {
 		services: [],
 		allServices: false,
 		brokerRestart: false,
-		others: null
+		others: []
 	};
 	projectFiles.set(fName, watchItem);
 
@@ -146,7 +148,7 @@ function getWatchItem(fName) {
 function processModule(broker, mod, service = null, level = 0, parents = null) {
 	const fName = mod.filename;
 
-	// Skip node_modules files
+	// Skip node_modules files, if there is parent project file
 	if ((service || parents) && fName.indexOf("node_modules") !== -1)
 		return;
 
@@ -164,16 +166,16 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 
 	if (service) {
 		const watchItem = getWatchItem(fName);
-		watchItem.services.push(service.fullName);
-		watchItem.others = parents;
-		watchItem.prev = false;
+		if (!watchItem.services.includes(service.fullName))
+			watchItem.services.push(service.fullName);
+
+		watchItem.others = _.uniq([].concat(watchItem.others, parents || []));
 
 	} else {
 		if (parents) {
 			const watchItem = getWatchItem(fName);
 			watchItem.allServices = true;
-			watchItem.others = parents;
-			watchItem.prev = false;
+			watchItem.others = _.uniq([].concat(watchItem.others, parents || []));
 		}
 	}
 
@@ -198,6 +200,10 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 module.exports = {
 	// After broker created
 	created(broker) {
+		if (broker.options.hotReload) {
+			// Kick out the original service watcher
+			broker.watchService = () => {};
+		}
 		/*broker.restart = async function() {
 			broker.logger.info("Restarting ServiceBroker...");
 			await broker.stop();
@@ -208,9 +214,6 @@ module.exports = {
 	// After broker started
 	started(broker) {
 		if (broker.options.hotReload) {
-			// Kick out the original service watcher
-			broker.watchService = () => {};
-
 			// Execute new watcher
 			watchProjectFiles(broker);
 		}

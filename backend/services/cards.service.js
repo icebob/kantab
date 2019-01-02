@@ -5,6 +5,7 @@ const _ 				= require("lodash");
 const DbService 		= require("../mixins/db.mixin");
 const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
 const ConfigLoader 		= require("../mixins/config.mixin");
+const TestMixin 		= require("../mixins/test.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
@@ -15,6 +16,7 @@ module.exports = {
 	version: 1,
 
 	mixins: [
+		TestMixin,
 		DbService("cards"),
 		CacheCleaner([
 			"cache.clean.boards",
@@ -96,6 +98,7 @@ module.exports = {
 	 * Service started lifecycle event handler
 	 */
 	started() {
+		this.logger.info(/*this.test() + */" - Hello cards!");
 	},
 
 	/**
