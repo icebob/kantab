@@ -44,7 +44,7 @@ Desired features & modules:
 - [x] Docker files
 
 ## Monitoring
-In production, this project contains some monitoring features. It uses [Prometheus](https://prometheus.io/) & [Grafana](https://grafana.com/).
+In production, this project contains monitoring feature with [Prometheus](https://prometheus.io/) & [Grafana](https://grafana.com/).
 
 [Read more about it](monitoring/README.md)
 
@@ -63,5 +63,5 @@ In production, this project contains some monitoring features. It uses [Promethe
 - `test:backend`: Run backend tests
 - `test:frontend`: Run frontend tests
 - `test:e2e`: Run E2E tests
-- `dc:up`: Start the stack with Docker Compose
-- `dc:down`: Stop the stack with Docker Compose
+- `dc:up`: Start the stack in production with Docker Compose
+- `dc:down`: Stop the stack in production with Docker Compose
