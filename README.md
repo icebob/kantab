@@ -39,9 +39,14 @@ Desired features & modules:
 - [x] Websocket
 - [ ] Plugin system
 - [ ] Caching with tags
-- [ ] Metrics & monitoring
+- [x] Metrics & monitoring
 - [x] Unit test & E2E test with Jest, Cypress
 - [x] Docker files
+
+## Monitoring
+In production, this project contains some monitoring features. It uses [Prometheus](https://prometheus.io/) & [Grafana](https://grafana.com/).
+
+[Read more about it](monitoring/README.md)
 
 ## NPM Scripts
 
