@@ -9,15 +9,18 @@ const { clearRequireCache } = require("moleculer").Utils;
 
 const cache = new Map();
 
-/*
-	TODO:
-	- meg kell várni a következő ráfuttatással amíg a hotReload lefut
-	  mert így hamarabb bejárja, pedig az előző service-t még le sem állította
-	  és az újonnan bejött új függőségeket nem találja meg.
- */
-
 let projectFiles = new Map();
 let prevProjectFiles = new Map();
+
+
+function hotReloadService(broker, service) {
+	const relPath = path.relative(process.cwd(), service.__filename);
+
+	broker.logger.info(`Hot reload '${service.name}' service...`, chalk.grey(relPath));
+
+	return broker.destroyService(service)
+		.then(() => broker.loadService(service.__filename));
+}
 
 /**
  * Detect service dependency graph & watch all dependent files & services.
@@ -34,66 +37,56 @@ function watchProjectFiles(broker) {
 	const mainModule = process.mainModule;
 
 	// Process the whole module tree
-	processModule(broker, mainModule);
+	processModule(broker, mainModule, null, 0, mainModule.filename.indexOf("node_modules") === -1 ? [mainModule.filename] : null);
 
 	const needToReload = new Set();
 
+	// Debounced Service reloader function
 	const reloadServices = _.debounce(() => {
 		broker.logger.info(chalk.bgMagenta.white.bold(`Reload ${needToReload.size} service(s)`));
 
-		needToReload.forEach(svc => broker.hotReloadService(svc));
+		needToReload.forEach(svc => hotReloadService(broker, svc));
 		needToReload.clear();
 
-		// Recall processing (TODO: wait for hotReload)
-		setTimeout(() => watchProjectFiles(broker), 2000);
 	}, 500);
 
+	// Close previous watchers
+	stopAllFileWatcher(prevProjectFiles);
 
-	prevProjectFiles.forEach((prevWatchItem, fName) => {
-		// const relPath = path.relative(process.cwd(), fName);
-
-		//if (!projectFiles.has(fName)) {
-		//	broker.logger.info("  Remove unused dependency:", relPath);
-
-		// Close previous watcher
-		if (prevWatchItem.watcher) {
-			prevWatchItem.watcher.close();
-			prevWatchItem.watcher = null;
-		}
-		//}
-	});
-
-	broker.logger.info("");
-	broker.logger.info(chalk.yellow.bold("Watching the following project files:"));
+	// Watching project files
+	broker.logger.debug("");
+	broker.logger.debug(chalk.yellow.bold("Watching the following project files:"));
 	projectFiles.forEach((watchItem, fName) => {
 		const relPath = path.relative(process.cwd(), fName);
 		if (watchItem.brokerRestart)
-			broker.logger.info(`  ${relPath}: restart broker`);
+			broker.logger.debug(`  ${relPath}:`, chalk.grey("restart broker."));
 		else if (watchItem.allServices)
-			broker.logger.info(`  ${relPath}: reload all services`);
+			broker.logger.debug(`  ${relPath}:`, chalk.grey("reload all services."));
 		else if (watchItem.services.length > 0)
-			broker.logger.info(`  ${relPath}: reload ${watchItem.services.length} service(s):`, watchItem.services);
+			broker.logger.debug(`  ${relPath}:`, chalk.grey(`reload ${watchItem.services.length} service(s) & ${watchItem.others.length} other(s).`)/*, watchItem.services, watchItem.others*/);
 
-		if (watchItem.others.length > 0)
-			broker.logger.info("    Others:", watchItem.others);
-
+		// Create watcher
 		watchItem.watcher = fs.watch(fName, async (eventType) => {
 			const relPath = path.relative(process.cwd(), fName);
 			broker.logger.info(chalk.magenta.bold(`The '${relPath}' file is changed. (Event: ${eventType})`));
 
+			// Clear from require cache
 			clearRequireCache(fName);
-
 			if (watchItem.others.length > 0) {
 				watchItem.others.forEach(f => clearRequireCache(f));
 			}
 
 			if (watchItem.brokerRestart) {
-				/*broker.logger.info(chalk.bgMagenta.white.bold("Action: Stop all file watcher & restart broker..."));
-				stopAllFileWatcher();
+				// TODO: it is not working properly. The ServiceBroker doesn't reload the config from the moleculer.config.js
+				// file because it is loaded by Moleculer Runner (with merged environment files)
+				broker.logger.info(chalk.bgMagenta.white.bold("Action: Stop all file watcher & restart broker..."));
+				stopAllFileWatcher(projectFiles);
+				// Clear the whole require cache
+				require.cache.length = 0;
 				broker.restart();
-				*/
 
 			} else if (watchItem.allServices) {
+				// Reload all services
 				broker.services.forEach(svc => {
 					if (svc.__filename)
 						needToReload.add(svc);
@@ -101,6 +94,7 @@ function watchProjectFiles(broker) {
 				reloadServices();
 
 			} else if (watchItem.services.length > 0) {
+				// Reload certain services
 				broker.services.forEach(svc => {
 					if (watchItem.services.indexOf(svc.fullName) !== -1)
 						needToReload.add(svc);
@@ -112,8 +106,13 @@ function watchProjectFiles(broker) {
 
 }
 
-function stopAllFileWatcher() {
-	projectFiles.forEach((watchItem) => {
+const debouncedWatchProjectFiles = _.debounce(watchProjectFiles, 2000);
+
+/**
+ * Stop all file watchers
+ */
+function stopAllFileWatcher(items) {
+	items.forEach((watchItem) => {
 		if (watchItem.watcher) {
 			watchItem.watcher.close();
 			watchItem.watcher = null;
@@ -121,6 +120,12 @@ function stopAllFileWatcher() {
 	});
 }
 
+/**
+ * Get a watch item
+ *
+ * @param {String} fName
+ * @returns {Object}
+ */
 function getWatchItem(fName) {
 	let watchItem = projectFiles.get(fName);
 	if (watchItem)
@@ -165,6 +170,7 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 	}
 
 	if (service) {
+		// It is a service dependency. We should reload this service if this file has changed.
 		const watchItem = getWatchItem(fName);
 		if (!watchItem.services.includes(service.fullName))
 			watchItem.services.push(service.fullName);
@@ -172,6 +178,7 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 		watchItem.others = _.uniq([].concat(watchItem.others, parents || []));
 
 	} else {
+		// It is not a service dependency, it is a global middleware. We should reload all services if this file has changed.
 		if (parents) {
 			const watchItem = getWatchItem(fName);
 			watchItem.allServices = true;
@@ -184,9 +191,8 @@ function processModule(broker, mod, service = null, level = 0, parents = null) {
 			parents = parents ? parents.concat([fName]) : [fName];
 		} else if (fName.endsWith("moleculer.config.js")) {
 			parents = [];
-			// const watchItem = getWatchItem(fName);
-			// watchItem.brokerRestart = true;
-			// watchItem.prev = false;
+			//const watchItem = getWatchItem(fName);
+			//watchItem.brokerRestart = true;
 		} else if (parents) {
 			parents.push(fName);
 		}
@@ -204,11 +210,17 @@ module.exports = {
 			// Kick out the original service watcher
 			broker.watchService = () => {};
 		}
-		/*broker.restart = async function() {
+
+		// TODO: it is not working properly. The ServiceBroker doesn't reload the config from the moleculer.config.js
+		// file because it is loaded by Moleculer Runner (with merged environment files)
+		/*
+		broker.restart = async function() {
 			broker.logger.info("Restarting ServiceBroker...");
 			await broker.stop();
+			await broker.Promise.delay(1000);
 			await broker.start();
-		}.bind(broker);*/
+		}.bind(broker);
+		*/
 	},
 
 	// After broker started
@@ -216,6 +228,13 @@ module.exports = {
 		if (broker.options.hotReload) {
 			// Execute new watcher
 			watchProjectFiles(broker);
+		}
+	},
+
+	serviceStarted({ broker }) {
+		// Re-watch new services if broker has already started.
+		if (broker.started) {
+			debouncedWatchProjectFiles(broker);
 		}
 	}
 };
