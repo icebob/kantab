@@ -42,6 +42,7 @@ Desired features & modules:
 - [x] Metrics & monitoring
 - [x] Unit test & E2E test with Jest, Cypress
 - [x] Docker files
+- [ ] Kubernetes & Helm chart files
 
 ## Monitoring
 In production, this project contains monitoring feature with [Prometheus](https://prometheus.io/) & [Grafana](https://grafana.com/).
