@@ -58,8 +58,18 @@ module.exports = {
 	validation: true,
 	validator: null,
 
-	metrics: true,
-	metricsRate: 1,
+	tracing: {
+		enabled: true,
+		exporter: [
+			{
+				type: "Console",
+				options: {
+					width: 80,
+					colors: true,
+				}
+			}
+		]
+	},
 
 	internalServices: true,
 	internalMiddlewares: true,
@@ -70,7 +80,7 @@ module.exports = {
 	middlewares: [
 		require("./backend/middlewares/CheckPermissions"),
 		require("./backend/middlewares/FindEntity"),
-		require("./backend/middlewares/EnhancedHotReload"),
+		//require("./backend/middlewares/EnhancedHotReload"),
 	],
 
 	// Called after broker created.
