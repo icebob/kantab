@@ -88,7 +88,7 @@
     "cookie": "0.4.0",
     "cross-env": "5.2.0",
     "dotenv": "8.0.0",
-    "execa": "2.0.1",
+    "execa": "2.0.2",
     "glob": "7.1.4",
     "graphql": "14.4.1",
     "graphql-depth-limit": "1.1.0",

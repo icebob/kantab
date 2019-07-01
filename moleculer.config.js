@@ -64,7 +64,7 @@ module.exports = {
 			{
 				type: "Console",
 				options: {
-					width: 80,
+					width: 100,
 					colors: true,
 				}
 			}
