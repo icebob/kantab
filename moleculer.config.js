@@ -80,7 +80,6 @@ module.exports = {
 	middlewares: [
 		require("./backend/middlewares/CheckPermissions"),
 		require("./backend/middlewares/FindEntity"),
-		//require("./backend/middlewares/EnhancedHotReload"),
 	],
 
 	// Called after broker created.
