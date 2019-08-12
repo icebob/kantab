@@ -1,5 +1,5 @@
 "use strict";
-
+/*
 const Tracer = require("moleculer-console-tracer");
 const PromService = require("moleculer-prometheus");
 
@@ -27,3 +27,7 @@ if (process.env.NODE_ENV == "production") {
 }
 
 
+*/
+module.exports = {
+	name: "metrics"
+};
