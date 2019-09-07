@@ -1,6 +1,6 @@
 "use strict";
 
-const Hashids = require("hashids");
+const Hashids = require("hashids/cjs");
 const hashids = new Hashids(process.env.HASHID_SALT || "K4nTa3");
 
 module.exports = function(opts = {}) {
