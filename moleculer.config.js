@@ -7,10 +7,25 @@ module.exports = {
 	namespace: "",
 	nodeID: null,
 
-	logger: process.env.TEST_E2E !== "run",
+	logger: process.env.TEST_E2E !== "run" ? [
+		{
+			type: "Console",
+			options: {
+				formatter: "short",
+				moduleColors: true,
+				//autoPadding: true
+				objectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 }),
+			}
+		},
+		{
+			type: "File",
+			options: {
+				folder: "./logs",
+				formatter: "full",
+			}
+		}
+	] : false,
 	logLevel: "info",
-	logFormatter: "short",
-	logObjectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 }),
 
 	serializer: "JSON",
 
@@ -66,6 +81,7 @@ module.exports = {
 				options: {
 					width: 100,
 					colors: true,
+					logger: console.log
 				}
 			}
 		]
