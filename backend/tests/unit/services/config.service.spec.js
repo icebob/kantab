@@ -167,7 +167,7 @@ describe("Test Configuration service", () => {
 
 	});
 
-	describe("Test 'config.set' action", async () => {
+	describe("Test 'config.set' action", () => {
 
 		let original;
 		beforeAll(async () => {
