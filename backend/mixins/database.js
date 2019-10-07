@@ -350,7 +350,7 @@ module.exports = function(adapter, opts) {
 				],
 			},
 			handler(ctx) {
-				return ctx.entity;
+				return ctx.locals.entity;
 			}
 		};
 
@@ -396,12 +396,12 @@ module.exports = function(adapter, opts) {
 				mapping: { type: "boolean", optional: true }
 			},
 			async handler(ctx) {
-				const doc = ctx.entity;
+				const doc = ctx.locals.entity;
 				const json = await this.transformDocuments(ctx, ctx.params, doc);
 				if (Array.isArray(json) && ctx.params.mapping === true) {
 					let res = {};
 					json.forEach((doc, i) => {
-						// TODO const id = ctx.entity[i][this.$primaryField.name];
+						// TODO const id = ctx.locals.entity[i][this.$primaryField.name];
 						const id = json[i][this.$primaryField.name];
 						res[id] = doc;
 					});
@@ -434,8 +434,8 @@ module.exports = function(adapter, opts) {
 				let changes = Object.assign({}, ctx.params);
 				delete changes[this.$primaryField.name];
 
-				const entity = await this.validateEntity(ctx, ctx.entity, changes);
-				return await this.adapter.updateById(ctx.entityID, { "$set": entity });
+				const entity = await this.validateEntity(ctx, ctx.locals.entity, changes);
+				return await this.adapter.updateById(ctx.locals.entityID, { "$set": entity });
 			}
 		};
 
@@ -462,7 +462,7 @@ module.exports = function(adapter, opts) {
 
 				// TODO: implement replace in adapters
 				const res = await this.adapter.collection.findOneAndUpdate({
-					[this.$primaryField.name]: this.stringToObjectID(ctx.entity[this.$primaryField.name])
+					[this.$primaryField.name]: this.stringToObjectID(ctx.locals.entity[this.$primaryField.name])
 				}, entity, { returnNewDocument : true });
 				return res.value;
 			}
@@ -490,7 +490,7 @@ module.exports = function(adapter, opts) {
 				id: { type: "any" }
 			},
 			async handler(ctx) {
-				return await this.adapter.removeById(ctx.entityID);
+				return await this.adapter.removeById(ctx.locals.entityID);
 			}
 		};
 
@@ -652,9 +652,9 @@ module.exports = function(adapter, opts) {
 				id = ctx.params.id;
 
 			if (id != null) {
-				ctx.entityID = id;
+				ctx.locals.entityID = id;
 				const entity = await this.getById(id, true);
-				ctx.entity = entity;
+				ctx.locals.entity = entity;
 			}
 			return null;
 		},
@@ -666,8 +666,8 @@ module.exports = function(adapter, opts) {
 		 * @returns
 		 */
 		entityNotFoundHook(ctx) {
-			if (!ctx.entity)
-				return Promise.reject(new EntityNotFoundError(ctx.entityID));
+			if (!ctx.locals.entity)
+				return Promise.reject(new EntityNotFoundError(ctx.locals.entityID));
 		},
 
 		/**

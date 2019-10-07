@@ -4,6 +4,7 @@ const { MoleculerClientError } = require("moleculer").Errors;
 const C = require("../constants");
 
 module.exports = {
+	name: "FindEntity",
 
 	// Wrap local action handlers
 	localAction(handler, action) {
@@ -15,7 +16,7 @@ module.exports = {
 				if (!entity)
 					throw new MoleculerClientError("Entity not found!", 400, "ERR_ENTITY_NOT_FOUND");
 
-				ctx.entity = entity;
+				ctx.locals.entity = entity;
 
 				// Call the handler
 				return handler(ctx);

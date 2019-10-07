@@ -490,7 +490,7 @@ module.exports = {
 		 * @returns {Promise<Boolean>}
 		 */
 		async isEntityOwner(ctx) {
-			return !!(ctx.entity && ctx.entity.owner == ctx.meta.userID);
+			return !!(ctx.locals.entity && ctx.locals.entity.owner == ctx.meta.userID);
 		}
 	},
 

@@ -4,6 +4,7 @@ const _ = require("lodash");
 const { MoleculerClientError } = require("moleculer").Errors;
 
 module.exports = {
+	name: "CheckPermissions",
 
 	// Wrap local action handlers
 	localAction(handler, action) {

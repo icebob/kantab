@@ -75,6 +75,7 @@ module.exports = {
 
 	tracing: {
 		enabled: true,
+		events: true,
 		exporter: [
 			{
 				type: "Console",

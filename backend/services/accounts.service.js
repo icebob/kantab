@@ -236,7 +236,7 @@ module.exports = {
 				lastName: { type: "string", min: 2 },
 				avatar: { type: "string", optional: true },
 			},
-			rest: "GET /register",
+			rest: "POST /register",
 			async handler(ctx) {
 				if (!this.config["accounts.signup.enabled"])
 					throw new MoleculerClientError("Sign up is not available.", 400, "ERR_SIGNUP_DISABLED");
@@ -321,7 +321,7 @@ module.exports = {
 			params: {
 				token: { type: "string" }
 			},
-			rest: "GET /verify",
+			rest: "POST /verify",
 			async handler(ctx) {
 				const user = await this.adapter.findOne({ verificationToken: ctx.params.token });
 				if (!user)
@@ -350,7 +350,7 @@ module.exports = {
 			},
 			needEntity: true,
 			async handler(ctx) {
-				const user = ctx.entity;
+				const user = ctx.locals.entity;
 				if (user.status == 0)
 					throw new MoleculerClientError("Account has already been disabled!", 400, "ERR_USER_ALREADY_DISABLED");
 
@@ -373,7 +373,7 @@ module.exports = {
 			},
 			needEntity: true,
 			async handler(ctx) {
-				const user = ctx.entity;
+				const user = ctx.locals.entity;
 				if (user.status == 1)
 					throw new MoleculerClientError("Account has already been enabled!", 400, "ERR_USER_ALREADY_ENABLED");
 
@@ -394,7 +394,7 @@ module.exports = {
 			params: {
 				token: { type: "string" }
 			},
-			rest: "GET /passwordless",
+			rest: "POST /passwordless",
 			async handler(ctx) {
 				if (!this.config["accounts.passwordless.enabled"])
 					throw new MoleculerClientError("Passwordless login is not allowed.", 400, "ERR_PASSWORDLESS_DISABLED");
@@ -431,7 +431,7 @@ module.exports = {
 			params: {
 				email: { type: "email" }
 			},
-			rest: "GET /forgotPassword",
+			rest: "GET /forgot-password",
 			async handler(ctx) {
 				const token = this.generateToken();
 
@@ -469,7 +469,7 @@ module.exports = {
 				token: { type: "string" },
 				password: { type: "string", min: 8 }
 			},
-			rest: "GET /resetPassword",
+			rest: "POST /reset-password",
 			async handler(ctx) {
 				// Check the token & expires
 				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
@@ -543,7 +543,7 @@ module.exports = {
 				password: { type: "string", optional: true },
 				token: { type: "string", optional: true }
 			},
-			rest: "GET /login",
+			rest: "POST /login",
 			graphql: {
 				mutation: "login(email: String!, password: String, token: String): LoginToken"
 			},
@@ -718,7 +718,7 @@ module.exports = {
 			params: {
 				token: { type: "string", optional: true }
 			},
-			rest: "GET /enable2Fa",
+			rest: "POST /enable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
 				const user = await this.adapter.findById(ctx.meta.userID);
@@ -765,7 +765,7 @@ module.exports = {
 			params: {
 				token: "string"
 			},
-			rest: "GET /disable2Fa",
+			rest: "GET /disable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
 				const user = await this.adapter.findById(ctx.meta.userID);

@@ -143,7 +143,7 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.assignPermission(ctx.entity, ctx.params.permission);
+				const role = await this.assignPermission(ctx.locals.entity, ctx.params.permission);
 				const json = await this.transformDocuments(ctx, {}, role);
 				this.entityChanged("updated", json, ctx);
 				return json;
@@ -163,7 +163,7 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.revokePermission(ctx.entity, ctx.params.permission);
+				const role = await this.revokePermission(ctx.locals.entity, ctx.params.permission);
 				const json = await this.transformDocuments(ctx, {}, role);
 				this.entityChanged("updated", json, ctx);
 				return json;
@@ -183,7 +183,7 @@ module.exports = {
 				permissions: { type: "array", items: "string" }
 			},
 			async handler(ctx) {
-				const role = await this.syncPermissions(ctx.entity, ctx.params.permissions);
+				const role = await this.syncPermissions(ctx.locals.entity, ctx.params.permissions);
 				const json = await this.transformDocuments(ctx, {}, role);
 				this.entityChanged("updated", json, ctx);
 				return json;
