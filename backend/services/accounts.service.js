@@ -431,7 +431,7 @@ module.exports = {
 			params: {
 				email: { type: "email" }
 			},
-			rest: "GET /forgot-password",
+			rest: "POST /forgot-password",
 			async handler(ctx) {
 				const token = this.generateToken();
 
