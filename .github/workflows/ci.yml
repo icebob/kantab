@@ -35,3 +35,10 @@ jobs:
 
     - name: Run E2E tests
       run: npm run test:e2e
+
+    - name: Upload E2E videos
+      uses: actions/upload-artifact@v2
+      with:
+        name: videos
+        path: |
+          test/e2e/videos
