@@ -1,6 +1,0 @@
-{
-  "baseUrl": "http://localhost:4000",
-  "pluginsFile": "tests/e2e/plugins/index.js",
-  "projectId": "swss8v",
-  "chromeWebSecurity": false
-}

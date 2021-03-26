@@ -1154,7 +1154,7 @@ module.exports = {
 					lastName: "",
 					email: "admin@kantab.io",
 					avatar:
-						"http://romaniarising.com/wp-content/uploads/2014/02/avatar-admin-robot-150x150.jpg",
+						"https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
 					roles: ["administrator"],
 					socialLinks: {},
 					status: 1,
@@ -1172,7 +1172,7 @@ module.exports = {
 					lastName: "User",
 					email: "test@kantab.io",
 					avatar:
-						"http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
 					roles: ["user"],
 					socialLinks: {},
 					status: 1,
