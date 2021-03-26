@@ -10,13 +10,14 @@ const FindEntityMiddleware = require("../../../middlewares/FindEntity");
 //const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
 
 describe("Test ACL service", () => {
-
 	describe("Test common methods", () => {
-
-		let broker = new ServiceBroker({ logger: false, middlewares: [
-			FindEntityMiddleware,
-		//CheckPermissionsMiddleware
-		] });
+		let broker = new ServiceBroker({
+			logger: false,
+			middlewares: [
+				FindEntityMiddleware
+				//CheckPermissionsMiddleware
+			]
+		});
 
 		// Config service
 		broker.createService(ConfigService);
@@ -28,21 +29,31 @@ describe("Test ACL service", () => {
 		afterAll(() => broker.stop());
 
 		it.skip("check permissions", async () => {
-			expect(broker.findNextActionEndpoint("v1.acl.create").action.permissions).toBe("protected");
-			expect(broker.findNextActionEndpoint("v1.acl.list").action.permissions).toBe("protected");
-			expect(broker.findNextActionEndpoint("v1.acl.find").action.permissions).toBe("protected");
-			expect(broker.findNextActionEndpoint("v1.acl.get").action.permissions).toBe("protected");
-			expect(broker.findNextActionEndpoint("v1.acl.update").action.permissions).toBe("protected");
-			expect(broker.findNextActionEndpoint("v1.acl.remove").action.permissions).toBe("protected");
+			expect(broker.findNextActionEndpoint("v1.acl.create").action.permissions).toBe(
+				"protected"
+			);
+			expect(broker.findNextActionEndpoint("v1.acl.list").action.permissions).toBe(
+				"protected"
+			);
+			expect(broker.findNextActionEndpoint("v1.acl.find").action.permissions).toBe(
+				"protected"
+			);
+			expect(broker.findNextActionEndpoint("v1.acl.get").action.permissions).toBe(
+				"protected"
+			);
+			expect(broker.findNextActionEndpoint("v1.acl.update").action.permissions).toBe(
+				"protected"
+			);
+			expect(broker.findNextActionEndpoint("v1.acl.remove").action.permissions).toBe(
+				"protected"
+			);
 		});
 
 		describe("Test 'assignPermission' method", () => {
 			const role = {
 				_id: 123,
 				name: "moderator",
-				permissions: [
-					"boards.create"
-				]
+				permissions: ["boards.create"]
 			};
 
 			it("should assign permission to role", async () => {
@@ -76,9 +87,7 @@ describe("Test ACL service", () => {
 			const role = {
 				_id: 123,
 				name: "moderator",
-				permissions: [
-					"boards.create"
-				]
+				permissions: ["boards.create"]
 			};
 
 			it("should not revoke available permission to role", async () => {
@@ -112,9 +121,7 @@ describe("Test ACL service", () => {
 			const role = {
 				_id: 123,
 				name: "moderator",
-				permissions: [
-					"boards.create"
-				]
+				permissions: ["boards.create"]
 			};
 
 			it("should revoke permission to role", async () => {
@@ -124,81 +131,58 @@ describe("Test ACL service", () => {
 				expect(res).toBe(role);
 
 				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
-				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $set: {
-					permissions: ["boards.remove", "users.list"]
-				}});
+				expect(service.adapter.updateById).toHaveBeenCalledWith(123, {
+					$set: {
+						permissions: ["boards.remove", "users.list"]
+					}
+				});
 			});
 		});
 
 		describe("Test 'getPermissions' method", () => {
 			const roles = {
 				admin: {
-					inherits: [
-						"boardRead",
-						"boardWrite",
-						"userFull"
-					]
+					inherits: ["boardRead", "boardWrite", "userFull"]
 				},
 
 				boardRead: {
-					permissions: [
-						"boards.list",
-						"boards.get"
-					],
+					permissions: ["boards.list", "boards.get"],
 					inherits: []
 				},
 
 				boardWrite: {
-					permissions: [
-						"boards.create",
-						"boards.list",
-						"boards.update",
-						"boards.remove",
-					],
-					inherits: [
-						"empty"
-					]
+					permissions: ["boards.create", "boards.list", "boards.update", "boards.remove"],
+					inherits: ["empty"]
 				},
 
-				empty: {
-
-				},
+				empty: {},
 
 				userRead: {
-					permissions: [
-						"users.list",
-						"users.get"
-					]
+					permissions: ["users.list", "users.get"]
 				},
 
 				userWrite: {
-					permissions: [
-						"users.list",
-						"users.update",
-						"users.remove"
-					]
+					permissions: ["users.list", "users.update", "users.remove"]
 				},
 
 				userFull: {
-					inherits: [
-						"userRead",
-						"userWrite"
-					]
+					inherits: ["userRead", "userWrite"]
 				}
 			};
 
-			service.adapter.find = jest.fn(async ({query}) => Promise.resolve(query.name["$in"].map(name => roles[name])));
+			service.adapter.find = jest.fn(async ({ query }) =>
+				Promise.resolve(query.name["$in"].map(name => roles[name]))
+			);
 
 			it("should return permissions of role", async () => {
 				const res = await service.getPermissions("userRead");
 
-				expect(res).toEqual([
-					"users.list",
-					"users.get"
-				]);
+				expect(res).toEqual(["users.list", "users.get"]);
 
 				expect(service.adapter.find).toHaveBeenCalledTimes(1);
-				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["userRead"] } }});
+				expect(service.adapter.find).toHaveBeenCalledWith({
+					query: { name: { $in: ["userRead"] } }
+				});
 			});
 
 			it("should return multiple merged permissions of roles", async () => {
@@ -206,15 +190,12 @@ describe("Test ACL service", () => {
 
 				const res = await service.getPermissions(["userRead", "userWrite"]);
 
-				expect(res).toEqual([
-					"users.list",
-					"users.get",
-					"users.update",
-					"users.remove",
-				]);
+				expect(res).toEqual(["users.list", "users.get", "users.update", "users.remove"]);
 
 				expect(service.adapter.find).toHaveBeenCalledTimes(1);
-				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["userRead", "userWrite"] } }});
+				expect(service.adapter.find).toHaveBeenCalledWith({
+					query: { name: { $in: ["userRead", "userWrite"] } }
+				});
 			});
 
 			it("should return nested merged permissions of roles", async () => {
@@ -231,20 +212,26 @@ describe("Test ACL service", () => {
 					"users.list",
 					"users.get",
 					"users.update",
-					"users.remove",
+					"users.remove"
 				]);
 
 				expect(service.adapter.find).toHaveBeenCalledTimes(4);
-				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["admin"] } }});
-				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["boardRead", "boardWrite", "userFull"] } }});
-				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["empty"] } }});
-				expect(service.adapter.find).toHaveBeenCalledWith({ query: { name: { $in: ["userRead", "userWrite"] } }});
+				expect(service.adapter.find).toHaveBeenCalledWith({
+					query: { name: { $in: ["admin"] } }
+				});
+				expect(service.adapter.find).toHaveBeenCalledWith({
+					query: { name: { $in: ["boardRead", "boardWrite", "userFull"] } }
+				});
+				expect(service.adapter.find).toHaveBeenCalledWith({
+					query: { name: { $in: ["empty"] } }
+				});
+				expect(service.adapter.find).toHaveBeenCalledWith({
+					query: { name: { $in: ["userRead", "userWrite"] } }
+				});
 			});
-
 		});
 
 		describe("Test 'hasRole' method", () => {
-
 			it("should find the role 1", async () => {
 				service.adapter.find = jest.fn(async () => Promise.resolve([]));
 
@@ -275,14 +262,15 @@ describe("Test ACL service", () => {
 
 		describe("Test 'hasRole' method with inherits", () => {
 			it("should find the role", async () => {
-				service.adapter.find = jest.fn(async () => Promise.resolve([{ inherits: ["user", "board-admin"] }]));
+				service.adapter.find = jest.fn(async () =>
+					Promise.resolve([{ inherits: ["user", "board-admin"] }])
+				);
 				const res = await service.hasRole(["moderator"], "user");
 				expect(res).toBe(true);
 			});
 		});
 
 		describe("Test 'can' method", () => {
-
 			it("should find the permission", async () => {
 				service.getPermissions = jest.fn(async () => ["boards.create"]);
 				const res = await service.can("admin", "boards.create");
@@ -330,7 +318,6 @@ describe("Test ACL service", () => {
 		});
 
 		describe("Test 'canAtLeast' method", () => {
-
 			it("should find the permission", async () => {
 				service.getPermissions = jest.fn(async () => ["boards.create"]);
 				const res = await service.canAtLeast("admin", ["boards.create"]);
@@ -342,7 +329,10 @@ describe("Test ACL service", () => {
 
 			it("should find the permission", async () => {
 				service.getPermissions = jest.fn(async () => ["boards.create"]);
-				const res = await service.canAtLeast(["user", "admin"], ["boards.insert", "boards.create"]);
+				const res = await service.canAtLeast(
+					["user", "admin"],
+					["boards.insert", "boards.create"]
+				);
 
 				expect(res).toBe(true);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -351,7 +341,10 @@ describe("Test ACL service", () => {
 
 			it("should not find the role", async () => {
 				service.getPermissions = jest.fn(async () => ["boards.create"]);
-				const res = await service.canAtLeast(["admin"], ["boards.insert", "boards.insertMany"]);
+				const res = await service.canAtLeast(
+					["admin"],
+					["boards.insert", "boards.insertMany"]
+				);
 
 				expect(res).toBe(false);
 				expect(service.getPermissions).toHaveBeenCalledTimes(1);
@@ -378,7 +371,6 @@ describe("Test ACL service", () => {
 		});
 
 		describe("Test 'hasAccess' method", () => {
-
 			it("should call 'can' method", async () => {
 				service.can = jest.fn(async () => false);
 				service.hasRole = jest.fn(async () => false);
@@ -421,9 +413,6 @@ describe("Test ACL service", () => {
 				expect(service.can).toHaveBeenCalledTimes(1);
 				expect(service.can).toHaveBeenCalledWith("admin", "boards.remove");
 			});
-
 		});
-
 	});
-
 });

@@ -1,10 +1,10 @@
 "use strict";
 
-const _ 			= require("lodash");
-const path 			= require("path");
+const _ = require("lodash");
+const path = require("path");
 
-const i18next 		= require("i18next");
-const i18nextFs 	= require("i18next-node-fs-backend");
+const i18next = require("i18next");
+const i18nextFs = require("i18next-node-fs-backend");
 
 // Credits: Copied from https://github.com/i18next/i18next-express-middleware/blob/master/src/utils.js
 function setPath(object, path, newValue) {
@@ -12,7 +12,7 @@ function setPath(object, path, newValue) {
 	if (typeof path !== "string") stack = [].concat(path);
 	if (typeof path === "string") stack = path.split(".");
 
-	while(stack.length > 1) {
+	while (stack.length > 1) {
 		let key = stack.shift();
 		if (key.indexOf("###") > -1) key = key.replace(/###/g, ".");
 		if (!object[key]) object[key] = {};
@@ -24,8 +24,7 @@ function setPath(object, path, newValue) {
 	object[key] = newValue;
 }
 
-module.exports = function(mixinOptions) {
-
+module.exports = function (mixinOptions) {
 	mixinOptions = _.defaultsDeep(mixinOptions, {
 		folder: "./locales",
 		routePath: "/locales"
@@ -44,7 +43,7 @@ module.exports = function(mixinOptions) {
 			saveMissingTo: "all", // "fallback", "current", "all"
 
 			backend: {
-			// path where resources get loaded from
+				// path where resources get loaded from
 				loadPath: path.join(mixinOptions.folder, "{{lng}}", "{{ns}}.json"),
 
 				// path to post missing resources
@@ -53,12 +52,11 @@ module.exports = function(mixinOptions) {
 				// jsonIndent to use when storing json files
 				jsonIndent: 4
 			}
-		}).catch(err => console.warn(err));
+		})
+		.catch(err => console.warn(err));
 
 	return {
-
 		created() {
-
 			const route = {
 				path: mixinOptions.routePath,
 
@@ -72,11 +70,20 @@ module.exports = function(mixinOptions) {
 
 						// extend ns
 						namespaces.forEach(ns => {
-							if (i18next.options.ns && i18next.options.ns.indexOf(ns) < 0) i18next.options.ns.push(ns);
+							if (i18next.options.ns && i18next.options.ns.indexOf(ns) < 0)
+								i18next.options.ns.push(ns);
 						});
 
-						i18next.services.backendConnector.load(languages, namespaces, function() {
-							languages.forEach(lng => namespaces.forEach(ns => setPath(resources, [lng, ns], i18next.getResourceBundle(lng, ns))));
+						i18next.services.backendConnector.load(languages, namespaces, function () {
+							languages.forEach(lng =>
+								namespaces.forEach(ns =>
+									setPath(
+										resources,
+										[lng, ns],
+										i18next.getResourceBundle(lng, ns)
+									)
+								)
+							);
 
 							res.setHeader("Content-Type", "application/json; charset=utf-8");
 							res.end(JSON.stringify(resources));
@@ -90,19 +97,23 @@ module.exports = function(mixinOptions) {
 
 						for (let m in req.body) {
 							if (m != "_t")
-								i18next.services.backendConnector.saveMissing([lng], ns, m, req.body[m]);
+								i18next.services.backendConnector.saveMissing(
+									[lng],
+									ns,
+									m,
+									req.body[m]
+								);
 						}
 						res.end("ok");
-					},
+					}
 				},
 
 				mappingPolicy: "restrict",
 
 				bodyParsers: {
 					urlencoded: { extended: true }
-				},
+				}
 			};
-
 
 			// Add route.
 			this.settings.routes.unshift(route);

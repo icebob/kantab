@@ -1,30 +1,17 @@
-type Board {
-  id: String!
-  title: String!
-  slug: String
-  description: String
-  owner: User
-  createdAt: Float
-}
-
 scalar Date
-
-type LoginToken {
-  token: String!
-}
-
-type Mutation {
-  login(email: String!, password: String, token: String): LoginToken
-  createBoard(title: String!, description: String): Board
-}
 
 type Query {
   users(limit: Int, offset: Int, sort: String): [User]
   user(id: String): User
   me: User
   boards(limit: Int, offset: Int, sort: String): [Board]
-  boardCount: Int
+  boardsCount: Int
   board(id: String!): Board
+}
+
+type Mutation {
+  login(email: String!, password: String, token: String): LoginToken
+  createBoard(title: String!, description: String): Board
 }
 
 type User {
@@ -37,4 +24,17 @@ type User {
   status: Int
   boards(limit: Int, offset: Int, sort: String): [Board]
   boardCount: Int
+}
+
+type LoginToken {
+  token: String!
+}
+
+type Board {
+  id: String!
+  title: String!
+  slug: String
+  description: String
+  owner: User
+  createdAt: Float
 }

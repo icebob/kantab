@@ -1,9 +1,9 @@
 "use strict";
 
-const _ 		= require("lodash");
+const _ = require("lodash");
 const DbService = require("../mixins/db.mixin");
 const { ValidationError } = require("moleculer").Errors;
-const CacheCleaner 	= require("../mixins/cache.cleaner.mixin");
+const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const { match } = require("moleculer").Utils;
 
 /**
@@ -15,9 +15,7 @@ module.exports = {
 
 	mixins: [
 		DbService("configurations", { createActions: false }),
-		CacheCleaner([
-			"cache.clean.config"
-		])
+		CacheCleaner(["cache.clean.config"])
 	],
 
 	/**
@@ -51,9 +49,7 @@ module.exports = {
 		},
 
 		// Indexes on collection
-		indexes: [
-			{ key: 1 }
-		]
+		indexes: [{ key: 1 }]
 	},
 
 	/**
@@ -68,6 +64,7 @@ module.exports = {
 		 * @returns {Object|Array<String>}
 		 */
 		get: {
+			tracing: false,
 			cache: {
 				keys: ["key"]
 			},
@@ -81,7 +78,10 @@ module.exports = {
 			],*/
 			async handler(ctx) {
 				if (ctx.params.key == null)
-					throw new ValidationError("Param 'key' must be defined.", "ERR_KEY_NOT_DEFINED");
+					throw new ValidationError(
+						"Param 'key' must be defined.",
+						"ERR_KEY_NOT_DEFINED"
+					);
 
 				return await this.transformDocuments(ctx, {}, await this.get(ctx.params.key));
 			}
@@ -112,19 +112,20 @@ module.exports = {
 			],*/
 			async handler(ctx) {
 				if (Array.isArray(ctx.params)) {
-					return this.Promise.all(ctx.params.map(async p => {
-						const { changed, item } = await this.set(p.key, p.value);
-						const res = await this.transformDocuments(ctx, {}, item);
-						if (changed)
-							this.broker.broadcast(`${this.name}.${item.key}.changed`, res);
+					return this.Promise.all(
+						ctx.params.map(async p => {
+							const { changed, item } = await this.set(p.key, p.value);
+							const res = await this.transformDocuments(ctx, {}, item);
+							if (changed)
+								this.broker.broadcast(`${this.name}.${item.key}.changed`, res);
 
-						return res;
-					}));
+							return res;
+						})
+					);
 				} else {
 					const { changed, item } = await this.set(ctx.params.key, ctx.params.value);
 					const res = await this.transformDocuments(ctx, {}, item);
-					if (changed)
-						this.broker.broadcast(`${this.name}.${item.key}.changed`, res);
+					if (changed) this.broker.broadcast(`${this.name}.${item.key}.changed`, res);
 
 					return res;
 				}
@@ -132,6 +133,7 @@ module.exports = {
 		},
 
 		all: {
+			tracing: false,
 			cache: true,
 			handler() {
 				return this.adapter.find({});
@@ -143,7 +145,6 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
-
 		/**
 		 * Get configurations by key.
 		 *
@@ -174,8 +175,7 @@ module.exports = {
 			const allItems = await this.broker.call(`${this.fullName}.all`);
 
 			/* istanbul ignore next */
-			if (!allItems)
-				return [];
+			if (!allItems) return [];
 
 			return allItems.filter(item => match(item.key, mask));
 		},
@@ -208,15 +208,17 @@ module.exports = {
 				if (!_.isEqual(item.value, value)) {
 					// Modify
 					return {
-						item: await this.adapter.updateById(item._id, { $set: { value, isDefault, updatedAt: Date.now() } }),
-						changed: true,
+						item: await this.adapter.updateById(item._id, {
+							$set: { value, isDefault, updatedAt: Date.now() }
+						}),
+						changed: true
 					};
 				}
 
 				// No changes
 				return {
 					item,
-					changed: false,
+					changed: false
 				};
 			}
 
@@ -235,17 +237,19 @@ module.exports = {
 		 * @private
 		 */
 		migrateConfig() {
-			return this.Promise.all(Object.keys(this.settings.defaultConfig).map(async key => {
-				const value = this.settings.defaultConfig[key];
-				const item = await this.get(key);
-				if (!item) {
-					this.logger.info(`Save new config: "${key}" =`, value);
-					return this.set(key, value, true);
-				} else if (item.isDefault && !_.isEqual(item.value, value)) {
-					this.logger.info(`Update default config: "${key}" =`, value);
-					return this.set(key, value, true);
-				}
-			}));
+			return this.Promise.all(
+				Object.keys(this.settings.defaultConfig).map(async key => {
+					const value = this.settings.defaultConfig[key];
+					const item = await this.get(key);
+					if (!item) {
+						this.logger.info(`Save new config: "${key}" =`, value);
+						return this.set(key, value, true);
+					} else if (item.isDefault && !_.isEqual(item.value, value)) {
+						this.logger.info(`Update default config: "${key}" =`, value);
+						return this.set(key, value, true);
+					}
+				})
+			);
 		}
 	},
 
@@ -254,6 +258,5 @@ module.exports = {
 	 */
 	started() {
 		return this.migrateConfig();
-	},
-
+	}
 };

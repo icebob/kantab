@@ -1,8 +1,8 @@
 "use strict";
 
-const _ 			= require("lodash");
+const _ = require("lodash");
 
-module.exports = function(keys, opts) {
+module.exports = function (keys, opts) {
 	const events = {};
 
 	opts = _.defaultsDeep(opts, {
@@ -13,7 +13,7 @@ module.exports = function(keys, opts) {
 		serviceVersion: 1
 	});
 
-	const eventHandler = function(payload) {
+	const eventHandler = function (payload) {
 		this[opts.propName][payload.key] = payload.value;
 		_.set(this[opts.objPropName], payload.key, payload.value);
 		this.logger.debug("Configuration updated:", this[opts.propName]);
@@ -23,20 +23,16 @@ module.exports = function(keys, opts) {
 		}
 	};
 
-	keys.forEach(key => events[`config.${key}.changed`] = eventHandler);
+	keys.forEach(key => (events[`config.${key}.changed`] = eventHandler));
 
 	const schema = {
-		dependencies: [
-			{ name: opts.serviceName, version: opts.serviceVersion }
-		],
+		dependencies: [{ name: opts.serviceName, version: opts.serviceVersion }],
 
 		events,
 
 		async started() {
-			if (!_.isObject(this[opts.propName]))
-				this[opts.propName] = {};
-			if (!_.isObject(this[opts.objPropName]))
-				this[opts.objPropName] = {};
+			if (!_.isObject(this[opts.propName])) this[opts.propName] = {};
+			if (!_.isObject(this[opts.objPropName])) this[opts.objPropName] = {};
 
 			if (keys.length > 0) {
 				const items = await this.broker.call("v1.config.get", { key: keys });

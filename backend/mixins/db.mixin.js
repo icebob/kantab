@@ -1,16 +1,16 @@
 "use strict";
 
-const _ 			= require("lodash");
-const path 			= require("path");
-const mkdir			= require("mkdirp").sync;
+const _ = require("lodash");
+const path = require("path");
+const mkdir = require("mkdirp").sync;
 //const DbService		= require("moleculer-db");
-const DbService		= require("./database");
-const MongoAdapter 	= require("moleculer-db-adapter-mongo");
+const DbService = require("./database");
+const MongoAdapter = require("moleculer-db-adapter-mongo");
 
 const TESTING = process.env.NODE_ENV === "test";
-const ISMONGO = !process.env.NEDB_FOLDER;
+//const ISMONGO = !process.env.NEDB_FOLDER;
 
-module.exports = function(collection, opts = {}) {
+module.exports = function (collection, opts = {}) {
 	let adapter;
 	if (TESTING) {
 		adapter = new DbService.MemoryAdapter();
@@ -20,7 +20,9 @@ module.exports = function(collection, opts = {}) {
 			mkdir(dir);
 			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`) });
 		} else {
-			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab", { useNewUrlParser: true });
+			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab", {
+				useNewUrlParser: true
+			});
 			// Mongo has an internal reconnect logic
 			opts.autoReconnect = false;
 		}
@@ -36,7 +38,7 @@ module.exports = function(collection, opts = {}) {
 					const eventName = `${this.name}.entity.${type}`;
 					this.broker.broadcast(eventName, { meta: ctx.meta, entity: json });
 				});
-			},
+			}
 
 			/*encodeID(id) {
 				return id != null ? id.toString() : null;
@@ -59,8 +61,12 @@ module.exports = function(collection, opts = {}) {
 				if (this.settings.indexes) {
 					try {
 						if (_.isFunction(this.adapter.collection.createIndex))
-							await this.Promise.all(this.settings.indexes.map(idx => this.adapter.collection.createIndex(idx)));
-					} catch(err) {
+							await this.Promise.all(
+								this.settings.indexes.map(idx =>
+									this.adapter.collection.createIndex(idx)
+								)
+							);
+					} catch (err) {
 						this.logger.error("Unable to create indexes.", err);
 					}
 				}

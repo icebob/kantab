@@ -6,20 +6,12 @@ const ConfigLoader = require("../mixins/config.mixin");
 module.exports = {
 	name: "mail",
 
-	mixins: [
-		MailService,
-		ConfigLoader([
-			"site.**",
-			"mail.**",
-		])
-	],
+	mixins: [MailService, ConfigLoader(["site.**", "mail.**"])],
 
 	/**
 	 * Service dependencies
 	 */
-	dependencies: [
-		{ name: "config", version: 1 }
-	],
+	dependencies: [{ name: "config", version: 1 }],
 
 	/**
 	 * Service settings
@@ -34,6 +26,6 @@ module.exports = {
 				pass: process.env.MAILTRAP_PASS
 			}
 		},
-		templateFolder: "./backend/templates/mail",
+		templateFolder: "./backend/templates/mail"
 	}
 };

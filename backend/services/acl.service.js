@@ -1,12 +1,12 @@
 "use strict";
 
-const _ 				= require("lodash");
-const DbService 		= require("../mixins/db.mixin");
-const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
-const Memoize 			= require("../mixins/memoize.mixin");
-const { match } 		= require("moleculer").Utils;
-const ConfigLoader 		= require("../mixins/config.mixin");
-const C 				= require("../constants");
+const _ = require("lodash");
+const DbService = require("../mixins/db.mixin");
+const CacheCleaner = require("../mixins/cache.cleaner.mixin");
+const Memoize = require("../mixins/memoize.mixin");
+const { match } = require("moleculer").Utils;
+const ConfigLoader = require("../mixins/config.mixin");
+const C = require("../constants");
 
 /**
  * Role-based ACL (Access-Control-List) service
@@ -32,45 +32,36 @@ module.exports = {
 	name: "acl",
 	version: 1,
 
-	mixins: [
-		DbService("roles"),
-		CacheCleaner([
-			"cache.clean.acl"
-		]),
-		ConfigLoader([
-		]),
-		Memoize()
-	],
+	mixins: [DbService("roles"), CacheCleaner(["cache.clean.acl"]), ConfigLoader([]), Memoize()],
 
 	/**
 	 * Service settings
 	 */
 	settings: {
 		fields: {
-			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
+			id: {
+				type: "string",
+				readonly: true,
+				primaryKey: true,
+				secure: true,
+				columnName: "_id"
+			},
 			name: { type: "string" },
 			description: { type: "string" },
 			permissions: { type: "array" },
 			inherits: { type: "array" },
 			status: { type: "number", default: 1 },
 			createdAt: { type: "number", updateable: false, default: Date.now },
-			updatedAt: { type: "number", readonly: true, updateDefault: Date.now },
+			updatedAt: { type: "number", readonly: true, updateDefault: Date.now }
 		},
 
-		permissions: [
-			"boards.create",
-			"boards.read",
-			"boards.edit",
-			"boards.remove",
-		]
+		permissions: ["boards.create", "boards.read", "boards.edit", "boards.remove"]
 	},
 
 	/**
 	 * Service metadata
 	 */
-	metadata: {
-
-	},
+	metadata: {},
 
 	/**
 	 * Service dependencies
@@ -110,7 +101,7 @@ module.exports = {
 			},
 			params: {
 				roles: { type: "array", items: "string" },
-				permission: { type: "string" },
+				permission: { type: "string" }
 			},
 			async handler(ctx) {
 				return await this.can(ctx.params.roles, ctx.params.permission);
@@ -124,7 +115,7 @@ module.exports = {
 			},
 			params: {
 				roles: { type: "array", items: "string" },
-				permissions: { type: "array", items: "string", min: 1 },
+				permissions: { type: "array", items: "string", min: 1 }
 			},
 			async handler(ctx) {
 				return await this.hasAccess(ctx.params.roles, ctx.params.permissions);
@@ -188,21 +179,18 @@ module.exports = {
 				this.entityChanged("updated", json, ctx);
 				return json;
 			}
-		},
+		}
 	},
 
 	/**
 	 * Events
 	 */
-	events: {
-
-	},
+	events: {},
 
 	/**
 	 * Methods
 	 */
 	methods: {
-
 		/**
 		 * Assigns the given permission to the role.
 		 * @param {Object} role
@@ -249,9 +237,11 @@ module.exports = {
 		 * @param {Array<String>} permissions
 		 */
 		async syncPermissions(role, permissions) {
-			return await this.adapter.updateById(role._id, { $set: {
-				permissions: permissions
-			} });
+			return await this.adapter.updateById(role._id, {
+				$set: {
+					permissions: permissions
+				}
+			});
 		},
 
 		/**
@@ -265,7 +255,7 @@ module.exports = {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
 				const roles = await this.adapter.find({ query: { name: { $in: roleNames } } });
-				const permissions = await this.Promise.map(roles, async role => {
+				const permissions = await this.Promise.mapSeries(roles, async role => {
 					let res = role.permissions ? Array.from(role.permissions) : [];
 
 					if (Array.isArray(role.inherits) && role.inherits.length > 0)
@@ -292,9 +282,10 @@ module.exports = {
 				// Check inherits
 				const entities = await this.adapter.find({ query: { name: { $in: roleNames } } });
 				if (Array.isArray(entities) && entities.length > 0) {
-					const inherits = _.uniq(_.compact(_.flattenDeep(entities.map(entity => entity.inherits))));
-					if (inherits.length > 0)
-						res = await this.hasRole(inherits, role);
+					const inherits = _.uniq(
+						_.compact(_.flattenDeep(entities.map(entity => entity.inherits)))
+					);
+					if (inherits.length > 0) res = await this.hasRole(inherits, role);
 				}
 			}
 			return res;
@@ -338,15 +329,14 @@ module.exports = {
 		 * @returns {boolean}
 		 */
 		async hasAccess(roleNames, permissionsAndRoles) {
-			const res = await this.Promise.all(permissionsAndRoles.map(async p => {
-				if (p.indexOf(".") !== -1)
-					return await this.can(roleNames, p);
-				else
-					return await this.hasRole(roleNames, p);
-			}));
+			const res = await this.Promise.all(
+				permissionsAndRoles.map(async p => {
+					if (p.indexOf(".") !== -1) return await this.can(roleNames, p);
+					else return await this.hasRole(roleNames, p);
+				})
+			);
 			return res.some(p => !!p);
 		},
-
 
 		/**
 		 * Seed an empty collection with an `admin` and a `user` roles.
@@ -357,11 +347,9 @@ module.exports = {
 				{
 					name: "administrator",
 					description: "System Administrator",
-					permissions: [
-						"**"
-					],
+					permissions: ["**"],
 					status: 1,
-					createdAt: Date.now(),
+					createdAt: Date.now()
 				},
 
 				// User
@@ -376,32 +364,26 @@ module.exports = {
 						"cards.create"
 					],
 					status: 1,
-					createdAt: Date.now(),
+					createdAt: Date.now()
 				}
 			]);
 
 			this.logger.info(`Generated ${res.length} ACL roles.`);
-		},
+		}
 	},
 
 	/**
 	 * Service created lifecycle event handler
 	 */
-	created() {
-
-	},
+	created() {},
 
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler
 	 */
-	stopped() {
-
-	}
+	stopped() {}
 };

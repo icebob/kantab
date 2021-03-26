@@ -1,11 +1,11 @@
 "use strict";
 
-const _ 				= require("lodash");
+const _ = require("lodash");
 
-const DbService 		= require("../mixins/db.mixin");
-const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
-const ConfigLoader 		= require("../mixins/config.mixin");
-const SecureID 			= require("../mixins/secure-id.mixin");
+const DbService = require("../mixins/db.mixin");
+const CacheCleaner = require("../mixins/cache.cleaner.mixin");
+const ConfigLoader = require("../mixins/config.mixin");
+const SecureID = require("../mixins/secure-id.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
@@ -17,21 +17,15 @@ module.exports = {
 
 	mixins: [
 		DbService("boards"),
-		CacheCleaner([
-			"cache.clean.boards",
-			"cache.clean.accounts"
-		]),
+		CacheCleaner(["cache.clean.boards", "cache.clean.accounts"]),
 		SecureID(),
-		ConfigLoader([
-		])
+		ConfigLoader([])
 	],
 
 	/**
 	 * Service dependencies
 	 */
-	dependencies: [
-		{ name: "accounts", version: 1 }
-	],
+	dependencies: [{ name: "accounts", version: 1 }],
 
 	/**
 	 * Service settings
@@ -40,13 +34,27 @@ module.exports = {
 		rest: true,
 
 		fields: {
-			id: { type: "string", readonly: true, primaryKey: true, secure: true, columnName: "_id" },
-			owner: { required: true, populate: {
-				action: "v1.accounts.resolve",
-				fields: ["id", "username", "firstName", "lastName", "avatar"]
-			}, set: (value, entity, ctx) => entity.owner || ctx.meta.user.id },
+			id: {
+				type: "string",
+				readonly: true,
+				primaryKey: true,
+				secure: true,
+				columnName: "_id"
+			},
+			owner: {
+				required: true,
+				populate: {
+					action: "v1.accounts.resolve",
+					fields: ["id", "username", "firstName", "lastName", "avatar"]
+				},
+				set: (value, entity, ctx) => entity.owner || ctx.meta.user.id
+			},
 			title: { type: "string", required: true, trim: true },
-			slug: { type: "string", readonly: true, set: (value, entity, ctx) => `${entity.title}-slug` },
+			slug: {
+				type: "string",
+				readonly: true,
+				set: (value, entity, ctx) => `${entity.title}-slug`
+			},
 			description: "string",
 			position: { type: "number", hidden: true, default: 0 },
 			archived: { type: "boolean", default: false },
@@ -57,7 +65,7 @@ module.exports = {
 			createdAt: { type: "date", readonly: true, setOnCreate: () => Date.now() },
 			updatedAt: { type: "date", readonly: true, setOnUpdate: () => Date.now() },
 			archivedAt: { type: "date" },
-			deletedAt: { type: "date", setOnDelete: () => Date.now() },
+			deletedAt: { type: "date", setOnDelete: () => Date.now() }
 		},
 		strict: true, // TODO
 		softDelete: true, // TODO
@@ -78,11 +86,11 @@ module.exports = {
 					owner: {
 						action: "v1.accounts.get",
 						rootParams: {
-							"owner": "id"
+							owner: "id"
 						}
 					}
 				}
-			},
+			}
 		},
 
 		openapi: {
@@ -96,7 +104,7 @@ module.exports = {
 							id: { type: "string", example: "5bf18691fe972d2464a7ba14" },
 							title: { type: "string", example: "Test board" },
 							slug: { type: "string", example: "test_board" },
-							description: { type: "string", example: "Test board description" },
+							description: { type: "string", example: "Test board description" }
 						}
 					},
 					Boards: {
@@ -129,7 +137,7 @@ module.exports = {
 					name: "boards",
 					description: "Boards operations"
 				}
-			],
+			]
 		}
 	},
 
@@ -162,18 +170,17 @@ module.exports = {
 					}
 				},
 				responses: {
-					"200": {
+					200: {
 						description: "Created board",
 						content: {
 							"application/json": {
 								schema: {
-									"$ref": "#/components/schemas/Board"
+									$ref: "#/components/schemas/Board"
 								}
 							}
 						}
 					}
 				}
-
 			},
 			permissions: ["boards.create"],
 			graphql: {
@@ -263,17 +270,17 @@ module.exports = {
 						},
 						required: false,
 						description: "Custom query"
-					},
+					}
 				],
 				responses: {
-					"200": {
+					200: {
 						description: "Boards",
 						content: {
 							"application/json": {
 								schema: {
 									type: "array",
 									items: {
-										"$ref": "#/components/schemas/BoardList"
+										$ref: "#/components/schemas/BoardList"
 									}
 								}
 							}
@@ -291,14 +298,14 @@ module.exports = {
 				tags: ["boards"],
 				operationId: "v1.boards.find",
 				responses: {
-					"200": {
+					200: {
 						description: "Boards",
 						content: {
 							"application/json": {
 								schema: {
 									type: "array",
 									items: {
-										"$ref": "#/components/schemas/Boards"
+										$ref: "#/components/schemas/Boards"
 									}
 								}
 							}
@@ -319,7 +326,7 @@ module.exports = {
 				tags: ["boards"],
 				operationId: "v1.boards.count",
 				responses: {
-					"200": {
+					200: {
 						description: "Number of boards",
 						content: {
 							"application/json": {
@@ -356,12 +363,12 @@ module.exports = {
 					}
 				],
 				responses: {
-					"200": {
+					200: {
 						description: "Found board",
 						content: {
 							"application/json": {
 								schema: {
-									"$ref": "#/components/schemas/Board"
+									$ref: "#/components/schemas/Board"
 								}
 							}
 						}
@@ -369,10 +376,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: [
-				"boards.read",
-				"$owner"
-			],
+			permissions: ["boards.read", "$owner"],
 			graphql: {
 				query: "board(id: String!): Board"
 			}
@@ -414,12 +418,12 @@ module.exports = {
 					}
 				},
 				responses: {
-					"200": {
+					200: {
 						description: "Found board",
 						content: {
 							"application/json": {
 								schema: {
-									"$ref": "#/components/schemas/Board"
+									$ref: "#/components/schemas/Board"
 								}
 							}
 						}
@@ -427,10 +431,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: [
-				"administrator",
-				"$owner"
-			]
+			permissions: ["administrator", "$owner"]
 		},
 		remove: {
 			openapi: {
@@ -452,12 +453,12 @@ module.exports = {
 					}
 				],
 				responses: {
-					"200": {
+					200: {
 						description: "Found board",
 						content: {
 							"application/json": {
 								schema: {
-									"$ref": "#/components/schemas/Board"
+									$ref: "#/components/schemas/Board"
 								}
 							}
 						}
@@ -465,19 +466,14 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: [
-				"administrator",
-				"$owner"
-			]
-		},
+			permissions: ["administrator", "$owner"]
+		}
 	},
 
 	/**
 	 * Events
 	 */
-	events: {
-
-	},
+	events: {},
 
 	/**
 	 * Methods
@@ -497,19 +493,15 @@ module.exports = {
 	/**
 	 * Service created lifecycle event handler
 	 */
-	created() {
-	},
+	created() {},
 
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler
 	 */
-	stopped() {
-
-	}
+	stopped() {}
 };

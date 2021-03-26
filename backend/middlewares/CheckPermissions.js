@@ -10,7 +10,9 @@ module.exports = {
 	localAction(handler, action) {
 		// If this feature enabled
 		if (action.permissions) {
-			const permissions = Array.isArray(action.permissions) ? action.permissions : [action.permissions];
+			const permissions = Array.isArray(action.permissions)
+				? action.permissions
+				: [action.permissions];
 
 			const permNames = [];
 			const permFuncs = [];
@@ -44,23 +46,28 @@ module.exports = {
 					}
 					if (res !== true) {
 						if (permFuncs.length > 0) {
-							const results = await ctx.broker.Promise.all(permFuncs.map(async fn => fn.call(this, ctx)));
+							const results = await ctx.broker.Promise.all(
+								permFuncs.map(async fn => fn.call(this, ctx))
+							);
 							res = results.find(r => !!r);
 						}
 
 						if (res !== true)
-							throw new MoleculerClientError("You have no right for this operation!", 401, "ERR_HAS_NO_ACCESS", { action: action.name });
+							throw new MoleculerClientError(
+								"You have no right for this operation!",
+								401,
+								"ERR_HAS_NO_ACCESS",
+								{ action: action.name }
+							);
 					}
 				}
 
 				// Call the handler
 				return handler(ctx);
-
 			}.bind(this);
 		}
 
 		// Return original handler, because feature is disabled
 		return handler;
 	}
-
 };
