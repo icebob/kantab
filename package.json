@@ -28,7 +28,9 @@
   "author": "Icebob",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
+    "axios": "^0.21.1",
     "coveralls": "^3.1.0",
+    "cypress": "^6.8.0",
     "eslint": "^7.22.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-prettier": "^3.3.1",
@@ -37,6 +39,7 @@
     "i18next-xhr-backend": "^3.2.2",
     "jest": "^26.6.3",
     "jest-cli": "^26.6.3",
+    "maildev": "^1.1.0",
     "moleculer-repl": "^0.6.4",
     "npm-check": "^5.9.2",
     "prettier": "^2.2.1"

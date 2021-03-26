@@ -21,7 +21,8 @@ module.exports = function (collection, opts = {}) {
 			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`) });
 		} else {
 			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab", {
-				useNewUrlParser: true
+				useNewUrlParser: true,
+				useUnifiedTopology: true
 			});
 			// Mongo has an internal reconnect logic
 			opts.autoReconnect = false;

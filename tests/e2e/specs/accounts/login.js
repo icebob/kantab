@@ -54,6 +54,9 @@ describe("Test login page with passwordless", () => {
 					cy.url().should("equal", `${baseUrl}/`);
 					cy.contains("h4", "Home");
 				});
+			}).catch(err => {
+				console.error(err);
+				throw err;
 			});
 		});
 	});

@@ -8,6 +8,7 @@ const EMAIL_PAUSE = 3000;
 describe("Test forgot password flow", () => {
 
 	const user = fakerator.entity.user();
+	user.fullName = user.firstName + " " + user.lastName;
 	const baseUrl = Cypress.config("baseUrl");
 
 	it("Create a temp user", () => {

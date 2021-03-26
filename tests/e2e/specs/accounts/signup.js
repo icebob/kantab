@@ -9,6 +9,7 @@ describe("Test signup page with password", () => {
 	//beforeEach(() => cy.visit("/login"));
 
 	const user = fakerator.entity.user();
+	user.fullName = user.firstName + " " + user.lastName;
 
 	const baseUrl = Cypress.config("baseUrl");
 	it("Check the signup screen", () => {
@@ -61,6 +62,7 @@ describe("Test signup page with passwordless account", () => {
 	//beforeEach(() => cy.visit("/login"));
 
 	const user = fakerator.entity.user();
+	user.fullName = user.firstName + " " + user.lastName;
 
 	const baseUrl = Cypress.config("baseUrl");
 

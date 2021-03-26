@@ -8,7 +8,6 @@ const axios = require("axios").create({
 	}
 });
 
-
 function getMessages(inboxID, email) {
 	inboxID = inboxID || Cypress.env("MAILTRAP_INBOX");
 
