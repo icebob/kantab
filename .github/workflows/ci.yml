@@ -41,5 +41,5 @@ jobs:
       with:
         name: videos
         path: |
-          test/e2e/videos
+          tests/e2e/videos
       if: failure()
