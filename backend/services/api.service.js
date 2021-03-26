@@ -188,7 +188,7 @@ module.exports = {
 					require("connect-history-api-fallback")(),
 
 					// Webpack middlewares
-					...initWebpackMiddlewares(),
+					//...initWebpackMiddlewares(),
 
 					// Serve static
 					ApiGateway.serveStatic("./static"),

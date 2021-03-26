@@ -61,7 +61,7 @@ module.exports = {
 
 	// More info: https://github.com/vuejs/vue-cli/blob/dev/packages/%40vue/cli-service/lib/options.js
 
-	baseUrl: undefined,
+	//publicPath: undefined,
 	outputDir: "./static",
 	assetsDir: undefined,
 	productionSourceMap: false,

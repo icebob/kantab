@@ -70,9 +70,6 @@ module.exports = {
 		maxQueueSize: 100,
 	},
 
-	validation: true,
-	validator: null,
-
 	tracing: {
 		enabled: true,
 		events: true,
@@ -90,8 +87,6 @@ module.exports = {
 
 	internalServices: true,
 	internalMiddlewares: true,
-
-	hotReload: false,
 
 	// Register custom middlewares
 	middlewares: [
