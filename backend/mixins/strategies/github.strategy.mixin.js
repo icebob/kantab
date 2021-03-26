@@ -12,10 +12,10 @@ module.exports = {
 		registerGithubStrategy(setting, route) {
 			let Strategy;
 			try {
-				Strategy = require("passport-github").Strategy;
+				Strategy = require("passport-github2").Strategy;
 			} catch (error) {
 				this.logger.error(
-					"The 'passport-github' package is missing. Please install it with 'npm i passport-github' command."
+					"The 'passport-github2' package is missing. Please install it with 'npm i passport-github2' command."
 				);
 				return;
 			}

@@ -3,6 +3,7 @@
 const ApiGateway = require("moleculer-web");
 const _ = require("lodash");
 const helmet = require("helmet");
+const history = require("connect-history-api-fallback");
 const fs = require("fs");
 const cookie = require("cookie");
 const C = require("../constants");
@@ -98,7 +99,7 @@ module.exports = {
 	settings: {
 		port: process.env.PORT || 4000,
 
-		//use: [helmet()],
+		use: [helmet()],
 
 		routes: [
 			/**
@@ -135,7 +136,7 @@ module.exports = {
 			 */
 			{
 				path: "/",
-				use: [ApiGateway.serveStatic("public", {})],
+				use: [history(), ApiGateway.serveStatic("public", {})],
 
 				mappingPolicy: "restrict",
 				logging: false
