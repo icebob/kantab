@@ -6,7 +6,8 @@ const fs = require("fs");
 const ApiGateway = require("moleculer-web");
 const { MoleculerServerError } = require("moleculer").Errors;
 
-const SwaggerUI = require("swagger-ui-dist");
+//const SwaggerUI = require("swagger-ui-dist");
+const SwaggerUI = require("swagger-ui-express");
 const pkg = require("../../package.json");
 
 module.exports = function (mixinOptions) {
@@ -118,42 +119,60 @@ module.exports = function (mixinOptions) {
 						{ err }
 					);
 				}
+			},
+
+			getOpenAPISchema() {
+				if (shouldUpdateSchema || !schema) {
+					// Create new server & regenerate GraphQL schema
+					this.logger.info("♻ Regenerate OpenAPI/Swagger schema...");
+
+					schema = this.generateOpenAPISchema();
+
+					shouldUpdateSchema = false;
+
+					this.logger.debug(schema);
+					if (process.env.NODE_ENV != "production") {
+						fs.writeFileSync("./openapi.json", JSON.stringify(schema, null, 4), "utf8");
+					}
+
+					return schema;
+				}
 			}
 		},
 
 		created() {
 			const route = _.defaultsDeep(mixinOptions.routeOptions, {
-				use: [ApiGateway.serveStatic(SwaggerUI.absolutePath())],
+				//use: [ApiGateway.serveStatic(SwaggerUI.absolutePath())],
+				use: [
+					(req, res, next) => {
+						res.set = (key, value) => res.setHeader(key, value);
+						res.send = content =>
+							this.sendResponse(req, res, content, {
+								responseType: res.getHeader("Content-Type") || "text/html"
+							});
+
+						req.swaggerDoc = this.getOpenAPISchema();
+
+						next();
+					},
+					...SwaggerUI.serve,
+					SwaggerUI.setup()
+				],
 
 				aliases: {
 					"GET /openapi.json"(req, res) {
 						// Send back the generated schema
-						if (shouldUpdateSchema || !schema) {
-							// Create new server & regenerate GraphQL schema
-							this.logger.info("♻ Regenerate OpenAPI/Swagger schema...");
+						try {
+							const schema = this.getOpenAPISchema();
 
-							try {
-								schema = this.generateOpenAPISchema();
+							const ctx = req.$ctx;
+							ctx.meta.responseType = "application/json";
 
-								shouldUpdateSchema = false;
-
-								this.logger.debug(schema);
-								if (process.env.NODE_ENV != "production")
-									fs.writeFileSync(
-										"./openapi.json",
-										JSON.stringify(schema, null, 4),
-										"utf8"
-									);
-							} catch (err) {
-								this.logger.warn(err);
-								this.sendError(req, res, err);
-							}
+							return this.sendResponse(req, res, schema);
+						} catch (err) {
+							this.logger.warn(err);
+							this.sendError(req, res, err);
 						}
-
-						const ctx = req.$ctx;
-						ctx.meta.responseType = "application/json";
-
-						return this.sendResponse(req, res, schema);
 					}
 				},
 

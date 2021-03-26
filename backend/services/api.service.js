@@ -99,7 +99,12 @@ module.exports = {
 	settings: {
 		port: process.env.PORT || 4000,
 
-		use: [helmet()],
+		use: [
+			helmet({
+				// It needs that GraphQL Playground and OpenAPI UI work
+				contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false
+			})
+		],
 
 		routes: [
 			/**

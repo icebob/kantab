@@ -81,6 +81,7 @@
     "pug": "^3.0.2",
     "speakeasy": "2.0.0",
     "swagger-ui-dist": "^3.45.1",
+    "swagger-ui-express": "^4.1.6",
     "uid-generator": "2.0.0"
   },
   "engines": {

@@ -1,8 +1,8 @@
 # TODO
 
 - [ ] add Laboratory Agent service
-- [ ] http://localhost:4000/openapi not working
-- [ ] http://localhost:4000/graphql not working
+- [x] http://localhost:4000/openapi not working
+- [x] http://localhost:4000/graphql not working
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
