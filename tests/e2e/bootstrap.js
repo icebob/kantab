@@ -20,7 +20,7 @@ module.exports = broker => {
 	const execa = require("execa");
 	const args = [];
 	if (process.env.TEST_E2E == "run")
-		args.push("open"/*, "--record", "--key", "920a1001-30cb-4471-8d5d-066843b6a9a3"*/);
+		args.push("run"/*, "--record", "--key", "920a1001-30cb-4471-8d5d-066843b6a9a3"*/);
 	else
 		args.push("open");
 	const runner = execa(require.resolve("cypress/bin/cypress"), args, { stdin: "inherit", stdout: "inherit" });
@@ -30,7 +30,7 @@ module.exports = broker => {
 	runner.on("error", async () => await broker.stop());
 	runner.on("exit", async code => {
 		console.log("Cypress exited", code);
-		await broker.stop();
+		broker.stop();
 		process.exit(code);
 	});
 };

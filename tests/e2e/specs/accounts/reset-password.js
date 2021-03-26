@@ -17,14 +17,20 @@ describe("Test forgot password flow", () => {
 
 		cy.wait(EMAIL_PAUSE);
 		cy.get(".alert.success").then(() => {
+			// Check token in sent email
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: user.email,
+				pattern: "verify-account\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
 
-			return mailtrap.getTokenFromMessage(null, user.email, /verify-account\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.visit(`/verify-account?token=${token}`);
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
-				});
+				cy.visit(`/verify-account?token=${token}`);
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
+
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
 		});
 
@@ -51,17 +57,23 @@ describe("Test forgot password flow", () => {
 
 		cy.wait(EMAIL_PAUSE);
 		cy.get(".alert.success").then(() => {
+			// Check token in sent email
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: user.email,
+				pattern: "reset-password\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
 
-			return mailtrap.getTokenFromMessage(null, user.email, /reset-password\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.resetPassword(token, "newpassword");
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
+				cy.resetPassword(token, "newpassword");
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
 
-					cy.logout();
-				});
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
+
+			cy.logout();
 		});
 	});
 
@@ -77,6 +89,4 @@ describe("Test forgot password flow", () => {
 		cy.contains("h4", "Home");
 		cy.logout();
 	});
-
-	after(() => mailtrap.cleanInbox());
 });

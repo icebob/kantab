@@ -2,33 +2,31 @@
 
 const { inspect } = require("util");
 
+const LOGGERS = [
+	{
+		type: "Console",
+		options: {
+			formatter: "short",
+			moduleColors: true,
+			//autoPadding: true
+			objectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 })
+		}
+	},
+	{
+		type: "File",
+		options: {
+			folder: "./logs",
+			formatter: "full"
+		}
+	}
+];
+
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
 	namespace: "",
 	nodeID: null,
 
-	logger:
-		process.env.TEST_E2E !== "run"
-			? [
-					{
-						type: "Console",
-						options: {
-							formatter: "short",
-							moduleColors: true,
-							//autoPadding: true
-							objectPrinter: o =>
-								inspect(o, { depth: 4, colors: true, breakLength: 100 })
-						}
-					},
-					{
-						type: "File",
-						options: {
-							folder: "./logs",
-							formatter: "full"
-						}
-					}
-			  ]
-			: false,
+	logger: process.env.TEST_E2E == "run" ? false : LOGGERS,
 	logLevel: "info",
 
 	serializer: "JSON",
@@ -104,6 +102,7 @@ module.exports = {
 	// Called after broker starte.
 	started(broker) {
 		if (process.env.TEST_E2E) {
+			broker.loadService("./tests/e2e/maildev.service.js");
 			require("./tests/e2e/bootstrap")(broker);
 		}
 	},

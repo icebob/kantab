@@ -1,6 +1,5 @@
 // https://docs.cypress.io/api/introduction/api.html
 
-const mailtrap = require("../../util/mailtrap");
 let fakerator = require("fakerator")();
 
 const EMAIL_PAUSE = 3000;
@@ -30,19 +29,24 @@ describe("Test signup page with password", () => {
 
 		cy.wait(EMAIL_PAUSE);
 		cy.get(".alert.success").then(() => {
+			// Check token in sent email
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: user.email,
+				pattern: "verify-account\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
 
-			return mailtrap.getTokenFromMessage(null, user.email, /verify-account\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.visit(`/verify-account?token=${token}`);
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
-				});
+				cy.visit(`/verify-account?token=${token}`);
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
+
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
 		});
 
 		cy.logout();
-
 	});
 
 	it("Login with email & password", () => {
@@ -73,19 +77,24 @@ describe("Test signup page with passwordless account", () => {
 
 		cy.wait(EMAIL_PAUSE);
 		cy.get(".alert.success").then(() => {
+			// Check token in sent email
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: user.email,
+				pattern: "verify-account\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
 
-			return mailtrap.getTokenFromMessage(null, user.email, /verify-account\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.visit(`/verify-account?token=${token}`);
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
-				});
+				cy.visit(`/verify-account?token=${token}`);
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
+
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
 		});
 
 		cy.logout();
-
 	});
 
 	it("Try login with password", () => {
@@ -101,14 +110,20 @@ describe("Test signup page with passwordless account", () => {
 
 		cy.wait(EMAIL_PAUSE);
 		cy.get(".alert.success").then(() => {
+			// Check token in sent email
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: user.email,
+				pattern: "passwordless\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
 
-			return mailtrap.getTokenFromMessage(null, user.email, /passwordless\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.visit(`/passwordless?token=${token}`);
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
-				});
+				cy.visit(`/passwordless?token=${token}`);
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
+
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
 		});
 		cy.logout();
@@ -121,20 +136,24 @@ describe("Test signup page with passwordless account", () => {
 
 		cy.wait(EMAIL_PAUSE);
 		cy.get(".alert.success").then(() => {
+			// Check token in sent email
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: user.email,
+				pattern: "passwordless\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
 
-			return mailtrap.getTokenFromMessage(null, user.email, /passwordless\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.visit(`/passwordless?token=${token}`);
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
-				});
+				cy.visit(`/passwordless?token=${token}`);
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
+
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
 		});
 		cy.logout();
 	});
-
-	after(() => mailtrap.cleanInbox());
 
 });
 

@@ -3,6 +3,21 @@
 const MailService = require("moleculer-mail");
 const ConfigLoader = require("../mixins/config.mixin");
 
+const MAILDEV_TRANSPORT = {
+	host: "localhost",
+	port: 1025,
+	ignoreTLS: true
+};
+
+const MAILTRAP_TRANSPORT = {
+	host: "smtp.mailtrap.io",
+	port: 2525,
+	auth: {
+		user: process.env.MAILTRAP_USER,
+		pass: process.env.MAILTRAP_PASS
+	}
+};
+
 module.exports = {
 	name: "mail",
 
@@ -18,14 +33,7 @@ module.exports = {
 	 */
 	settings: {
 		from: "no-reply@kantab.moleculer.services",
-		transport: {
-			host: "smtp.mailtrap.io",
-			port: 2525,
-			auth: {
-				user: process.env.MAILTRAP_USER,
-				pass: process.env.MAILTRAP_PASS
-			}
-		},
+		transport: process.env.TEST_E2E ? MAILDEV_TRANSPORT : MAILTRAP_TRANSPORT,
 		templateFolder: "./backend/templates/mail"
 	}
 };
