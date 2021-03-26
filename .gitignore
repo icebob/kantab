@@ -60,3 +60,4 @@ typings/
 tools/
 data/
 public/
+schema.gql
