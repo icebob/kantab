@@ -35,6 +35,10 @@ jobs:
 
     - name: Run E2E tests
       run: npm run test:e2e
+      env:
+        JWT_SECRET: 1NFgVrWC3n1Nl05c7RzXhlikjARjvxVu3CWUlM5dyAnKftHURE
+        HASHID_SALT: RzuPMmvUSV1JcRS8VdTb08ADJ2voAmvcnQXFnd4J1YU6cnfL3s
+
 
     - name: Upload E2E videos
       uses: actions/upload-artifact@v2
