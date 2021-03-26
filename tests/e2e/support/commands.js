@@ -46,18 +46,13 @@ Cypress.Commands.add("logout", () => {
 	cy.url().should("contain", `${Cypress.config("baseUrl")}/login`);
 });
 
-Cypress.Commands.add("signup", (firstName, lastName, email, username, password) => {
+Cypress.Commands.add("signup", (fullName, email, username, password) => {
 	cy.visit("/signup");
 
-	if (firstName)
-		cy.get("input[name='firstName']").clear().type(firstName);
+	if (fullName)
+		cy.get("input[name='fullName']").clear().type(fullName);
 	else
-		cy.get("input[name='firstName']").clear();
-
-	if (lastName)
-		cy.get("input[name='lastName']").clear().type(lastName);
-	else
-		cy.get("input[name='lastName']").clear();
+		cy.get("input[name='fullName']").clear();
 
 	if (email)
 		cy.get("input[name='email']").clear().type(email);

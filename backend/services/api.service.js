@@ -98,7 +98,7 @@ module.exports = {
 	settings: {
 		port: process.env.PORT || 4000,
 
-		use: [helmet()],
+		//use: [helmet()],
 
 		routes: [
 			/**
@@ -135,16 +135,10 @@ module.exports = {
 			 */
 			{
 				path: "/",
+				use: [ApiGateway.serveStatic("public", {})],
 
-				use: [
-					// Serve static
-					ApiGateway.serveStatic("./public")
-				],
-
-				// Action aliases
-				aliases: {},
-
-				mappingPolicy: "restrict"
+				mappingPolicy: "restrict",
+				logging: false
 			}
 		]
 	},
@@ -190,14 +184,7 @@ module.exports = {
 					ctx.meta.token = token;
 					ctx.meta.userID = user.id;
 					// Reduce user fields (it will be transferred to other nodes)
-					return _.pick(user, [
-						"id",
-						"email",
-						"username",
-						"firstName",
-						"lastName",
-						"avatar"
-					]);
+					return _.pick(user, ["id", "email", "username", "fullName", "avatar"]);
 				}
 				return null;
 			}

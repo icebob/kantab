@@ -45,7 +45,7 @@ module.exports = {
 				required: true,
 				populate: {
 					action: "v1.accounts.resolve",
-					fields: ["id", "username", "firstName", "lastName", "avatar"]
+					fields: ["id", "username", "fullName", "avatar"]
 				},
 				set: (value, entity, ctx) => entity.owner || ctx.meta.user.id
 			},

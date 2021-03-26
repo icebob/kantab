@@ -207,8 +207,7 @@ describe("Test Accounts service", () => {
 			username: "user1",
 			password: "password1",
 			email: "user1@kantab.io",
-			firstName: "User",
-			lastName: "One",
+			fullName: "User One",
 			avatar: "https://s3.amazonaws.com/uifaces/faces/twitter/ekvium/128.jpg"
 		};
 
@@ -216,15 +215,13 @@ describe("Test Accounts service", () => {
 			username: "user2",
 			password: "password2",
 			email: "user2@kantab.io",
-			firstName: "User",
-			lastName: "Two"
+			fullName: "User Two"
 		};
 
 		const user3 = {
 			username: "user3",
 			email: "user3@kantab.io",
-			firstName: "User",
-			lastName: "Three"
+			fullName: "User Three"
 		};
 
 		it("should throw error if signup is disabled", async () => {
@@ -301,8 +298,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				email: "user1@kantab.io",
 				username: "user1",
-				firstName: "User",
-				lastName: "One",
+				fullName: "User One",
 				passwordless: false,
 				roles: ["user"],
 				plan: "free",
@@ -335,8 +331,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				email: "user2@kantab.io",
 				username: "user2",
-				firstName: "User",
-				lastName: "Two",
+				fullName: "User Two",
 				passwordless: false,
 				roles: ["user"],
 				plan: "free",
@@ -393,8 +388,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				email: "user3@kantab.io",
 				username: "user3",
-				firstName: "User",
-				lastName: "Three",
+				fullName: "User Three",
 				passwordless: true,
 				roles: ["admin", "visitor"],
 				plan: "premium",
@@ -441,8 +435,7 @@ describe("Test Accounts service", () => {
 						_id: expect.any(String),
 						email: "user3@kantab.io",
 						username: "user3",
-						firstName: "User",
-						lastName: "Three",
+						fullName: "User Three",
 						password: expect.any(String),
 						passwordless: true,
 						roles: ["admin", "visitor"],
@@ -486,8 +479,7 @@ describe("Test Accounts service", () => {
 				username: "user4",
 				password: "password4",
 				email: "user4@kantab.io",
-				firstName: "User",
-				lastName: "Four"
+				fullName: "User Four"
 			};
 
 			let savedUser, verificationToken;
@@ -651,8 +643,7 @@ describe("Test Accounts service", () => {
 			const user = {
 				username: "user5",
 				email: "user5@kantab.io",
-				firstName: "User",
-				lastName: "Five"
+				fullName: "User Five"
 			};
 
 			let savedUser, verificationToken;
@@ -908,11 +899,10 @@ describe("Test Accounts service", () => {
 				expect(res).toEqual({
 					id: expect.any(String),
 					avatar:
-						"http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
 					email: "test@kantab.io",
 					username: "test",
-					firstName: "Test",
-					lastName: "User",
+					fullName: "Test User",
 					passwordless: false,
 					plan: "free",
 					roles: ["user"],
@@ -973,11 +963,10 @@ describe("Test Accounts service", () => {
 				expect(res).toEqual({
 					id: expect.any(String),
 					avatar:
-						"http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
 					email: "test@kantab.io",
 					username: "test",
-					firstName: "Test",
-					lastName: "User",
+					fullName: "Test User",
 					passwordless: false,
 					plan: "free",
 					roles: ["user"],
@@ -1003,8 +992,7 @@ describe("Test Accounts service", () => {
 				username: "user6",
 				password: "password6",
 				email: "user6@kantab.io",
-				firstName: "User",
-				lastName: "Six"
+				fullName: "User Six"
 			};
 
 			let savedUser;
@@ -1127,8 +1115,7 @@ describe("Test Accounts service", () => {
 						profile: {
 							socialID: 3000,
 							email: "user7@kantab.io",
-							firstName: "User",
-							lastName: "Seven",
+							fullName: "User Seven",
 							avatar: "social-avatar.jpg"
 						},
 						accessToken: "token-100"
@@ -1149,8 +1136,7 @@ describe("Test Accounts service", () => {
 					profile: {
 						socialID: 3000,
 						email: "user7@kantab.io",
-						firstName: "User",
-						lastName: "Seven",
+						fullName: "User Seven",
 						avatar: "social-avatar.jpg"
 					},
 					accessToken: "token-100"
@@ -1160,8 +1146,7 @@ describe("Test Accounts service", () => {
 					id: expect.any(String),
 					email: "user7@kantab.io",
 					username: "user7",
-					firstName: "User",
-					lastName: "Seven",
+					fullName: "User Seven",
 					passwordless: false,
 					roles: ["user"],
 					plan: "free",
@@ -1182,8 +1167,7 @@ describe("Test Accounts service", () => {
 				username: "user8",
 				password: "password8",
 				email: "user8@kantab.io",
-				firstName: "User",
-				lastName: "Eight"
+				fullName: "User Eight"
 			};
 
 			let savedUser;
@@ -1296,8 +1280,7 @@ describe("Test Accounts service", () => {
 			username: "user9",
 			password: "password9",
 			email: "user9@kantab.io",
-			firstName: "User",
-			lastName: "Nine"
+			fullName: "User Nine"
 		};
 
 		let savedUser;
@@ -1314,8 +1297,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				username: "user9",
 				email: "user9@kantab.io",
-				firstName: "User",
-				lastName: "Nine",
+				fullName: "User Nine",
 				passwordless: false,
 				avatar:
 					"https://gravatar.com/avatar/328e47ea15a902d25ef32f2a59cb9199?s=64&d=robohash",
@@ -1418,8 +1400,7 @@ describe("Test Accounts service", () => {
 		const user = {
 			username: "user10",
 			email: "user10@kantab.io",
-			firstName: "User",
-			lastName: "Ten"
+			fullName: "User Ten"
 		};
 
 		let savedUser;
@@ -1538,8 +1519,7 @@ describe("Test Accounts service", () => {
 			username: "user11",
 			password: "password11",
 			email: "user11@kantab.io",
-			firstName: "User",
-			lastName: "Eleven"
+			fullName: "User Eleven"
 		};
 
 		let savedUser;
@@ -1757,8 +1737,7 @@ describe("Test Accounts service", () => {
 			//username: "user12",
 			password: "password12",
 			email: "user12@kantab.io",
-			firstName: "User",
-			lastName: "Twelve"
+			fullName: "User Twelve"
 		};
 
 		let savedUser;

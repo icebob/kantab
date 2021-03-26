@@ -10,8 +10,8 @@
     "deps": "npm-check -u",
     "ci": "jest -c jest.backend.config.js --watch",
     "ci:e2e": "cross-env TEST_E2E=open MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
-    "test": "npm run test:backend && npm run test:e2e",
-    "test:backend": "jest -c jest.backend.config.js --coverage --no-cache",
+    "test": "npm run test:backend",
+    "test:backend": "jest --coverage --no-cache",
     "test:e2e": "cross-env TEST_E2E=run MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "dc:up": "docker-compose up --build -d",
@@ -74,6 +74,7 @@
     "passport-facebook": "3.0.0",
     "passport-github": "1.1.0",
     "passport-google-oauth20": "2.0.0",
+    "pug": "^3.0.2",
     "speakeasy": "2.0.0",
     "swagger-ui-dist": "^3.45.1",
     "uid-generator": "2.0.0"

@@ -17,8 +17,7 @@ export default {
 	data() {
 		return {
 			processing: false,
-			firstName: "",
-			lastName: "",
+			fullName: "",
 			email: "",
 			username: "",
 			password: "",

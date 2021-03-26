@@ -77,8 +77,7 @@ module.exports = {
 				provider: profile.provider,
 				socialID: profile.id,
 				username: profile.username,
-				firstName: profile.displayName,
-				lastName: "",
+				fullName: profile.displayName,
 				avatar: profile._json.avatar_url
 			};
 

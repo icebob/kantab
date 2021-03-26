@@ -11,7 +11,7 @@ describe("Test forgot password flow", () => {
 	const baseUrl = Cypress.config("baseUrl");
 
 	it("Create a temp user", () => {
-		cy.signup(user.firstName, user.lastName, user.email, user.userName);
+		cy.signup(user.fullName, user.email, user.userName);
 		cy.get(".alert.success").should("contain", "Account created. Please activate now.");
 
 		cy.wait(EMAIL_PAUSE);

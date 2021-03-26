@@ -52,8 +52,7 @@ module.exports = {
 				columnName: "_id"
 			},
 			username: { type: "string", maxlength: 50, required: true },
-			firstName: { type: "string", maxlength: 50, required: true },
-			lastName: { type: "string", maxlength: 50, required: true },
+			fullName: { type: "string", maxlength: 50, required: true },
 			email: { type: "string", maxlength: 100, required: true },
 			password: { type: "string", minlength: 6, maxlength: 60, hidden: true },
 			avatar: { type: "string" },
@@ -78,8 +77,7 @@ module.exports = {
 				type User {
 					id: String!
 					username: String!
-					firstName: String!
-					lastName: String!
+					fullName: String!
 					email: String
 					avatar: String
 					status: Int
@@ -235,8 +233,7 @@ module.exports = {
 				username: { type: "string", min: 3, optional: true },
 				password: { type: "string", min: 8, optional: true },
 				email: { type: "email" },
-				firstName: { type: "string", min: 2 },
-				lastName: { type: "string", min: 2 },
+				fullName: { type: "string", min: 2 },
 				avatar: { type: "string", optional: true }
 			},
 			rest: "POST /register",
@@ -283,8 +280,7 @@ module.exports = {
 
 				// Set basic data
 				entity.email = params.email;
-				entity.firstName = params.firstName;
-				entity.lastName = params.lastName;
+				entity.fullName = params.fullName;
 				entity.roles = this.config["accounts.defaultRoles"];
 				entity.plan = this.config["accounts.defaultPlan"];
 				entity.avatar = params.avatar;
@@ -804,8 +800,7 @@ module.exports = {
 						username: profile.username || profile.email.split("@")[0],
 						password: await bcrypt.genSalt(),
 						email: profile.email,
-						firstName: profile.firstName,
-						lastName: profile.lastName,
+						fullName: profile.fullName,
 						avatar: profile.avatar
 					});
 
@@ -1150,8 +1145,7 @@ module.exports = {
 				{
 					username: "admin",
 					password: await this.hashPassword("admin"),
-					firstName: "Administrator",
-					lastName: "",
+					fullName: "Administrator",
 					email: "admin@kantab.io",
 					avatar:
 						"https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
@@ -1168,8 +1162,7 @@ module.exports = {
 				{
 					username: "test",
 					password: await this.hashPassword("test"),
-					firstName: "Test",
-					lastName: "User",
+					fullName: "Test User",
 					email: "test@kantab.io",
 					avatar:
 						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",

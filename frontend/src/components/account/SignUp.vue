@@ -7,19 +7,12 @@
 				<form @submit.prevent="submit">
 					<div v-if="success" class="alert success">{{ success }}</div>
 					<div v-if="error" class="alert error">{{ error }}</div>
-					<fieldset class="two-fields">
+					<fieldset>
 						<input
 							type="text"
-							name="firstName"
-							v-model="firstName"
-							placeholder="First name"
-							required
-						/>
-						<input
-							type="text"
-							name="lastName"
-							v-model="lastName"
-							placeholder="Last name"
+							name="fullName"
+							v-model="fullName"
+							placeholder="Full name"
 							required
 						/>
 					</fieldset>
@@ -81,8 +74,7 @@ export default {
 	methods: {
 		async process() {
 			const res = await this.$authenticator.register({
-				firstName: this.firstName,
-				lastName: this.lastName,
+				fullName: this.fullName,
 				email: this.email,
 				username: this.username,
 				password: this.password

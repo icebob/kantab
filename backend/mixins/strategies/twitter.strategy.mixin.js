@@ -64,7 +64,7 @@ module.exports = {
 				provider: profile.provider,
 				socialID: profile.id,
 				username: profile.username,
-				firstName: profile.displayName,
+				fullName: profile.displayName,
 				email: `${profile.username}@twitter.com`,
 				avatar: profile._json.profile_image_url_https
 			};

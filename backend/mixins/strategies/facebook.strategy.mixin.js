@@ -84,8 +84,7 @@ module.exports = {
 			const res = {
 				provider: profile.provider,
 				socialID: profile.id,
-				firstName: profile.name.givenName,
-				lastName: profile.name.familyName,
+				fullName: profile.name.givenName + " " + profile.name.familyName,
 				email: profile._json.email,
 				avatar: `https://graph.facebook.com/${profile.id}/picture?type=large`
 			};

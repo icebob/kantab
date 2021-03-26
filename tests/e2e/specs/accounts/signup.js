@@ -17,13 +17,13 @@ describe("Test signup page with password", () => {
 	});
 
 	it("Try too short password", () => {
-		cy.signup(user.firstName, user.lastName, user.email, user.userName, "pass");
+		cy.signup(user.fullName, user.email, user.userName, "pass");
 		cy.url().should("equal", `${baseUrl}/signup`);
 		cy.get(".alert.error").should("be.visible");
 	});
 
 	it("Signup with correct data", () => {
-		cy.signup(user.firstName, user.lastName, user.email, user.userName, user.password);
+		cy.signup(user.fullName, user.email, user.userName, user.password);
 		cy.url().should("equal", `${baseUrl}/signup`);
 		cy.get(".alert.success").should("contain", "Account created. Please activate now.");
 
@@ -65,7 +65,7 @@ describe("Test signup page with passwordless account", () => {
 	const baseUrl = Cypress.config("baseUrl");
 
 	it("Signup with correct data", () => {
-		cy.signup(user.firstName, user.lastName, user.email, user.userName);
+		cy.signup(user.fullName, user.email, user.userName);
 		cy.url().should("equal", `${baseUrl}/signup`);
 		cy.get(".alert.success").should("contain", "Account created. Please activate now.");
 
