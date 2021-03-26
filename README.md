@@ -13,7 +13,7 @@ Live demo on now.sh: https://kantab.now.sh/
 ## Tech stack
 Desired features & modules:
 
-- [x] Node v8.x with async/await
+- [x] Node v14.x with async/await
 - [x] Moleculer microservices backend
 - [x] VueJS frontend (VueX, Vue-router)
 - [x] MongoDB
