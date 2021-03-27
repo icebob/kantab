@@ -74,12 +74,15 @@ npm run dev
 The application is available on http://localhost:4000
 
 ### GraphQL Playground
-
 The GraphQL playground is available on http://localhost/graphql
 
-### OpenAPI (Swagger) UI
+![GraphQL Playground](https://user-images.githubusercontent.com/306521/112732784-5150ed80-8f3c-11eb-86a1-88bef067e723.png)
 
+
+### OpenAPI (Swagger) UI
 The OpenAPI UI is available on http://localhost/openapi
+
+![OpenAPI UI](https://user-images.githubusercontent.com/306521/112732801-66c61780-8f3c-11eb-9c69-0c7985b4ba12.png)
 
 ## NPM Scripts
 
