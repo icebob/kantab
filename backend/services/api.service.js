@@ -148,7 +148,7 @@ module.exports = {
 			 */
 			{
 				path: "/",
-				use: [history({ verbose: true }), ApiGateway.serveStatic("public", {})],
+				use: [history(), ApiGateway.serveStatic("public", {})],
 
 				mappingPolicy: "restrict"
 				//logging: false

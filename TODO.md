@@ -1,11 +1,13 @@
 # TODO
 
-- [ ] add Laboratory Agent service
-- [x] http://localhost:4000/openapi not working
-- [x] http://localhost:4000/graphql not working
+## Common 
+- [ ] 
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
+
+## Websocket
+- [ ] Need authorization via websocket
 
 ## Deployment
 - [ ] Update docker-compose file (Grafana, Prometheus)

@@ -55,9 +55,10 @@ module.exports = {
 				readonly: true,
 				set: (value, entity, ctx) => `${entity.title}-slug`
 			},
-			description: "string",
+			description: { type: "string", required: false, trim: true },
 			position: { type: "number", hidden: true, default: 0 },
 			archived: { type: "boolean", default: false },
+			public: { type: "boolean", default: false },
 			stars: { type: "number", default: 0 },
 			labels: { type: "array" },
 			members: { type: "array" },
@@ -74,11 +75,20 @@ module.exports = {
 			type: `
 				type Board {
 					id: String!,
+					owner: User!,
 					title: String!,
 					slug: String,
 					description: String,
-					owner: User,
-					createdAt: Float
+					position: Int,
+					archived: Boolean,
+					public: Boolean,
+					stars: Int,
+					members: [User],
+					# options: Object,
+					createdAt: Float,
+					updatedAt: Float,
+					archivedAt: Float,
+					deletedAt: Float
 				}
 			`,
 			resolvers: {
@@ -278,10 +288,7 @@ module.exports = {
 						content: {
 							"application/json": {
 								schema: {
-									type: "array",
-									items: {
-										$ref: "#/components/schemas/BoardList"
-									}
+									$ref: "#/components/schemas/BoardList"
 								}
 							}
 						}
@@ -303,10 +310,7 @@ module.exports = {
 						content: {
 							"application/json": {
 								schema: {
-									type: "array",
-									items: {
-										$ref: "#/components/schemas/Boards"
-									}
+									$ref: "#/components/schemas/Boards"
 								}
 							}
 						}

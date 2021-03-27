@@ -56,7 +56,6 @@ In production, this project contains monitoring feature with [Prometheus](https:
 
 ## Usage
 
-
 ### Build frontend
 The frontend Vue project is in the `frontend` folder. The build process generates the bundle files and copy them to the `public` folder which is served by the Moleculer API Gateway.
 
@@ -71,6 +70,16 @@ To run the backend you need a running MongoDB server on localhost. Or set the re
 ```bash
 npm run dev
 ```
+
+The application is available on http://localhost:4000
+
+### GraphQL Playground
+
+The GraphQL playground is available on http://localhost/graphql
+
+### OpenAPI (Swagger) UI
+
+The OpenAPI UI is available on http://localhost/openapi
 
 ## NPM Scripts
 

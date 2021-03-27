@@ -9,7 +9,9 @@
 				<router-link to="/login">Login</router-link> |
 				<router-link to="/signup">Sign Up</router-link> |
 			</template>
-			<template v-else> <a style="cursor: pointer" @click="$authenticator.logout()">Logout</a> | </template>
+			<template v-else>
+				<a style="cursor: pointer" @click="$authenticator.logout()">Logout</a> |
+			</template>
 		</div>
 		<router-view />
 	</div>

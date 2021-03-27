@@ -11,6 +11,12 @@
         }
     ],
     "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        },
         "schemas": {
             "Board": {
                 "required": [
@@ -86,10 +92,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Boards"
-                                    }
+                                    "$ref": "#/components/schemas/Boards"
                                 }
                             }
                         }
@@ -210,10 +213,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/BoardList"
-                                    }
+                                    "$ref": "#/components/schemas/BoardList"
                                 }
                             }
                         }
@@ -380,7 +380,11 @@
             }
         }
     },
-    "security": [],
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ],
     "tags": [
         {
             "name": "boards",

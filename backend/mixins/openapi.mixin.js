@@ -64,13 +64,20 @@ module.exports = function (mixinOptions) {
 						],
 
 						// https://swagger.io/specification/#componentsObject
-						components: {},
+						components: {
+							securitySchemes: {
+								BearerAuth: {
+									type: "http",
+									scheme: "bearer"
+								}
+							}
+						},
 
 						// https://swagger.io/specification/#pathsObject
 						paths: {},
 
 						// https://swagger.io/specification/#securityRequirementObject
-						security: [],
+						security: [{ BearerAuth: [] }],
 
 						// https://swagger.io/specification/#tagObject
 						tags: [
