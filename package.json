@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "moleculer-runner --env --repl --hot backend/services",
     "start": "moleculer-runner --env",
+    "build:frontend": "cd frontend && npm run build",
     "lint": "eslint backend",
     "lint:fix": "eslint backend --fix",
     "deps": "npm-check -u",
@@ -45,6 +46,7 @@
     "prettier": "^2.2.1"
   },
   "dependencies": {
+    "@moleculer/lab": "^0.6.0",
     "accept": "3.1.3",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
@@ -64,6 +66,7 @@
     "i18next-http-middleware": "^3.1.0",
     "i18next-node-fs-backend": "2.1.3",
     "ioredis": "^4.24.4",
+    "js-yaml": "^4.0.0",
     "jsonwebtoken": "8.5.1",
     "moleculer": "^0.14.12",
     "moleculer-apollo-server": "^0.3.3",

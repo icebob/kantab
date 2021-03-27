@@ -22,7 +22,6 @@ const { createComplexityLimitRule } = require("graphql-validation-complexity");
 
 module.exports = {
 	name: "api",
-	version: 1,
 
 	mixins: [
 		// Gateway
@@ -95,6 +94,14 @@ module.exports = {
 		SocketIOMixin
 	],
 
+	metadata: {
+		dockerCompose: {
+			template: {
+				ports: ["4000:4000"]
+			}
+		}
+	},
+
 	// More info about settings: https://moleculer.services/docs/0.13/moleculer-web.html
 	settings: {
 		port: process.env.PORT || 4000,
@@ -141,10 +148,10 @@ module.exports = {
 			 */
 			{
 				path: "/",
-				use: [history(), ApiGateway.serveStatic("public", {})],
+				use: [history({ verbose: true }), ApiGateway.serveStatic("public", {})],
 
-				mappingPolicy: "restrict",
-				logging: false
+				mappingPolicy: "restrict"
+				//logging: false
 			}
 		]
 	},

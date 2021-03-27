@@ -1,0 +1,11 @@
+[
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "icebob-pc-17808"
+    },
+    "targets": [
+      "ICEBOB-PC:3030"
+    ]
+  }
+]

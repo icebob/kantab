@@ -1,32 +1,38 @@
 "use strict";
 
 const { inspect } = require("util");
+require("@moleculer/lab");
 
-const LOGGERS = [
-	{
-		type: "Console",
-		options: {
-			formatter: "short",
-			moduleColors: true,
-			//autoPadding: true
-			objectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 })
-		}
-	},
-	{
-		type: "File",
-		options: {
-			folder: "./logs",
-			formatter: "full"
-		}
-	}
-];
+const isProd = process.env.NODE_ENV == "production";
 
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
 	namespace: "",
 	nodeID: null,
 
-	logger: process.env.TEST_E2E == "run" ? false : LOGGERS,
+	logger:
+		process.env.TEST_E2E == "run"
+			? false
+			: [
+					{
+						type: "Console",
+						options: {
+							formatter: "short",
+							moduleColors: true,
+							//autoPadding: true
+							objectPrinter: o =>
+								inspect(o, { depth: 4, colors: true, breakLength: 100 })
+						}
+					},
+					{
+						type: "File",
+						options: {
+							folder: "./logs",
+							formatter: "full"
+						}
+					},
+					"Laboratory"
+			  ],
 	logLevel: "info",
 
 	serializer: "JSON",
@@ -72,18 +78,49 @@ module.exports = {
 		maxQueueSize: 100
 	},
 
+	// Enable action & event parameter validation. More info: https://moleculer.services/docs/0.14/validating.html
+	validator: true,
+
+	// Enable/disable built-in metrics function. More info: https://moleculer.services/docs/0.14/metrics.html
+	metrics: {
+		enabled: true,
+		reporter: [
+			"Laboratory",
+			isProd
+				? {
+						// Available built-in reporters: "Console", "CSV", "Event", "Prometheus", "Datadog", "StatsD"
+						type: "Prometheus",
+						options: {
+							// HTTP port
+							port: 3030,
+							// HTTP URL path
+							path: "/metrics",
+							// Default labels which are appended to all metrics labels
+							defaultLabels: registry => ({
+								namespace: registry.broker.namespace,
+								nodeID: registry.broker.nodeID
+							})
+						}
+				  }
+				: null
+		]
+	},
+
 	tracing: {
-		enabled: false,
+		enabled: true,
 		events: true,
 		exporter: [
-			{
-				type: "Console",
-				options: {
-					width: 100,
-					colors: true,
-					logger: console.log
-				}
-			}
+			//"Laboratory"
+			/*!isProd
+				? {
+						type: "Console",
+						options: {
+							width: 100,
+							colors: true,
+							logger: console.log
+						}
+				  }
+				: null*/
 		]
 	},
 
@@ -92,8 +129,10 @@ module.exports = {
 
 	// Register custom middlewares
 	middlewares: [
-		require("./backend/middlewares/CheckPermissions"),
-		require("./backend/middlewares/FindEntity")
+		require("./backend/middlewares/check-permissions.middleare"),
+		require("./backend/middlewares/find-entity.middleware"),
+		require("./backend/middlewares/docker-compose-generator.middleware"),
+		require("./backend/middlewares/prometheus-file-generator.middleware")
 	],
 
 	// Called after broker created.
@@ -109,6 +148,121 @@ module.exports = {
 
 	// Called after broker stopped.
 	stopped(broker) {},
+
+	metadata: {
+		dockerCompose: {
+			filename: "./docker-compose.yml",
+			serviceBaseDir: "backend/services",
+			root: {
+				version: "3.0",
+
+				services: {
+					nats: {
+						image: "nats:2",
+						ports: ["4222:4222"],
+						restart: "unless-stopped"
+					},
+
+					redis: {
+						image: "redis:6-alpine",
+						restart: "unless-stopped"
+					},
+
+					mongo: {
+						image: "mongo:4",
+						volumes: ["mongo_data:/data/db"],
+						restart: "unless-stopped"
+					},
+
+					traefik: {
+						image: "traefik:1.7.6",
+						command:
+							"--web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false",
+						ports: ["3000:80", "3001:8080"],
+						volumes: [
+							"/var/run/docker.sock:/var/run/docker.sock",
+							"/dev/null:/traefik.toml"
+						],
+						restart: "unless-stopped"
+					},
+
+					prometheus: {
+						image: "prom/prometheus:v2.6.0",
+						volumes: [
+							"./monitoring/prometheus/:/etc/prometheus/",
+							"prometheus_data:/prometheus"
+						],
+						command: [
+							"--config.file=/etc/prometheus/prometheus.yml",
+							"--storage.tsdb.path=/prometheus",
+							"--web.console.libraries=/usr/share/prometheus/console_libraries",
+							"--web.console.templates=/usr/share/prometheus/consoles"
+						],
+						ports: ["9090:9090"],
+						links: ["metrics", "alertmanager:alertmanager"],
+						restart: "unless-stopped"
+					},
+
+					alertmanager: {
+						image: "prom/alertmanager:v0.15.3",
+						ports: ["9093:9093"],
+						volumes: ["./monitoring/alertmanager/:/etc/alertmanager/"],
+						restart: "unless-stopped",
+						command: [
+							"--config.file=/etc/alertmanager/config.yml",
+							"--storage.path=/alertmanager"
+						]
+					},
+
+					grafana: {
+						image: "grafana/grafana:5.4.2",
+						depends_on: ["prometheus"],
+						ports: ["9000:3000"],
+						volumes: [
+							"grafana_data:/var/lib/grafana",
+							"./monitoring/grafana/provisioning/:/etc/grafana/provisioning/"
+						],
+						env_file: ["./monitoring/grafana/config.monitoring"],
+						restart: "unless-stopped"
+					}
+				},
+
+				volumes: {
+					app_data: {
+						driver: "local"
+					},
+					mongo_data: {
+						driver: "local"
+					},
+					prometheus_data: {
+						driver: "local"
+					},
+					grafana_data: {
+						driver: "local"
+					}
+				}
+			},
+
+			serviceTemplate: {
+				build: {
+					context: "."
+				},
+				image: "kantab",
+				environment: {
+					SERVICEDIR: "backend/services",
+					TRANSPORTER: "nats://nats:4222",
+					MONGO_URI: "mongodb://mongo:27017/kantab"
+				},
+				volumes: [
+					"app_data:/app/data",
+					"./monitoring/prometheus:/app/monitoring/prometheus"
+				],
+				expose: [3030],
+				depends_on: ["mongo", "nats", "redis"],
+				restart: "unless-stopped"
+			}
+		}
+	},
 
 	replCommands: null
 };

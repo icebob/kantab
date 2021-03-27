@@ -15,8 +15,6 @@ module.exports = {
 		ecmaVersion: 9
 	},
 	rules: {
-		indent: ["warn", "tab", { SwitchCase: 1 }],
-		quotes: ["warn", "double"],
 		semi: ["error", "always"],
 		"no-var": ["error"],
 		"no-console": ["off"],

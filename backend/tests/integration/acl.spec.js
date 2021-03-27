@@ -4,8 +4,8 @@ const { ServiceBroker } = require("moleculer");
 const AclService = require("../../services/acl.service");
 const ConfigService = require("../../services/config.service");
 
-const FindEntityMiddleware = require("../../middlewares/FindEntity");
-const CheckPermissionsMiddleware = require("../../middlewares/CheckPermissions");
+const FindEntityMiddleware = require("../../middlewares/find-entity.middleware");
+const CheckPermissionsMiddleware = require("../../middlewares/check-permissions.middleare");
 
 describe("Test Access-Control logic", () => {
 	describe("Test ACL service CRUD actions", () => {

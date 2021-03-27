@@ -5,8 +5,8 @@ const TestService = require("../../../services/accounts.service");
 const ConfigService = require("../../../services/config.service");
 const E = require("moleculer").Errors;
 
-const FindEntityMiddleware = require("../../../middlewares/FindEntity");
-const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
+const FindEntityMiddleware = require("../../../middlewares/find-entity.middleware");
+const CheckPermissionsMiddleware = require("../../../middlewares/check-permissions.middleare");
 
 process.env.JWT_SECRET = "kantab-secret-test";
 

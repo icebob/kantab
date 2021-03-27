@@ -40,7 +40,7 @@ module.exports = {
 		rest: true,
 
 		actions: {
-			sendMail: "mail.send"
+			sendMail: "v1.mail.send"
 		},
 
 		fields: {

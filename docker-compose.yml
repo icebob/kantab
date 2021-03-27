@@ -1,201 +1,30 @@
-version: "3.0"
-
+version: '3.0'
 services:
-
-  api:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: api
-      PORT: 3000
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=kantab"
-      - "traefik.port=3000"
-      - "traefik.frontend.entryPoints=http"
-      - "traefik.frontend.rule=PathPrefix:/"
-    depends_on:
-      - nats
-      - redis
-
-  accounts:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: accounts
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  acl:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: acl
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  boards:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: boards
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  card-activities:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: card.activities
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  card-attachments:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: card.attachments
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  card-checklists:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: card.checklists
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  cards:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: cards
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  config:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: config
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  lists:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: lists
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  mail:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: mail
-    depends_on:
-      - nats
-      - redis
-      - mongo
-
-  metrics:
-    build:
-      context: .
-    image: kantab
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      SERVICES: metrics
-    depends_on:
-      - nats
-      - redis
-
-  # NATS for transporter
   nats:
-    image: nats:1.3.0
+    image: nats:2
     ports:
-      - "4222:4222"
+      - '4222:4222'
     restart: unless-stopped
-
-  # Redis for caching
   redis:
-    image: redis:5.0.3-alpine
+    image: redis:6-alpine
     restart: unless-stopped
-
-  # Database store
   mongo:
-    image: mongo:3.4.18
-    command: mongod --smallfiles --oplogSize 128
+    image: mongo:4
     volumes:
-      - db:/data/db
+      - mongo_data:/data/db
     restart: unless-stopped
-
-  # Reverse proxy for API server
   traefik:
     image: traefik:1.7.6
-    command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
+    command: >-
+      --web --docker --docker.domain=docker.localhost --logLevel=INFO
+      --docker.exposedbydefault=false
     ports:
-      - "3000:80"
-      - "3001:8080"
+      - '3000:80'
+      - '3001:8080'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /dev/null:/traefik.toml
     restart: unless-stopped
-
-  # Prometheus for metrics
   prometheus:
     image: prom/prometheus:v2.6.0
     volumes:
@@ -207,42 +36,288 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     ports:
-      - 9090:9090
+      - '9090:9090'
     links:
       - metrics
       - alertmanager:alertmanager
     restart: unless-stopped
-
-  # Alert manager for Prometheus
   alertmanager:
     image: prom/alertmanager:v0.15.3
     ports:
-      - 9093:9093
+      - '9093:9093'
     volumes:
       - ./monitoring/alertmanager/:/etc/alertmanager/
     restart: unless-stopped
     command:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
-
-  # Grafana UI
   grafana:
     image: grafana/grafana:5.4.2
     depends_on:
       - prometheus
     ports:
-      - 9000:3000
+      - '9000:3000'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning/
     env_file:
       - ./monitoring/grafana/config.monitoring
     restart: unless-stopped
-
+  v1-accounts:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: accounts.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-acl:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: acl.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  api:
+    ports:
+      - '4000:4000'
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: api.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-boards:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: boards.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-card-activities:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: card.activities.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-card-attachments:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: card.attachments.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-card-checklists:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: card.checklists.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-cards:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: cards.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-config:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: config.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  laboratory:
+    expose:
+      - 3212
+    ports:
+      - '3212:3212'
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: laboratory.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-lists:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: lists.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  v1-mail:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: mail.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
+  metrics:
+    build:
+      context: .
+    image: kantab
+    environment:
+      SERVICEDIR: backend/services
+      TRANSPORTER: nats://nats:4222
+      MONGO_URI: mongodb://mongo:27017/kantab
+      SERVICES: metrics.service.js
+    volumes:
+      - app_data:/app/data
+      - ./monitoring/prometheus:/app/monitoring/prometheus
+    expose:
+      - 3030
+    depends_on:
+      - mongo
+      - nats
+      - redis
+    restart: unless-stopped
 volumes:
-  data:
+  app_data:
     driver: local
-  db:
+  mongo_data:
     driver: local
   prometheus_data:
     driver: local

@@ -20,6 +20,7 @@ const MAILTRAP_TRANSPORT = {
 
 module.exports = {
 	name: "mail",
+	version: 1,
 
 	mixins: [MailService, ConfigLoader(["site.**", "mail.**"])],
 

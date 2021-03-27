@@ -5,7 +5,7 @@ const TestService = require("../../../services/boards.service");
 const ConfigService = require("../../../services/config.service");
 const E = require("moleculer").Errors;
 
-const FindEntityMiddleware = require("../../../middlewares/FindEntity");
+const FindEntityMiddleware = require("../../../middlewares/find-entity.middleware");
 //const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermissions");
 
 describe("Test Boards service", () => {
