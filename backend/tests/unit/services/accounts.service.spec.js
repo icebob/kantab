@@ -26,6 +26,7 @@ describe("Test Accounts service", () => {
 	const mailSendMock = jest.fn(() => Promise.resolve(true));
 	broker.createService({
 		name: "mail",
+		version: 1,
 		actions: {
 			send: mailSendMock
 		}
