@@ -1,5 +1,16 @@
 # TODO
 
+- [ ] add Laboratory Agent service
+- [x] http://localhost:4000/openapi not working
+- [x] http://localhost:4000/graphql not working
+
+## Login
+- [ ] Password reset doesn't check 2FA and login after the new password without it.
+
+## Deployment
+- [ ] Update docker-compose file (Grafana, Prometheus)
+
+## Others
 - check https://github.com/lipp/login-with/tree/master/src/strategies
 - LDAP auth: 
     - https://www.npmjs.com/package/passport-ldapauth

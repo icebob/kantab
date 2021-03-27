@@ -11,10 +11,13 @@ const CheckPermissionsMiddleware = require("../../../middlewares/CheckPermission
 process.env.JWT_SECRET = "kantab-secret-test";
 
 describe("Test Accounts service", () => {
-	let broker = new ServiceBroker({ logger: false, middlewares: [
-		FindEntityMiddleware,
-		//CheckPermissionsMiddleware
-	] });
+	let broker = new ServiceBroker({
+		logger: false,
+		middlewares: [
+			FindEntityMiddleware
+			//CheckPermissionsMiddleware
+		]
+	});
 
 	// Config service
 	broker.createService(ConfigService);
@@ -49,12 +52,24 @@ describe("Test Accounts service", () => {
 	}
 
 	it("check action visibilities", async () => {
-		expect(broker.findNextActionEndpoint("v1.accounts.create").action.visibility).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.accounts.list").action.visibility).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.accounts.find").action.visibility).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.accounts.get").action.visibility).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.accounts.update").action.visibility).toBe("protected");
-		expect(broker.findNextActionEndpoint("v1.accounts.remove").action.visibility).toBe("protected");
+		expect(broker.findNextActionEndpoint("v1.accounts.create").action.visibility).toBe(
+			"protected"
+		);
+		expect(broker.findNextActionEndpoint("v1.accounts.list").action.visibility).toBe(
+			"protected"
+		);
+		expect(broker.findNextActionEndpoint("v1.accounts.find").action.visibility).toBe(
+			"protected"
+		);
+		expect(broker.findNextActionEndpoint("v1.accounts.get").action.visibility).toBe(
+			"protected"
+		);
+		expect(broker.findNextActionEndpoint("v1.accounts.update").action.visibility).toBe(
+			"protected"
+		);
+		expect(broker.findNextActionEndpoint("v1.accounts.remove").action.visibility).toBe(
+			"protected"
+		);
 	});
 
 	describe("Test JWT methods", () => {
@@ -69,7 +84,7 @@ describe("Test Accounts service", () => {
 			expect(res).toEqual({
 				...payload,
 				exp: expect.any(Number),
-				iat: expect.any(Number),
+				iat: expect.any(Number)
 			});
 		});
 
@@ -112,9 +127,7 @@ describe("Test Accounts service", () => {
 	});
 
 	describe("Test common methods", () => {
-
 		describe("Test sendMagicLink method", () => {
-
 			let oldSendMail, oldUpdateById;
 			beforeAll(() => {
 				oldSendMail = service.sendMail;
@@ -136,13 +149,17 @@ describe("Test Accounts service", () => {
 				await service.sendMagicLink(ctx, user);
 
 				expect(service.sendMail).toHaveBeenCalledTimes(1);
-				expect(service.sendMail).toHaveBeenCalledWith(ctx, user, "magic-link", { token: expect.any(String) });
+				expect(service.sendMail).toHaveBeenCalledWith(ctx, user, "magic-link", {
+					token: expect.any(String)
+				});
 
 				expect(service.adapter.updateById).toHaveBeenCalledTimes(1);
-				expect(service.adapter.updateById).toHaveBeenCalledWith(123, { $set: {
-					passwordlessToken: expect.any(String),
-					passwordlessTokenExpires: expect.any(Number)
-				} });
+				expect(service.adapter.updateById).toHaveBeenCalledWith(123, {
+					$set: {
+						passwordlessToken: expect.any(String),
+						passwordlessTokenExpires: expect.any(Number)
+					}
+				});
 			});
 		});
 
@@ -182,7 +199,6 @@ describe("Test Accounts service", () => {
 	});
 
 	describe("Test 'register' & 'verify' action", () => {
-
 		beforeAll(() => {
 			service.sendMail = jest.fn(() => Promise.resolve());
 		});
@@ -191,8 +207,7 @@ describe("Test Accounts service", () => {
 			username: "user1",
 			password: "password1",
 			email: "user1@kantab.io",
-			firstName: "User",
-			lastName: "One",
+			fullName: "User One",
 			avatar: "https://s3.amazonaws.com/uifaces/faces/twitter/ekvium/128.jpg"
 		};
 
@@ -200,15 +215,13 @@ describe("Test Accounts service", () => {
 			username: "user2",
 			password: "password2",
 			email: "user2@kantab.io",
-			firstName: "User",
-			lastName: "Two"
+			fullName: "User Two"
 		};
 
 		const user3 = {
 			username: "user3",
 			email: "user3@kantab.io",
-			firstName: "User",
-			lastName: "Three"
+			fullName: "User Three"
 		};
 
 		it("should throw error if signup is disabled", async () => {
@@ -230,7 +243,10 @@ describe("Test Accounts service", () => {
 		it("should throw error if email is exist", async () => {
 			expect.assertions(4);
 			try {
-				await broker.call("v1.accounts.register", Object.assign({}, user1, { email: "test@kantab.io" }));
+				await broker.call(
+					"v1.accounts.register",
+					Object.assign({}, user1, { email: "test@kantab.io" })
+				);
 			} catch (err) {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
@@ -244,7 +260,10 @@ describe("Test Accounts service", () => {
 
 			expect.assertions(4);
 			try {
-				await broker.call("v1.accounts.register", Object.assign({}, user1, { username: null }));
+				await broker.call(
+					"v1.accounts.register",
+					Object.assign({}, user1, { username: null })
+				);
 			} catch (err) {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
@@ -258,7 +277,10 @@ describe("Test Accounts service", () => {
 
 			expect.assertions(4);
 			try {
-				await broker.call("v1.accounts.register", Object.assign({}, user1, { username: "test" }));
+				await broker.call(
+					"v1.accounts.register",
+					Object.assign({}, user1, { username: "test" })
+				);
 			} catch (err) {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
@@ -276,8 +298,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				email: "user1@kantab.io",
 				username: "user1",
-				firstName: "User",
-				lastName: "One",
+				fullName: "User One",
 				passwordless: false,
 				roles: ["user"],
 				plan: "free",
@@ -290,7 +311,14 @@ describe("Test Accounts service", () => {
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({ password: expect.any(String) }, res, { _id: res.id, id: undefined }), "welcome");
+			expect(service.sendMail).toHaveBeenCalledWith(
+				expect.any(Context),
+				Object.assign({ password: expect.any(String) }, res, {
+					_id: res.id,
+					id: undefined
+				}),
+				"welcome"
+			);
 		});
 
 		it("should create new user without avatar with verification", async () => {
@@ -303,8 +331,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				email: "user2@kantab.io",
 				username: "user2",
-				firstName: "User",
-				lastName: "Two",
+				fullName: "User Two",
 				passwordless: false,
 				roles: ["user"],
 				plan: "free",
@@ -312,14 +339,24 @@ describe("Test Accounts service", () => {
 				createdAt: expect.any(Number),
 				verified: false,
 				status: 1,
-				avatar: "https://gravatar.com/avatar/6a99f787601d736a0d1b79b13a252f9a?s=64&d=robohash"
+				avatar:
+					"https://gravatar.com/avatar/6a99f787601d736a0d1b79b13a252f9a?s=64&d=robohash"
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
-				password: expect.any(String),
-				verificationToken: expect.any(String),
-			}, res, { _id: res.id, id: undefined }), "activate", { token: expect.any(String) });
+			expect(service.sendMail).toHaveBeenCalledWith(
+				expect.any(Context),
+				Object.assign(
+					{
+						password: expect.any(String),
+						verificationToken: expect.any(String)
+					},
+					res,
+					{ _id: res.id, id: undefined }
+				),
+				"activate",
+				{ token: expect.any(String) }
+			);
 		});
 
 		it("should throw error if no password & passwordless is not enabled", async () => {
@@ -351,8 +388,7 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				email: "user3@kantab.io",
 				username: "user3",
-				firstName: "User",
-				lastName: "Three",
+				fullName: "User Three",
 				passwordless: true,
 				roles: ["admin", "visitor"],
 				plan: "premium",
@@ -360,14 +396,24 @@ describe("Test Accounts service", () => {
 				createdAt: expect.any(Number),
 				verified: false,
 				status: 1,
-				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
+				avatar:
+					"https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({
-				password: expect.any(String),
-				verificationToken: expect.any(String),
-			}, res, { _id: res.id, id: undefined }), "activate", { token: expect.any(String) });
+			expect(service.sendMail).toHaveBeenCalledWith(
+				expect.any(Context),
+				Object.assign(
+					{
+						password: expect.any(String),
+						verificationToken: expect.any(String)
+					},
+					res,
+					{ _id: res.id, id: undefined }
+				),
+				"activate",
+				{ token: expect.any(String) }
+			);
 
 			user3VerificationToken = service.sendMail.mock.calls[0][3].token;
 		});
@@ -381,23 +427,30 @@ describe("Test Accounts service", () => {
 			});
 
 			expect(service.sendMail).toHaveBeenCalledTimes(1);
-			expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, {
-				_id: expect.any(String),
-				email: "user3@kantab.io",
-				username: "user3",
-				firstName: "User",
-				lastName: "Three",
-				password: expect.any(String),
-				passwordless: true,
-				roles: ["admin", "visitor"],
-				plan: "premium",
-				socialLinks: {},
-				createdAt: expect.any(Number),
-				verified: true, // !
-				verificationToken: null,
-				status: 1,
-				avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
-			}), "welcome");
+			expect(service.sendMail).toHaveBeenCalledWith(
+				expect.any(Context),
+				Object.assign(
+					{},
+					{
+						_id: expect.any(String),
+						email: "user3@kantab.io",
+						username: "user3",
+						fullName: "User Three",
+						password: expect.any(String),
+						passwordless: true,
+						roles: ["admin", "visitor"],
+						plan: "premium",
+						socialLinks: {},
+						createdAt: expect.any(Number),
+						verified: true, // !
+						verificationToken: null,
+						status: 1,
+						avatar:
+							"https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
+					}
+				),
+				"welcome"
+			);
 
 			service.config["accounts.defaultRoles"] = ["user"];
 			service.config["accounts.defaultPlan"] = "free";
@@ -414,23 +467,19 @@ describe("Test Accounts service", () => {
 				expect(err.type).toBe("INVALID_TOKEN");
 			}
 		});
-
 	});
 
 	describe("Test 'login' action", () => {
-
 		beforeAll(() => {
 			service.sendMail = jest.fn(() => Promise.resolve());
 		});
 
 		describe("with password", () => {
-
 			const user = {
 				username: "user4",
 				password: "password4",
 				email: "user4@kantab.io",
-				firstName: "User",
-				lastName: "Four"
+				fullName: "User Four"
 			};
 
 			let savedUser, verificationToken;
@@ -447,7 +496,10 @@ describe("Test Accounts service", () => {
 			it("should not logged in with non-exist account", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.login", { email: "no-user@kantab.io", password: "pass" });
+					await broker.call("v1.accounts.login", {
+						email: "no-user@kantab.io",
+						password: "pass"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -459,7 +511,10 @@ describe("Test Accounts service", () => {
 			it("should not logged in unverified account", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
+					await broker.call("v1.accounts.login", {
+						email: "user4@kantab.io",
+						password: "password4"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -475,7 +530,10 @@ describe("Test Accounts service", () => {
 			it("should not logged in with wrong password", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "wrong-password" });
+					await broker.call("v1.accounts.login", {
+						email: "user4@kantab.io",
+						password: "wrong-password"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -485,7 +543,10 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should logged with correct email & password", async () => {
-				const res = await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
+				const res = await broker.call("v1.accounts.login", {
+					email: "user4@kantab.io",
+					password: "password4"
+				});
 				expect(res).toEqual({
 					token: expect.any(String)
 				});
@@ -496,7 +557,10 @@ describe("Test Accounts service", () => {
 				service.config["accounts.username.enabled"] = false;
 
 				try {
-					await broker.call("v1.accounts.login", { email: "user4", password: "password4" });
+					await broker.call("v1.accounts.login", {
+						email: "user4",
+						password: "password4"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -507,7 +571,10 @@ describe("Test Accounts service", () => {
 
 			it("should logged with correct username & password", async () => {
 				service.config["accounts.username.enabled"] = true;
-				const res = await broker.call("v1.accounts.login", { email: "user4", password: "password4" });
+				const res = await broker.call("v1.accounts.login", {
+					email: "user4",
+					password: "password4"
+				});
 				expect(res).toEqual({
 					token: expect.any(String)
 				});
@@ -519,7 +586,10 @@ describe("Test Accounts service", () => {
 				await broker.call("v1.accounts.disable", { id: savedUser.id });
 
 				try {
-					await broker.call("v1.accounts.login", { email: "user4@kantab.io", password: "password4" });
+					await broker.call("v1.accounts.login", {
+						email: "user4@kantab.io",
+						password: "password4"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -554,26 +624,26 @@ describe("Test Accounts service", () => {
 				});
 
 				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
-				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
-					password: expect.any(String),
-					verified: true,
-					verificationToken: null,
-					_id: savedUser.id,
-					id: undefined
-				}));
+				expect(service.sendMagicLink).toHaveBeenCalledWith(
+					expect.any(Context),
+					Object.assign({}, savedUser, {
+						password: expect.any(String),
+						verified: true,
+						verificationToken: null,
+						_id: savedUser.id,
+						id: undefined
+					})
+				);
 
 				service.sendMagicLink = oldSendMagicLink;
 			});
-
 		});
 
 		describe("with passwordless", () => {
-
 			const user = {
 				username: "user5",
 				email: "user5@kantab.io",
-				firstName: "User",
-				lastName: "Five"
+				fullName: "User Five"
 			};
 
 			let savedUser, verificationToken;
@@ -615,7 +685,10 @@ describe("Test Accounts service", () => {
 			it("should not logged in with password", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.login", { email: "user5@kantab.io", password: "some-password" });
+					await broker.call("v1.accounts.login", {
+						email: "user5@kantab.io",
+						password: "some-password"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -661,11 +734,19 @@ describe("Test Accounts service", () => {
 				});
 
 				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
-				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
-					password: expect.any(String),
-					verified: true,
-					verificationToken: null,
-				}, { _id: savedUser.id, id: undefined }));
+				expect(service.sendMagicLink).toHaveBeenCalledWith(
+					expect.any(Context),
+					Object.assign(
+						{},
+						savedUser,
+						{
+							password: expect.any(String),
+							verified: true,
+							verificationToken: null
+						},
+						{ _id: savedUser.id, id: undefined }
+					)
+				);
 			});
 
 			it("should not logged in with username if this feature is disabled", async () => {
@@ -673,7 +754,10 @@ describe("Test Accounts service", () => {
 				service.config["accounts.username.enabled"] = false;
 
 				try {
-					await broker.call("v1.accounts.login", { email: "user5", password: "password5" });
+					await broker.call("v1.accounts.login", {
+						email: "user5",
+						password: "password5"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -692,11 +776,19 @@ describe("Test Accounts service", () => {
 				});
 
 				expect(service.sendMagicLink).toHaveBeenCalledTimes(1);
-				expect(service.sendMagicLink).toHaveBeenCalledWith(expect.any(Context), Object.assign({}, savedUser, {
-					password: expect.any(String),
-					verified: true,
-					verificationToken: null,
-				}, { _id: savedUser.id, id: undefined }));
+				expect(service.sendMagicLink).toHaveBeenCalledWith(
+					expect.any(Context),
+					Object.assign(
+						{},
+						savedUser,
+						{
+							password: expect.any(String),
+							verified: true,
+							verificationToken: null
+						},
+						{ _id: savedUser.id, id: undefined }
+					)
+				);
 			});
 
 			it("should not logged in disabled account", async () => {
@@ -713,7 +805,6 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ERR_ACCOUNT_DISABLED");
 				}
 			});
-
 		});
 
 		describe("Test resolveToken", () => {
@@ -724,7 +815,10 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should generate a token after login", async () => {
-				const res = await broker.call("v1.accounts.login", { email: "test", password: "test" });
+				const res = await broker.call("v1.accounts.login", {
+					email: "test",
+					password: "test"
+				});
 				expect(res.token).toBeDefined();
 				token = res.token;
 			});
@@ -804,11 +898,11 @@ describe("Test Accounts service", () => {
 
 				expect(res).toEqual({
 					id: expect.any(String),
-					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+					avatar:
+						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
 					email: "test@kantab.io",
 					username: "test",
-					firstName: "Test",
-					lastName: "User",
+					fullName: "Test User",
 					passwordless: false,
 					plan: "free",
 					roles: ["user"],
@@ -821,7 +915,6 @@ describe("Test Accounts service", () => {
 					verified: true
 				});
 			});
-
 		});
 
 		describe("Test resolveToken", () => {
@@ -844,7 +937,9 @@ describe("Test Accounts service", () => {
 			it("should throw error if account is not activated", async () => {
 				await unverifiedAccount(savedUser._id);
 
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id } });
+				const res = await broker.call("v1.accounts.me", null, {
+					meta: { userID: savedUser._id }
+				});
 				expect(res).toBeNull();
 
 				await verifiedAccount(savedUser._id);
@@ -853,21 +948,25 @@ describe("Test Accounts service", () => {
 			it("should throw error if account is disabled", async () => {
 				await broker.call("v1.accounts.disable", { id: savedUser._id });
 
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id } });
+				const res = await broker.call("v1.accounts.me", null, {
+					meta: { userID: savedUser._id }
+				});
 				expect(res).toBeNull();
 
 				await broker.call("v1.accounts.enable", { id: savedUser._id });
 			});
 
 			it("should return user after enabling", async () => {
-				const res = await broker.call("v1.accounts.me", null, { meta: { userID: savedUser._id } });
+				const res = await broker.call("v1.accounts.me", null, {
+					meta: { userID: savedUser._id }
+				});
 				expect(res).toEqual({
 					id: expect.any(String),
-					avatar: "http://icons.iconarchive.com/icons/iconshock/real-vista-general/256/administrator-icon.png",
+					avatar:
+						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
 					email: "test@kantab.io",
 					username: "test",
-					firstName: "Test",
-					lastName: "User",
+					fullName: "Test User",
 					passwordless: false,
 					plan: "free",
 					roles: ["user"],
@@ -881,23 +980,19 @@ describe("Test Accounts service", () => {
 				});
 			});
 		});
-
 	});
 
 	describe("Test 'socialLogin' action", () => {
-
 		beforeAll(() => {
 			service.sendMail = jest.fn(() => Promise.resolve());
 		});
 
 		describe("without logged in user", () => {
-
 			const user = {
 				username: "user6",
 				password: "password6",
 				email: "user6@kantab.io",
-				firstName: "User",
-				lastName: "Six"
+				fullName: "User Six"
 			};
 
 			let savedUser;
@@ -1020,8 +1115,7 @@ describe("Test Accounts service", () => {
 						profile: {
 							socialID: 3000,
 							email: "user7@kantab.io",
-							firstName: "User",
-							lastName: "Seven",
+							fullName: "User Seven",
 							avatar: "social-avatar.jpg"
 						},
 						accessToken: "token-100"
@@ -1042,8 +1136,7 @@ describe("Test Accounts service", () => {
 					profile: {
 						socialID: 3000,
 						email: "user7@kantab.io",
-						firstName: "User",
-						lastName: "Seven",
+						fullName: "User Seven",
 						avatar: "social-avatar.jpg"
 					},
 					accessToken: "token-100"
@@ -1053,8 +1146,7 @@ describe("Test Accounts service", () => {
 					id: expect.any(String),
 					email: "user7@kantab.io",
 					username: "user7",
-					firstName: "User",
-					lastName: "Seven",
+					fullName: "User Seven",
 					passwordless: false,
 					roles: ["user"],
 					plan: "free",
@@ -1068,17 +1160,14 @@ describe("Test Accounts service", () => {
 					token: expect.any(String)
 				});
 			});
-
 		});
 
 		describe("with logged in user", () => {
-
 			const user = {
 				username: "user8",
 				password: "password8",
 				email: "user8@kantab.io",
-				firstName: "User",
-				lastName: "Eight"
+				fullName: "User Eight"
 			};
 
 			let savedUser;
@@ -1095,13 +1184,17 @@ describe("Test Accounts service", () => {
 			it("should throw error if socialID is assigned to another account", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.socialLogin", {
-						provider: "google",
-						profile: {
-							socialID: 3000
+					await broker.call(
+						"v1.accounts.socialLogin",
+						{
+							provider: "google",
+							profile: {
+								socialID: 3000
+							},
+							accessToken: "token-8"
 						},
-						accessToken: "token-8"
-					}, { meta });
+						{ meta }
+					);
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -1111,13 +1204,17 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should link & login with same user", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 4000
+				const res = await broker.call(
+					"v1.accounts.socialLogin",
+					{
+						provider: "google",
+						profile: {
+							socialID: 4000
+						},
+						accessToken: "token-8"
 					},
-					accessToken: "token-8"
-				}, { meta });
+					{ meta }
+				);
 
 				expect(res).toEqual({
 					...savedUser,
@@ -1130,13 +1227,17 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should not link but login with same user", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "google",
-					profile: {
-						socialID: 4000
+				const res = await broker.call(
+					"v1.accounts.socialLogin",
+					{
+						provider: "google",
+						profile: {
+							socialID: 4000
+						},
+						accessToken: "token-8"
 					},
-					accessToken: "token-8"
-				}, { meta });
+					{ meta }
+				);
 
 				expect(res).toEqual({
 					...savedUser,
@@ -1149,13 +1250,17 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should add new link", async () => {
-				const res = await broker.call("v1.accounts.socialLogin", {
-					provider: "facebook",
-					profile: {
-						socialID: 5000
+				const res = await broker.call(
+					"v1.accounts.socialLogin",
+					{
+						provider: "facebook",
+						profile: {
+							socialID: 5000
+						},
+						accessToken: "token-8"
 					},
-					accessToken: "token-8"
-				}, { meta });
+					{ meta }
+				);
 
 				expect(res).toEqual({
 					...savedUser,
@@ -1167,19 +1272,15 @@ describe("Test Accounts service", () => {
 					token: expect.any(String)
 				});
 			});
-
 		});
-
 	});
 
 	describe("Test `link` & `unlink` actions", () => {
-
 		const user = {
 			username: "user9",
 			password: "password9",
 			email: "user9@kantab.io",
-			firstName: "User",
-			lastName: "Nine"
+			fullName: "User Nine"
 		};
 
 		let savedUser;
@@ -1196,10 +1297,10 @@ describe("Test Accounts service", () => {
 				id: expect.any(String),
 				username: "user9",
 				email: "user9@kantab.io",
-				firstName: "User",
-				lastName: "Nine",
+				fullName: "User Nine",
 				passwordless: false,
-				avatar: "https://gravatar.com/avatar/328e47ea15a902d25ef32f2a59cb9199?s=64&d=robohash",
+				avatar:
+					"https://gravatar.com/avatar/328e47ea15a902d25ef32f2a59cb9199?s=64&d=robohash",
 				plan: "free",
 				roles: ["user"],
 				socialLinks: {},
@@ -1253,7 +1354,7 @@ describe("Test Accounts service", () => {
 				await broker.call("v1.accounts.unlink", {
 					provider: "google"
 				});
-			} catch(err) {
+			} catch (err) {
 				expect(err).toBeInstanceOf(E.MoleculerClientError);
 				expect(err.name).toBe("MoleculerClientError");
 				expect(err.code).toBe(400);
@@ -1262,9 +1363,13 @@ describe("Test Accounts service", () => {
 		});
 
 		it("should unlink user from google via meta", async () => {
-			const res = await broker.call("v1.accounts.unlink", {
-				provider: "google"
-			}, { meta: { userID: savedUser.id } });
+			const res = await broker.call(
+				"v1.accounts.unlink",
+				{
+					provider: "google"
+				},
+				{ meta: { userID: savedUser.id } }
+			);
 
 			expect(res).toEqual({
 				...savedUser,
@@ -1289,16 +1394,13 @@ describe("Test Accounts service", () => {
 				}
 			});
 		});
-
 	});
 
 	describe("Test `passwordless` action", () => {
-
 		const user = {
 			username: "user10",
 			email: "user10@kantab.io",
-			firstName: "User",
-			lastName: "Ten"
+			fullName: "User Ten"
 		};
 
 		let savedUser;
@@ -1410,17 +1512,14 @@ describe("Test Accounts service", () => {
 				expect(err.type).toBe("TOKEN_EXPIRED");
 			}
 		});
-
 	});
 
 	describe("Test forgot password flow", () => {
-
 		const user = {
 			username: "user11",
 			password: "password11",
 			email: "user11@kantab.io",
-			firstName: "User",
-			lastName: "Eleven"
+			fullName: "User Eleven"
 		};
 
 		let savedUser;
@@ -1434,9 +1533,11 @@ describe("Test Accounts service", () => {
 		});
 
 		describe("Test `forgotPassword` action", () => {
-
 			it("should login with username & original password", async () => {
-				const res = await broker.call("v1.accounts.login", { email: user.email, password: user.password });
+				const res = await broker.call("v1.accounts.login", {
+					email: user.email,
+					password: user.password
+				});
 
 				expect(res).toEqual({
 					token: expect.any(String)
@@ -1490,25 +1591,33 @@ describe("Test Accounts service", () => {
 			it("should generate token and call sendMail", async () => {
 				service.sendMail.mockClear();
 
-				const res = await broker.call("v1.accounts.forgotPassword", { email: "user11@kantab.io" });
+				const res = await broker.call("v1.accounts.forgotPassword", {
+					email: "user11@kantab.io"
+				});
 
 				expect(res).toBe(true);
 
 				expect(service.sendMail).toHaveBeenCalledTimes(1);
-				expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), expect.any(Object), "reset-password", {
-					token: expect.any(String)
-				});
+				expect(service.sendMail).toHaveBeenCalledWith(
+					expect.any(Context),
+					expect.any(Object),
+					"reset-password",
+					{
+						token: expect.any(String)
+					}
+				);
 				resetToken = service.sendMail.mock.calls[0][3].token;
 			});
-
 		});
 
 		describe("Test `resetPassword` action", () => {
-
 			it("should throw error if token is not exist", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.resetPassword", { token: "12345", password: "newpass1234" });
+					await broker.call("v1.accounts.resetPassword", {
+						token: "12345",
+						password: "newpass1234"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -1522,7 +1631,10 @@ describe("Test Accounts service", () => {
 
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+					await broker.call("v1.accounts.resetPassword", {
+						token: resetToken,
+						password: "newpass1234"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -1536,12 +1648,15 @@ describe("Test Accounts service", () => {
 			it("should throw error if token is expired", async () => {
 				await broker.call("v1.accounts.update", {
 					id: savedUser.id,
-					resetTokenExpires: Date.now() - (3600 * 1000) - 5000
+					resetTokenExpires: Date.now() - 3600 * 1000 - 5000
 				});
 
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+					await broker.call("v1.accounts.resetPassword", {
+						token: resetToken,
+						password: "newpass1234"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -1551,26 +1666,36 @@ describe("Test Accounts service", () => {
 
 				await broker.call("v1.accounts.update", {
 					id: savedUser.id,
-					resetTokenExpires: Date.now() + (3600 * 1000)
+					resetTokenExpires: Date.now() + 3600 * 1000
 				});
 			});
 
 			it("should return token if token is valid and not expired", async () => {
 				service.sendMail.mockClear();
-				const res = await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+				const res = await broker.call("v1.accounts.resetPassword", {
+					token: resetToken,
+					password: "newpass1234"
+				});
 
 				expect(res).toEqual({
 					token: expect.any(String)
 				});
 
 				expect(service.sendMail).toHaveBeenCalledTimes(1);
-				expect(service.sendMail).toHaveBeenCalledWith(expect.any(Context), expect.any(Object), "password-changed");
+				expect(service.sendMail).toHaveBeenCalledWith(
+					expect.any(Context),
+					expect.any(Object),
+					"password-changed"
+				);
 			});
 
 			it("should not accept token multiple times", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.resetPassword", { token: resetToken, password: "newpass1234" });
+					await broker.call("v1.accounts.resetPassword", {
+						token: resetToken,
+						password: "newpass1234"
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -1580,7 +1705,10 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should login with username & new password", async () => {
-				const res = await broker.call("v1.accounts.login", { email: user.email, password: "newpass1234" });
+				const res = await broker.call("v1.accounts.login", {
+					email: user.email,
+					password: "newpass1234"
+				});
 
 				expect(res).toEqual({
 					token: expect.any(String)
@@ -1590,7 +1718,10 @@ describe("Test Accounts service", () => {
 			it("should not login with username & original password", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("v1.accounts.login", { email: user.email, password: user.password });
+					await broker.call("v1.accounts.login", {
+						email: user.email,
+						password: user.password
+					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
@@ -1598,19 +1729,15 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ERR_WRONG_PASSWORD");
 				}
 			});
-
 		});
-
 	});
 
 	describe("Test `disable` & `enable` actions", () => {
-
 		const user = {
 			//username: "user12",
 			password: "password12",
 			email: "user12@kantab.io",
-			firstName: "User",
-			lastName: "Twelve"
+			fullName: "User Twelve"
 		};
 
 		let savedUser;
@@ -1689,5 +1816,4 @@ describe("Test Accounts service", () => {
 			}
 		});
 	});
-
 });

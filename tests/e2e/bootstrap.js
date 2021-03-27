@@ -1,10 +1,10 @@
 "use strict";
 
-const chalk = require("chalk");
+const kleur = require("kleur");
 
 module.exports = broker => {
 
-	console.log(chalk.magenta.bold("Starting Cypress for End-to-End testing..."));
+	console.log(kleur.magenta().bold("Starting Cypress for End-to-End testing..."));
 
 	// Redirect Cypress logs to Moleculer logger
 	/*
@@ -13,7 +13,7 @@ module.exports = broker => {
 	const logStream = new stream.Stream();
 
 	logStream.writable = true;
-	logStream.write = data => logger.info(chalk.bgMagenta.bold.white("CYPRESS:"), data.toString("utf8").trim());
+	logStream.write = data => logger.info(kleur.bgMagenta().bold().white("CYPRESS:"), data.toString("utf8").trim());
 	*/
 
 	// Execute Cypress
@@ -30,7 +30,7 @@ module.exports = broker => {
 	runner.on("error", async () => await broker.stop());
 	runner.on("exit", async code => {
 		console.log("Cypress exited", code);
-		await broker.stop();
+		broker.stop();
 		process.exit(code);
 	});
 };

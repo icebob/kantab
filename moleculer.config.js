@@ -2,29 +2,31 @@
 
 const { inspect } = require("util");
 
+const LOGGERS = [
+	{
+		type: "Console",
+		options: {
+			formatter: "short",
+			moduleColors: true,
+			//autoPadding: true
+			objectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 })
+		}
+	},
+	{
+		type: "File",
+		options: {
+			folder: "./logs",
+			formatter: "full"
+		}
+	}
+];
+
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
 	namespace: "",
 	nodeID: null,
 
-	logger: process.env.TEST_E2E !== "run" ? [
-		{
-			type: "Console",
-			options: {
-				formatter: "short",
-				moduleColors: true,
-				//autoPadding: true
-				objectPrinter: o => inspect(o, { depth: 4, colors: true, breakLength: 100 }),
-			}
-		},
-		{
-			type: "File",
-			options: {
-				folder: "./logs",
-				formatter: "full",
-			}
-		}
-	] : false,
+	logger: process.env.TEST_E2E == "run" ? false : LOGGERS,
 	logLevel: "info",
 
 	serializer: "JSON",
@@ -45,7 +47,7 @@ module.exports = {
 
 	tracking: {
 		enabled: false,
-		shutdownTimeout: 5000,
+		shutdownTimeout: 5000
 	},
 
 	disableBalancer: false,
@@ -67,14 +69,11 @@ module.exports = {
 	bulkhead: {
 		enabled: false,
 		concurrency: 10,
-		maxQueueSize: 100,
+		maxQueueSize: 100
 	},
 
-	validation: true,
-	validator: null,
-
 	tracing: {
-		enabled: true,
+		enabled: false,
 		events: true,
 		exporter: [
 			{
@@ -91,32 +90,25 @@ module.exports = {
 	internalServices: true,
 	internalMiddlewares: true,
 
-	hotReload: false,
-
 	// Register custom middlewares
 	middlewares: [
 		require("./backend/middlewares/CheckPermissions"),
-		require("./backend/middlewares/FindEntity"),
+		require("./backend/middlewares/FindEntity")
 	],
 
 	// Called after broker created.
-	created(broker) {
-
-	},
+	created(broker) {},
 
 	// Called after broker starte.
 	started(broker) {
 		if (process.env.TEST_E2E) {
+			broker.loadService("./tests/e2e/maildev.service.js");
 			require("./tests/e2e/bootstrap")(broker);
 		}
 	},
 
 	// Called after broker stopped.
-	stopped(broker) {
-
-	},
+	stopped(broker) {},
 
 	replCommands: null
 };
-
-

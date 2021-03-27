@@ -1,0 +1,49 @@
+name: CI test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+
+    - name: Install dependencies
+      run: npm i
+
+    - name: Install dependencies in frontend
+      run: npm i
+      working-directory: frontend
+
+    - name: Build frontend
+      run: npm run build
+      working-directory: frontend
+
+    - name: Run unit tests
+      run: npm test
+
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@1.3.0
+      with:
+        mongodb-version: 4.4
+
+    - name: Run E2E tests
+      run: npm run test:e2e
+      env:
+        JWT_SECRET: 1NFgVrWC3n1Nl05c7RzXhlikjARjvxVu3CWUlM5dyAnKftHURE
+        HASHID_SALT: RzuPMmvUSV1JcRS8VdTb08ADJ2voAmvcnQXFnd4J1YU6cnfL3s
+
+
+    - name: Upload E2E videos
+      uses: actions/upload-artifact@v2
+      with:
+        name: videos
+        path: |
+          tests/e2e/videos
+      if: failure()

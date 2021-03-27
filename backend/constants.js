@@ -9,5 +9,5 @@ module.exports = {
 	VISIBILITY_PRIVATE: "private",
 	VISIBILITY_PROTECTED: "protected",
 	VISIBILITY_PUBLIC: "public",
-	VISIBILITY_PUBLISHED: "published",
+	VISIBILITY_PUBLISHED: "published"
 };

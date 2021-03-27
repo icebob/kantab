@@ -1,7 +1,5 @@
 // https://docs.cypress.io/api/introduction/api.html
 
-const mailtrap = require("../../util/mailtrap");
-
 describe("Test login page with username & password", () => {
 	//beforeEach(() => cy.visit("/login"));
 
@@ -47,16 +45,20 @@ describe("Test login page with passwordless", () => {
 		cy.wait(2000);
 		cy.get(".alert.success").then(() => {
 
-			return mailtrap.getTokenFromMessage(null, "test@kantab.io", /passwordless\?token=(\w+)/g).then(({ token, messageID }) => {
-				// Delete message
-				return mailtrap.deleteMessage(null, messageID).then(() => {
-					cy.visit(`/passwordless?token=${token}`);
-					cy.url().should("equal", `${baseUrl}/`);
-					cy.contains("h4", "Home");
-				});
+			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
+				recipient: "test@kantab.io",
+				pattern: "passwordless\\?token=(\\w+)"
+			}).then(response => {
+				expect(response.status).to.eq(200);
+				expect(response.body).to.be.a("string");
+				const token = response.body;
+
+				cy.visit(`/passwordless?token=${token}`);
+				cy.url().should("equal", `${baseUrl}/`);
+				cy.contains("h4", "Home");
+
+				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
 		});
 	});
-
-	after(() => mailtrap.cleanInbox());
 });

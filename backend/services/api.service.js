@@ -1,58 +1,24 @@
 "use strict";
 
-const ApiGateway 		= require("moleculer-web");
-const _ 				= require("lodash");
-const helmet 			= require("helmet");
-const fs 				= require("fs");
-const cookie 			= require("cookie");
-const C 				= require("../constants");
+const ApiGateway = require("moleculer-web");
+const _ = require("lodash");
+const helmet = require("helmet");
+const history = require("connect-history-api-fallback");
+const fs = require("fs");
+const cookie = require("cookie");
+const C = require("../constants");
 
-const PassportMixin 	= require("../mixins/passport.mixin");
-const I18NextMixin 		= require("../mixins/i18next.mixin");
+const PassportMixin = require("../mixins/passport.mixin");
+const I18NextMixin = require("../mixins/i18next.mixin");
 const { ApolloService } = require("moleculer-apollo-server");
-const OpenApiMixin 		= require("../mixins/openapi.mixin");
-const SocketIOMixin		= require("moleculer-io");
+const OpenApiMixin = require("../mixins/openapi.mixin");
+const SocketIOMixin = require("moleculer-io");
 
-const { GraphQLError } 				= require("graphql");
-const Kind							= require("graphql/language").Kind;
+const { GraphQLError } = require("graphql");
+const Kind = require("graphql/language").Kind;
 
-const depthLimit 					= require("graphql-depth-limit");
+const depthLimit = require("graphql-depth-limit");
 const { createComplexityLimitRule } = require("graphql-validation-complexity");
-
-/**
- * Initialize Webpack middleware in development
- */
-function initWebpackMiddlewares() {
-	if (process.env.NODE_ENV == "production")
-		return [];
-
-	const webpack	 		= require("webpack");
-	const devMiddleware 	= require("webpack-dev-middleware");
-	const hotMiddleware 	= require("webpack-hot-middleware");
-	const config 			= _.cloneDeep(require("@vue/cli-service/webpack.config.js"));
-
-	config.entry.app.unshift("webpack-hot-middleware/client");
-	//require("fs").writeFileSync("./webpack.generated.config.js", JSON.stringify(config, null, 4), "utf8");
-	const compiler 			= webpack(config);
-
-
-	return [
-		// Webpack middleware
-		devMiddleware(compiler, {
-			noInfo: true,
-			publicPath: config.output.publicPath,
-			headers: { "Access-Control-Allow-Origin": "*" },
-			stats: { colors: true }
-		}),
-
-		// Webpack hot replacement
-		hotMiddleware(compiler, {
-			log: console.info
-		})
-	];
-}
-
-
 
 module.exports = {
 	name: "api",
@@ -80,7 +46,6 @@ module.exports = {
 
 		// GraphQL
 		ApolloService({
-
 			typeDefs: `
 				scalar Date
 			`,
@@ -94,8 +59,7 @@ module.exports = {
 						return value.getTime(); // value sent to the client
 					},
 					__parseLiteral(ast) {
-						if (ast.kind === Kind.INT)
-							return parseInt(ast.value, 10); // ast value is always in string format
+						if (ast.kind === Kind.INT) return parseInt(ast.value, 10); // ast value is always in string format
 
 						return null;
 					}
@@ -104,17 +68,13 @@ module.exports = {
 
 			routeOptions: {
 				authentication: true,
-				cors: true,
+				cors: true
 			},
 
 			// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
 			serverOptions: {
 				tracing: true,
 				introspection: true,
-
-				engine: {
-					apiKey: process.env.APOLLO_ENGINE_KEY
-				},
 
 				validationRules: [
 					depthLimit(10),
@@ -140,7 +100,10 @@ module.exports = {
 		port: process.env.PORT || 4000,
 
 		use: [
-			helmet()
+			helmet({
+				// It needs that GraphQL Playground and OpenAPI UI work
+				contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false
+			})
 		],
 
 		routes: [
@@ -150,11 +113,7 @@ module.exports = {
 			{
 				path: "/api",
 
-				whitelist: [
-					"v1.accounts.**",
-					"v1.boards.**",
-					"v1.accounts.**"
-				],
+				whitelist: ["v1.accounts.**", "v1.boards.**", "v1.accounts.**", "maildev.**"],
 
 				etag: true,
 
@@ -174,7 +133,7 @@ module.exports = {
 				bodyParsers: {
 					json: { limit: "2MB" },
 					urlencoded: { extended: true, limit: "2MB" }
-				},
+				}
 			},
 
 			/**
@@ -182,24 +141,11 @@ module.exports = {
 			 */
 			{
 				path: "/",
-
-				use: [
-					// handle fallback for HTML5 history API
-					require("connect-history-api-fallback")(),
-
-					// Webpack middlewares
-					...initWebpackMiddlewares(),
-
-					// Serve static
-					ApiGateway.serveStatic("./static"),
-				],
-
-				// Action aliases
-				aliases: {
-				},
+				use: [history(), ApiGateway.serveStatic("public", {})],
 
 				mappingPolicy: "restrict",
-			},
+				logging: false
+			}
 		]
 	},
 
@@ -224,8 +170,7 @@ module.exports = {
 			// Get JWT token from Authorization header
 			if (!token) {
 				const auth = req.headers["authorization"];
-				if (auth && auth.startsWith("Bearer "))
-					token = auth.slice(7);
+				if (auth && auth.startsWith("Bearer ")) token = auth.slice(7);
 			}
 
 			ctx.meta.roles = [C.ROLE_EVERYONE];
@@ -234,15 +179,18 @@ module.exports = {
 				// Verify JWT token
 				const user = await ctx.call("v1.accounts.resolveToken", { token });
 				if (user) {
-					this.logger.info("User authenticated via JWT.", { username: user.username, email: user.email, id: user.id });
+					this.logger.info("User authenticated via JWT.", {
+						username: user.username,
+						email: user.email,
+						id: user.id
+					});
 
 					ctx.meta.roles.push(C.ROLE_AUTHENTICATED);
-					if (Array.isArray(user.roles))
-						ctx.meta.roles.push(...user.roles);
+					if (Array.isArray(user.roles)) ctx.meta.roles.push(...user.roles);
 					ctx.meta.token = token;
 					ctx.meta.userID = user.id;
 					// Reduce user fields (it will be transferred to other nodes)
-					return _.pick(user, ["id", "email", "username", "firstName", "lastName", "avatar"]);
+					return _.pick(user, ["id", "email", "username", "fullName", "avatar"]);
 				}
 				return null;
 			}
@@ -253,10 +201,10 @@ module.exports = {
 		async signInSocialUser(params, cb) {
 			try {
 				cb(null, await this.broker.call("v1.accounts.socialLogin", params));
-			} catch(err) {
+			} catch (err) {
 				cb(err);
 			}
-		},
+		}
 	},
 
 	events: {

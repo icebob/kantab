@@ -1,10 +1,10 @@
 "use strict";
 
-const _ 				= require("lodash");
+const _ = require("lodash");
 
-const DbService 		= require("../mixins/db.mixin");
-const CacheCleaner 		= require("../mixins/cache.cleaner.mixin");
-const ConfigLoader 		= require("../mixins/config.mixin");
+const DbService = require("../mixins/db.mixin");
+const CacheCleaner = require("../mixins/cache.cleaner.mixin");
+const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
@@ -16,20 +16,14 @@ module.exports = {
 
 	mixins: [
 		DbService("card-attachments"),
-		CacheCleaner([
-			"cache.clean.cards",
-			"cache.clean.card.attachments",
-			"cache.clean.accounts"
-		]),
-		ConfigLoader([
-		])
+		CacheCleaner(["cache.clean.cards", "cache.clean.card.attachments", "cache.clean.accounts"]),
+		ConfigLoader([])
 	],
 
 	/**
 	 * Service dependencies
 	 */
-	dependencies: [
-	],
+	dependencies: [],
 
 	/**
 	 * Service settings
@@ -49,7 +43,7 @@ module.exports = {
 
 			"options",
 			"createdAt",
-			"updatedAt",
+			"updatedAt"
 		]
 	},
 
@@ -63,40 +57,31 @@ module.exports = {
 		find: {},
 		get: {},
 		update: {},
-		remove: {},
+		remove: {}
 	},
 
 	/**
 	 * Events
 	 */
-	events: {
-
-	},
+	events: {},
 
 	/**
 	 * Methods
 	 */
-	methods: {
-
-	},
+	methods: {},
 
 	/**
 	 * Service created lifecycle event handler
 	 */
-	created() {
-
-	},
+	created() {},
 
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler
 	 */
-	stopped() {
-
-	}
+	stopped() {}
 };
