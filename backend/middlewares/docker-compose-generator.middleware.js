@@ -38,7 +38,7 @@ module.exports = {
 			const serviceName =
 				svc.metadata.dockerCompose && svc.metadata.dockerCompose.name
 					? svc.metadata.dockerCompose.name
-					: svc.fullName.replace(/[^\w\d]/g, "-");
+					: svc.fullName.replace(/[^\w\d]/g, "_");
 			res.services[serviceName] = schema;
 		});
 

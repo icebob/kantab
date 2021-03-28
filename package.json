@@ -15,8 +15,10 @@
     "test:backend": "jest --coverage --no-cache",
     "test:e2e": "cross-env TEST_E2E=run MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "coverall": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "dc:up": "docker-compose up --build -d",
-    "dc:down": "docker-compose down"
+    "build:docker": "docker build -t kantab:latest .",
+    "dc:up": "docker-compose up -d",
+    "dc:down": "docker-compose down",
+    "cli:prod": "moleculer connect --ns kantab-prod nats://localhost:4222"
   },
   "keywords": [
     "microservices",
@@ -84,7 +86,6 @@
     "pug": "^3.0.2",
     "speakeasy": "2.0.0",
     "swagger-ui-dist": "^3.45.1",
-    "swagger-ui-express": "^4.1.6",
     "uid-generator": "2.0.0"
   },
   "engines": {

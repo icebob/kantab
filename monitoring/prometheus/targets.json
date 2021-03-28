@@ -2,10 +2,118 @@
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "icebob-pc-19312"
+      "nodeID": "5424e546deb1-19"
     },
     "targets": [
-      "ICEBOB-PC:3030"
+      "5424e546deb1:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "f0fc1119d4fa-18"
+    },
+    "targets": [
+      "f0fc1119d4fa:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "40b03905a929-19"
+    },
+    "targets": [
+      "40b03905a929:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "b01f155e632e-19"
+    },
+    "targets": [
+      "b01f155e632e:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "5801e596a203-19"
+    },
+    "targets": [
+      "5801e596a203:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "f9bc4904ee45-20"
+    },
+    "targets": [
+      "f9bc4904ee45:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "a41a6d3495f3-21"
+    },
+    "targets": [
+      "a41a6d3495f3:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "a203676c7a0d-19"
+    },
+    "targets": [
+      "a203676c7a0d:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "b320ec918539-19"
+    },
+    "targets": [
+      "b320ec918539:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "5445356cf8c4-19"
+    },
+    "targets": [
+      "5445356cf8c4:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "756c0260ce8d-21"
+    },
+    "targets": [
+      "756c0260ce8d:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "d3c295421c8a-19"
+    },
+    "targets": [
+      "d3c295421c8a:3030"
+    ]
+  },
+  {
+    "labels": {
+      "job": "kantab",
+      "nodeID": "61218b309a44-19"
+    },
+    "targets": [
+      "61218b309a44:3030"
     ]
   }
 ]

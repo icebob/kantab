@@ -7,7 +7,7 @@ const ApiGateway = require("moleculer-web");
 const { MoleculerServerError } = require("moleculer").Errors;
 
 //const SwaggerUI = require("swagger-ui-dist");
-const SwaggerUI = require("swagger-ui-express");
+const SwaggerUI = require("../libs/swagger-ui");
 const pkg = require("../../package.json");
 
 module.exports = function (mixinOptions) {

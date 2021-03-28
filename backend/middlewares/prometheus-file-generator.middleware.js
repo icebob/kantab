@@ -14,7 +14,10 @@ module.exports = function (opts) {
 	 * More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config
 	 */
 	async function regenerateTargets(broker) {
-		const nodeList = await broker.registry.getNodeList({ onlyAvailable: true });
+		let nodeList = await broker.registry.getNodeList({ onlyAvailable: true });
+
+		// Skip CLI clients
+		nodeList = nodeList.filter(node => !node.id.startsWith("cli-"));
 
 		const targets = nodeList.map(node => ({
 			labels: { job: opts.jobName || node.hostname, nodeID: node.id },

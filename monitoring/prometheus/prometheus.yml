@@ -37,6 +37,7 @@ scrape_configs:
 
   # Moleculer exporter
   - job_name: 'moleculer'
-    scrape_interval: 5s
-    static_configs:
-      - targets: ['metrics:3030']
+    file_sd_configs:
+      - files:
+          - "/etc/prometheus/targets.json"
+        refresh_interval: 5s

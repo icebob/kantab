@@ -244,19 +244,13 @@ module.exports = {
 			},
 
 			serviceTemplate: {
-				build: {
-					context: "."
-				},
 				image: "kantab",
-				environment: {
-					SERVICEDIR: "backend/services",
-					TRANSPORTER: "nats://nats:4222",
-					MONGO_URI: "mongodb://mongo:27017/kantab"
-				},
+				env_file: "docker-compose.env",
 				volumes: [
 					"app_data:/app/data",
 					"./monitoring/prometheus:/app/monitoring/prometheus"
 				],
+				// Prometheus metric port
 				expose: [3030],
 				depends_on: ["mongo", "nats", "redis"],
 				restart: "unless-stopped"
