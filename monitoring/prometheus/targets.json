@@ -2,118 +2,109 @@
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "7e62446aea29-21"
+      "nodeID": "bbee7ee61f46-19"
     },
     "targets": [
-      "7e62446aea29:3030"
+      "bbee7ee61f46:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "5d520629120a-21"
+      "nodeID": "6ce964bbbaeb-21"
     },
     "targets": [
-      "5d520629120a:3030"
+      "6ce964bbbaeb:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "2caa400b6791-19"
+      "nodeID": "678c3fda0bb0-19"
     },
     "targets": [
-      "2caa400b6791:3030"
+      "678c3fda0bb0:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "f10382482677-19"
+      "nodeID": "d69df32300c0-20"
     },
     "targets": [
-      "f10382482677:3030"
+      "d69df32300c0:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "b2e04faa47fb-19"
+      "nodeID": "2e0e7e078827-19"
     },
     "targets": [
-      "b2e04faa47fb:3030"
+      "2e0e7e078827:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "b5a1ed1750db-19"
+      "nodeID": "27a97cd7c554-19"
     },
     "targets": [
-      "b5a1ed1750db:3030"
+      "27a97cd7c554:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "222e89239d95-18"
+      "nodeID": "72295d6c33f9-19"
     },
     "targets": [
-      "222e89239d95:3030"
+      "72295d6c33f9:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "656c4ca13fd6-21"
+      "nodeID": "61055425ad78-19"
     },
     "targets": [
-      "656c4ca13fd6:3030"
+      "61055425ad78:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "276af431826f-19"
+      "nodeID": "6db15e1d8daf-20"
     },
     "targets": [
-      "276af431826f:3030"
+      "6db15e1d8daf:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "63a6fab5ccd8-19"
+      "nodeID": "c2febdfcd13d-19"
     },
     "targets": [
-      "63a6fab5ccd8:3030"
+      "c2febdfcd13d:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "4d812240a9ca-19"
+      "nodeID": "e680e59cd9a9-19"
     },
     "targets": [
-      "4d812240a9ca:3030"
+      "e680e59cd9a9:3030"
     ]
   },
   {
     "labels": {
       "job": "kantab",
-      "nodeID": "0b52807506d0-21"
+      "nodeID": "b93efbc5008d-19"
     },
     "targets": [
-      "0b52807506d0:3030"
-    ]
-  },
-  {
-    "labels": {
-      "job": "kantab",
-      "nodeID": "d40639c34bd0-20"
-    },
-    "targets": [
-      "d40639c34bd0:3030"
+      "b93efbc5008d:3030"
     ]
   }
 ]

@@ -16,6 +16,11 @@ http://<docker-ip>:9090
 ```
 ![](https://files.gitter.im/moleculerjs/moleculer/fi8l/image.png)
 
+The Docker Compose files contains the following Prometheus Exporters:
+- NATS Exporter
+- Redis Exporter
+- Mongo Exporter
+
 ### Grafana UI
 
 - **Username**: admin
@@ -25,6 +30,13 @@ http://<docker-ip>:9000
 ```
 
 ![](https://files.gitter.im/moleculerjs/moleculer/BpWN/image.png)
+
+The Grafana contains the following dashboards:
+- Moleculer
+- MongoDB
+- NATS Server Dashboard
+- Redis Dashboard
+- Prometheus
 
 ## Alert manager
 

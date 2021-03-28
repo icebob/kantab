@@ -35,8 +35,12 @@ services:
     image: traefik:2.4
     command:
       - '--api.insecure=true'
+      - '--entryPoints.http.address=:80'
       - '--providers.docker=true'
       - '--providers.docker.exposedbydefault=false'
+      - '--metrics.prometheus=true'
+      - '--entryPoints.metrics.address=:8082'
+      - '--metrics.prometheus.entryPoint=metrics'
     ports:
       - '3000:80'
       - '3001:8080'
@@ -56,7 +60,6 @@ services:
     ports:
       - '9090:9090'
     links:
-      - metrics
       - alertmanager:alertmanager
     restart: unless-stopped
   alertmanager:
@@ -78,8 +81,10 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning/
-    env_file:
-      - ./monitoring/grafana/config.monitoring
+      - ./monitoring/grafana/plugins/:/var/lib/grafana/plugins/
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
     restart: unless-stopped
   v1_accounts:
     image: kantab
@@ -114,6 +119,7 @@ services:
   api:
     labels:
       - traefik.enable=true
+      - traefik.http.routers.api.entrypoints=http
       - traefik.http.routers.api.rule=PathPrefix(`/`)
       - traefik.http.services.api.loadbalancer.server.port=4000
     image: kantab
@@ -267,21 +273,6 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: mail.service.js
-  metrics:
-    image: kantab
-    env_file: docker-compose.env
-    volumes:
-      - app_data:/app/data
-      - ./monitoring/prometheus:/app/monitoring/prometheus
-    expose:
-      - 3030
-    depends_on:
-      - mongo
-      - nats
-      - redis
-    restart: unless-stopped
-    environment:
-      SERVICES: metrics.service.js
 volumes:
   app_data:
     driver: local

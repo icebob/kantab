@@ -161,7 +161,7 @@ module.exports = {
 						image: "nats:2",
 						ports: ["4222:4222"],
 						restart: "unless-stopped",
-						command: ["nats-server", "-m", "8222"]
+						command: ["-m", "8222"]
 					},
 
 					nats_exporter: {
@@ -199,8 +199,12 @@ module.exports = {
 						image: "traefik:2.4",
 						command: [
 							"--api.insecure=true", // Don't do that in production!
+							"--entryPoints.http.address=:80",
 							"--providers.docker=true",
-							"--providers.docker.exposedbydefault=false"
+							"--providers.docker.exposedbydefault=false",
+							"--metrics.prometheus=true",
+							"--entryPoints.metrics.address=:8082",
+							"--metrics.prometheus.entryPoint=metrics"
 						],
 						ports: ["3000:80", "3001:8080"],
 						volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"],
@@ -220,7 +224,7 @@ module.exports = {
 							"--web.console.templates=/usr/share/prometheus/consoles"
 						],
 						ports: ["9090:9090"],
-						links: ["metrics", "alertmanager:alertmanager"],
+						links: ["alertmanager:alertmanager"],
 						restart: "unless-stopped"
 					},
 
@@ -241,9 +245,13 @@ module.exports = {
 						ports: ["9000:3000"],
 						volumes: [
 							"grafana_data:/var/lib/grafana",
-							"./monitoring/grafana/provisioning/:/etc/grafana/provisioning/"
+							"./monitoring/grafana/provisioning/:/etc/grafana/provisioning/",
+							"./monitoring/grafana/plugins/:/var/lib/grafana/plugins/"
 						],
-						env_file: ["./monitoring/grafana/config.monitoring"],
+						environment: [
+							"GF_SECURITY_ADMIN_PASSWORD=admin",
+							"GF_USERS_ALLOW_SIGN_UP=false"
+						],
 						restart: "unless-stopped"
 					}
 				},

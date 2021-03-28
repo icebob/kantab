@@ -47,6 +47,11 @@ scrape_configs:
     static_configs:
     - targets: ['mongo_exporter:9216']
 
+  # Traefik
+  - job_name: 'traefik'
+    static_configs:
+    - targets: ['traefik:8082']
+
   # Moleculer exporter
   - job_name: 'moleculer'
     file_sd_configs:

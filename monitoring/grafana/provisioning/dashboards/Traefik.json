@@ -1,30 +1,4 @@
 {
-	"__requires": [
-	  {
-		"type": "panel",
-		"id": "singlestat",
-		"name": "Singlestat",
-		"version": ""
-	  },
-	  {
-		"type": "panel",
-		"id": "graph",
-		"name": "Graph",
-		"version": ""
-	  },
-	  {
-		"type": "grafana",
-		"id": "grafana",
-		"name": "Grafana",
-		"version": "3.1.1"
-	  },
-	  {
-		"type": "datasource",
-		"id": "prometheus",
-		"name": "Prometheus",
-		"version": "1.0.0"
-	  }
-	],
 	"annotations": {
 	  "list": [
 		{
@@ -38,12 +12,12 @@
 		}
 	  ]
 	},
-	"description": "Redis Dashboard for Prometheus Redis Exporter 1.x",
+	"description": "Simple dashboard for Traefik 2",
 	"editable": true,
-	"gnetId": 763,
+	"gnetId": 11462,
 	"graphTooltip": 0,
-	"id": 5,
-	"iteration": 1557495413494,
+	"id": 10,
+	"iteration": 1616959461927,
 	"links": [],
 	"panels": [
 	  {
@@ -51,14 +25,11 @@
 		"colorBackground": false,
 		"colorValue": false,
 		"colors": [
-		  "rgba(245, 54, 54, 0.9)",
+		  "#299c46",
 		  "rgba(237, 129, 40, 0.89)",
-		  "rgba(50, 172, 45, 0.97)"
+		  "#d44a3a"
 		],
 		"datasource": "Prometheus",
-		"decimals": 0,
-		"editable": true,
-		"error": false,
 		"format": "s",
 		"gauge": {
 		  "maxValue": 100,
@@ -68,14 +39,13 @@
 		  "thresholdMarkers": true
 		},
 		"gridPos": {
-		  "h": 7,
-		  "w": 2,
+		  "h": 6,
+		  "w": 3,
 		  "x": 0,
 		  "y": 0
 		},
-		"id": 9,
+		"id": 22,
 		"interval": null,
-		"isNew": true,
 		"links": [],
 		"mappingType": 1,
 		"mappingTypes": [
@@ -91,6 +61,7 @@
 		"maxDataPoints": 100,
 		"nullPointMode": "connected",
 		"nullText": null,
+		"options": {},
 		"postfix": "",
 		"postfixFontSize": "50%",
 		"prefix": "",
@@ -106,25 +77,21 @@
 		  "fillColor": "rgba(31, 118, 189, 0.18)",
 		  "full": false,
 		  "lineColor": "rgb(31, 120, 193)",
-		  "show": true
+		  "show": false
 		},
 		"tableColumn": "",
 		"targets": [
 		  {
-			"expr": "max(max_over_time(redis_uptime_in_seconds{instance=~\"$instance\"}[$__interval]))",
+			"expr": "time() - process_start_time_seconds{job=\"$job\"}",
 			"format": "time_series",
-			"interval": "",
 			"intervalFactor": 2,
-			"legendFormat": "",
-			"metric": "",
-			"refId": "A",
-			"step": 1800
+			"refId": "A"
 		  }
 		],
 		"thresholds": "",
 		"title": "Uptime",
 		"type": "singlestat",
-		"valueFontSize": "70%",
+		"valueFontSize": "80%",
 		"valueMaps": [
 		  {
 			"op": "=",
@@ -137,16 +104,14 @@
 	  {
 		"cacheTimeout": null,
 		"colorBackground": false,
-		"colorValue": false,
+		"colorValue": true,
 		"colors": [
-		  "rgba(245, 54, 54, 0.9)",
-		  "rgba(237, 129, 40, 0.89)",
-		  "rgba(50, 172, 45, 0.97)"
+		  "#37872D",
+		  "#37872D",
+		  "#C4162A"
 		],
 		"datasource": "Prometheus",
 		"decimals": 0,
-		"editable": true,
-		"error": false,
 		"format": "none",
 		"gauge": {
 		  "maxValue": 100,
@@ -156,15 +121,13 @@
 		  "thresholdMarkers": true
 		},
 		"gridPos": {
-		  "h": 7,
-		  "w": 2,
-		  "x": 2,
+		  "h": 6,
+		  "w": 3,
+		  "x": 3,
 		  "y": 0
 		},
-		"hideTimeOverride": true,
-		"id": 12,
+		"id": 26,
 		"interval": null,
-		"isNew": true,
 		"links": [],
 		"mappingType": 1,
 		"mappingTypes": [
@@ -180,10 +143,11 @@
 		"maxDataPoints": 100,
 		"nullPointMode": "connected",
 		"nullText": null,
+		"options": {},
 		"postfix": "",
 		"postfixFontSize": "50%",
 		"prefix": "",
-		"prefixFontSize": "50%",
+		"prefixFontSize": "200%",
 		"rangeMaps": [
 		  {
 			"from": "null",
@@ -195,26 +159,24 @@
 		  "fillColor": "rgba(31, 118, 189, 0.18)",
 		  "full": false,
 		  "lineColor": "rgb(31, 120, 193)",
-		  "show": true
+		  "show": false
 		},
 		"tableColumn": "",
 		"targets": [
 		  {
-			"expr": "redis_connected_clients{instance=~\"$instance\"}",
+			"expr": "sum(increase(traefik_service_requests_total{code=\"404\",protocol=~\"$protocol\"}[$interval]))",
 			"format": "time_series",
 			"intervalFactor": 2,
 			"legendFormat": "",
-			"metric": "",
+			"metric": "traefik_requests_total",
 			"refId": "A",
-			"step": 2
+			"step": 60
 		  }
 		],
-		"thresholds": "",
-		"timeFrom": "1m",
-		"timeShift": null,
-		"title": "Clients",
+		"thresholds": "0,1",
+		"title": "404 Error Count",
 		"type": "singlestat",
-		"valueFontSize": "80%",
+		"valueFontSize": "200%",
 		"valueMaps": [
 		  {
 			"op": "=",
@@ -222,6 +184,136 @@
 			"value": "null"
 		  }
 		],
+		"valueName": "max"
+	  },
+	  {
+		"cacheTimeout": null,
+		"colorBackground": false,
+		"colorValue": true,
+		"colors": [
+		  "#37872D",
+		  "#C4162A",
+		  "#C4162A"
+		],
+		"datasource": "Prometheus",
+		"decimals": 0,
+		"format": "none",
+		"gauge": {
+		  "maxValue": 100,
+		  "minValue": 0,
+		  "show": false,
+		  "thresholdLabels": false,
+		  "thresholdMarkers": true
+		},
+		"gridPos": {
+		  "h": 6,
+		  "w": 3,
+		  "x": 6,
+		  "y": 0
+		},
+		"id": 32,
+		"interval": null,
+		"links": [],
+		"mappingType": 1,
+		"mappingTypes": [
+		  {
+			"name": "value to text",
+			"value": 1
+		  },
+		  {
+			"name": "range to text",
+			"value": 2
+		  }
+		],
+		"maxDataPoints": 100,
+		"nullPointMode": "connected",
+		"nullText": null,
+		"options": {},
+		"postfix": "",
+		"postfixFontSize": "50%",
+		"prefix": "",
+		"prefixFontSize": "200%",
+		"rangeMaps": [
+		  {
+			"from": "null",
+			"text": "N/A",
+			"to": "null"
+		  }
+		],
+		"sparkline": {
+		  "fillColor": "rgba(31, 118, 189, 0.18)",
+		  "full": false,
+		  "lineColor": "rgb(31, 120, 193)",
+		  "show": false,
+		  "ymax": null,
+		  "ymin": null
+		},
+		"tableColumn": "",
+		"targets": [
+		  {
+			"expr": "sum(increase(traefik_service_requests_total{code=\"503\",protocol=~\"$protocol\"}[$interval]))",
+			"refId": "A"
+		  }
+		],
+		"thresholds": "0,1",
+		"timeFrom": null,
+		"timeShift": null,
+		"title": "503 Error count",
+		"type": "singlestat",
+		"valueFontSize": "200%",
+		"valueMaps": [
+		  {
+			"op": "=",
+			"text": "N/A",
+			"value": "null"
+		  }
+		],
+		"valueName": "max"
+	  },
+	  {
+		"aliasColors": {},
+		"breakPoint": "50%",
+		"cacheTimeout": null,
+		"combine": {
+		  "label": "Others",
+		  "threshold": 0
+		},
+		"datasource": "Prometheus",
+		"fontSize": "80%",
+		"format": "short",
+		"gridPos": {
+		  "h": 6,
+		  "w": 4,
+		  "x": 9,
+		  "y": 0
+		},
+		"id": 18,
+		"interval": null,
+		"legend": {
+		  "percentage": true,
+		  "show": true,
+		  "sort": null,
+		  "sortDesc": null,
+		  "values": true
+		},
+		"legendType": "Right side",
+		"links": [],
+		"maxDataPoints": 3,
+		"nullPointMode": "connected",
+		"options": {},
+		"pieType": "pie",
+		"strokeWidth": 1,
+		"targets": [
+		  {
+			"expr": "topk(5, sum(traefik_service_requests_total{protocol=~\"$protocol\"}) by (code))",
+			"format": "time_series",
+			"intervalFactor": 2,
+			"legendFormat": "{{code}}",
+			"refId": "A"
+		  }
+		],
+		"title": "Top 5 $protocol return code",
+		"type": "grafana-piechart-panel",
 		"valueName": "current"
 	  },
 	  {
@@ -229,32 +321,27 @@
 		"colorBackground": false,
 		"colorValue": false,
 		"colors": [
-		  "rgba(50, 172, 45, 0.97)",
+		  "#299c46",
 		  "rgba(237, 129, 40, 0.89)",
-		  "rgba(245, 54, 54, 0.9)"
+		  "#d44a3a"
 		],
 		"datasource": "Prometheus",
-		"decimals": 0,
-		"editable": true,
-		"error": false,
-		"format": "percent",
+		"format": "ms",
 		"gauge": {
 		  "maxValue": 100,
 		  "minValue": 0,
-		  "show": true,
+		  "show": false,
 		  "thresholdLabels": false,
 		  "thresholdMarkers": true
 		},
 		"gridPos": {
-		  "h": 7,
+		  "h": 6,
 		  "w": 4,
-		  "x": 4,
+		  "x": 13,
 		  "y": 0
 		},
-		"hideTimeOverride": true,
-		"id": 11,
+		"id": 20,
 		"interval": null,
-		"isNew": true,
 		"links": [],
 		"mappingType": 1,
 		"mappingTypes": [
@@ -270,6 +357,7 @@
 		"maxDataPoints": 100,
 		"nullPointMode": "connected",
 		"nullText": null,
+		"options": {},
 		"postfix": "",
 		"postfixFontSize": "50%",
 		"prefix": "",
@@ -290,19 +378,14 @@
 		"tableColumn": "",
 		"targets": [
 		  {
-			"expr": "100 * (redis_memory_used_bytes{instance=~\"$instance\"}  / redis_memory_max_bytes{instance=~\"$instance\"} )",
+			"expr": "sum(traefik_entrypoint_request_duration_seconds_sum) / sum(traefik_entrypoint_requests_total) * 1000",
 			"format": "time_series",
 			"intervalFactor": 2,
-			"legendFormat": "",
-			"metric": "",
-			"refId": "A",
-			"step": 2
+			"refId": "A"
 		  }
 		],
-		"thresholds": "80,95",
-		"timeFrom": "1m",
-		"timeShift": null,
-		"title": "Memory Usage",
+		"thresholds": "",
+		"title": "Average response time",
 		"type": "singlestat",
 		"valueFontSize": "80%",
 		"valueMaps": [
@@ -312,7 +395,7 @@
 			"value": "null"
 		  }
 		],
-		"valueName": "current"
+		"valueName": "avg"
 	  },
 	  {
 		"aliasColors": {},
@@ -320,737 +403,16 @@
 		"dashLength": 10,
 		"dashes": false,
 		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
 		"fill": 1,
-		"grid": {},
+		"fillGradient": 0,
 		"gridPos": {
-		  "h": 7,
-		  "w": 8,
-		  "x": 8,
+		  "h": 6,
+		  "w": 7,
+		  "x": 17,
 		  "y": 0
 		},
-		"id": 2,
-		"isNew": true,
-		"legend": {
-		  "avg": false,
-		  "current": false,
-		  "max": false,
-		  "min": false,
-		  "show": false,
-		  "total": false,
-		  "values": false
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "connected",
-		"percentage": false,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [],
-		"spaceLength": 10,
-		"stack": false,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "rate(redis_commands_processed_total{instance=~\"$instance\"}[1m])",
-			"format": "time_series",
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "",
-			"metric": "A",
-			"refId": "A",
-			"step": 240,
-			"target": ""
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Commands Executed / sec",
-		"tooltip": {
-		  "msResolution": false,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "cumulative"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"decimals": 2,
-		"editable": true,
-		"error": false,
-		"fill": 1,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 8,
-		  "x": 16,
-		  "y": 0
-		},
-		"id": 1,
-		"isNew": true,
-		"legend": {
-		  "avg": false,
-		  "current": false,
-		  "max": false,
-		  "min": false,
-		  "show": false,
-		  "total": false,
-		  "values": false
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "connected",
-		"percentage": true,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [],
-		"spaceLength": 10,
-		"stack": false,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "irate(redis_keyspace_hits_total{instance=~\"$instance\"}[5m])",
-			"format": "time_series",
-			"hide": false,
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "hits",
-			"metric": "",
-			"refId": "A",
-			"step": 240,
-			"target": ""
-		  },
-		  {
-			"expr": "irate(redis_keyspace_misses_total{instance=~\"$instance\"}[5m])",
-			"format": "time_series",
-			"hide": false,
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "misses",
-			"metric": "",
-			"refId": "B",
-			"step": 240,
-			"target": ""
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Hits / Misses per Sec",
-		"tooltip": {
-		  "msResolution": false,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "individual"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "short",
-			"label": "",
-			"logBase": 1,
-			"max": null,
-			"min": 0,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {
-		  "max": "#BF1B00"
-		},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
-		"fill": 1,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 12,
-		  "x": 0,
-		  "y": 7
-		},
-		"id": 7,
-		"isNew": true,
-		"legend": {
-		  "avg": false,
-		  "current": false,
-		  "hideEmpty": false,
-		  "hideZero": false,
-		  "max": false,
-		  "min": false,
-		  "show": true,
-		  "total": false,
-		  "values": false
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "null as zero",
-		"percentage": false,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [],
-		"spaceLength": 10,
-		"stack": false,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "redis_memory_used_bytes{instance=~\"$instance\"} ",
-			"format": "time_series",
-			"intervalFactor": 2,
-			"legendFormat": "used",
-			"metric": "",
-			"refId": "A",
-			"step": 240,
-			"target": ""
-		  },
-		  {
-			"expr": "redis_memory_max_bytes{instance=~\"$instance\"} ",
-			"format": "time_series",
-			"hide": false,
-			"intervalFactor": 2,
-			"legendFormat": "max",
-			"refId": "B",
-			"step": 240
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Total Memory Usage",
-		"tooltip": {
-		  "msResolution": false,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "cumulative"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "bytes",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": 0,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
-		"fill": 1,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 12,
-		  "x": 12,
-		  "y": 7
-		},
-		"id": 10,
-		"isNew": true,
-		"legend": {
-		  "avg": false,
-		  "current": false,
-		  "max": false,
-		  "min": false,
-		  "show": true,
-		  "total": false,
-		  "values": false
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "connected",
-		"percentage": false,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [],
-		"spaceLength": 10,
-		"stack": false,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "rate(redis_net_input_bytes_total{instance=~\"$instance\"}[5m])",
-			"format": "time_series",
-			"intervalFactor": 2,
-			"legendFormat": "{{ input }}",
-			"refId": "A",
-			"step": 240
-		  },
-		  {
-			"expr": "rate(redis_net_output_bytes_total{instance=~\"$instance\"}[5m])",
-			"format": "time_series",
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "{{ output }}",
-			"refId": "B",
-			"step": 240
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Network I/O",
-		"tooltip": {
-		  "msResolution": true,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "cumulative"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "bytes",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
-		"fill": 7,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 12,
-		  "x": 0,
-		  "y": 14
-		},
-		"id": 5,
-		"isNew": true,
-		"legend": {
-		  "alignAsTable": true,
-		  "avg": false,
-		  "current": true,
-		  "max": false,
-		  "min": false,
-		  "rightSide": true,
-		  "show": true,
-		  "total": false,
-		  "values": true
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "connected",
-		"percentage": false,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [],
-		"spaceLength": 10,
-		"stack": true,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "sum (redis_db_keys{instance=~\"$instance\"}) by (db)",
-			"format": "time_series",
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "{{ db }} ",
-			"refId": "A",
-			"step": 240,
-			"target": ""
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Total Items per DB",
-		"tooltip": {
-		  "msResolution": false,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "individual"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "none",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
-		"fill": 7,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 12,
-		  "x": 12,
-		  "y": 14
-		},
-		"id": 13,
-		"isNew": true,
-		"legend": {
-		  "avg": false,
-		  "current": false,
-		  "max": false,
-		  "min": false,
-		  "show": true,
-		  "total": false,
-		  "values": false
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "connected",
-		"percentage": false,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [],
-		"spaceLength": 10,
-		"stack": true,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "sum (redis_db_keys{instance=~\"$instance\"}) - sum (redis_db_keys_expiring{instance=~\"$instance\"}) ",
-			"format": "time_series",
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "not expiring",
-			"refId": "A",
-			"step": 240,
-			"target": ""
-		  },
-		  {
-			"expr": "sum (redis_db_keys_expiring{instance=~\"$instance\"}) ",
-			"format": "time_series",
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "expiring",
-			"metric": "",
-			"refId": "B",
-			"step": 240
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Expiring vs Not-Expiring Keys",
-		"tooltip": {
-		  "msResolution": false,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "individual"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {
-		  "evicts": "#890F02",
-		  "memcached_items_evicted_total{instance=\"172.17.0.1:9150\",job=\"prometheus\"}": "#890F02",
-		  "reclaims": "#3F6833"
-		},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
-		"fill": 1,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 12,
-		  "x": 0,
-		  "y": 21
-		},
-		"id": 8,
-		"isNew": true,
-		"legend": {
-		  "avg": false,
-		  "current": false,
-		  "max": false,
-		  "min": false,
-		  "show": true,
-		  "total": false,
-		  "values": false
-		},
-		"lines": true,
-		"linewidth": 2,
-		"links": [],
-		"nullPointMode": "connected",
-		"percentage": false,
-		"pointradius": 5,
-		"points": false,
-		"renderer": "flot",
-		"seriesOverrides": [
-		  {
-			"alias": "reclaims",
-			"yaxis": 2
-		  }
-		],
-		"spaceLength": 10,
-		"stack": false,
-		"steppedLine": false,
-		"targets": [
-		  {
-			"expr": "sum(rate(redis_expired_keys_total{instance=~\"$instance\"}[5m])) by (instance)",
-			"format": "time_series",
-			"hide": false,
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "expired",
-			"metric": "",
-			"refId": "A",
-			"step": 240,
-			"target": ""
-		  },
-		  {
-			"expr": "sum(rate(redis_evicted_keys_total{instance=~\"$instance\"}[5m])) by (instance)",
-			"format": "time_series",
-			"interval": "",
-			"intervalFactor": 2,
-			"legendFormat": "evicted",
-			"refId": "B",
-			"step": 240
-		  }
-		],
-		"thresholds": [],
-		"timeFrom": null,
-		"timeRegions": [],
-		"timeShift": null,
-		"title": "Expired / Evicted",
-		"tooltip": {
-		  "msResolution": false,
-		  "shared": true,
-		  "sort": 0,
-		  "value_type": "cumulative"
-		},
-		"type": "graph",
-		"xaxis": {
-		  "buckets": null,
-		  "mode": "time",
-		  "name": null,
-		  "show": true,
-		  "values": []
-		},
-		"yaxes": [
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  },
-		  {
-			"format": "short",
-			"label": null,
-			"logBase": 1,
-			"max": null,
-			"min": null,
-			"show": true
-		  }
-		],
-		"yaxis": {
-		  "align": false,
-		  "alignLevel": null
-		}
-	  },
-	  {
-		"aliasColors": {},
-		"bars": false,
-		"dashLength": 10,
-		"dashes": false,
-		"datasource": "Prometheus",
-		"editable": true,
-		"error": false,
-		"fill": 8,
-		"grid": {},
-		"gridPos": {
-		  "h": 7,
-		  "w": 12,
-		  "x": 12,
-		  "y": 21
-		},
+		"hiddenSeries": false,
 		"id": 14,
-		"isNew": true,
 		"legend": {
 		  "avg": false,
 		  "current": false,
@@ -1063,7 +425,292 @@
 		"lines": true,
 		"linewidth": 1,
 		"links": [],
-		"nullPointMode": "connected",
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(traefik_service_request_duration_seconds_sum{protocol=~\"$protocol\"}) / sum(traefik_entrypoint_requests_total{protocol=~\"$protocol\"}) * 1000",
+			"format": "time_series",
+			"intervalFactor": 2,
+			"legendFormat": "Average response time (ms)",
+			"refId": "A",
+			"step": 240
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "Average response time",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "ms",
+			"label": null,
+			"logBase": 10,
+			"max": null,
+			"min": "0",
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"decimals": 0,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 6,
+		  "w": 12,
+		  "x": 0,
+		  "y": 6
+		},
+		"hiddenSeries": false,
+		"id": 10,
+		"legend": {
+		  "alignAsTable": true,
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "rightSide": true,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(increase(traefik_service_requests_total{code=\"404\",method=\"GET\",protocol=~\"$protocol\"}[$interval])) by (service)",
+			"format": "time_series",
+			"interval": "",
+			"intervalFactor": 2,
+			"legendFormat": "{{service}} ",
+			"refId": "A",
+			"step": 240
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "Bad Status Code Count",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": false
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": true,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 6,
+		  "w": 12,
+		  "x": 12,
+		  "y": 6
+		},
+		"hiddenSeries": false,
+		"hideTimeOverride": false,
+		"id": 4,
+		"legend": {
+		  "alignAsTable": true,
+		  "avg": true,
+		  "current": false,
+		  "max": true,
+		  "min": true,
+		  "rightSide": true,
+		  "show": true,
+		  "total": false,
+		  "values": true
+		},
+		"lines": false,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(rate(traefik_service_requests_total[$interval]))",
+			"format": "time_series",
+			"intervalFactor": 2,
+			"legendFormat": "Total requests",
+			"refId": "A"
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "Total requests",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  },
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": "",
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 6,
+		  "w": 10,
+		  "x": 0,
+		  "y": 12
+		},
+		"hiddenSeries": false,
+		"id": 8,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null as zero",
+		"options": {
+		  "dataLinks": []
+		},
 		"percentage": false,
 		"pointradius": 5,
 		"points": false,
@@ -1074,12 +721,11 @@
 		"steppedLine": false,
 		"targets": [
 		  {
-			"expr": "topk(5, irate(redis_commands_total{instance=~\"$instance\"} [1m]))",
+			"expr": "process_open_fds{job=~\"$job\"}",
 			"format": "time_series",
 			"interval": "",
 			"intervalFactor": 2,
-			"legendFormat": "{{ cmd }}",
-			"metric": "redis_command_calls_total",
+			"legendFormat": "{{ instance }}",
 			"refId": "A",
 			"step": 240
 		  }
@@ -1088,12 +734,11 @@
 		"timeFrom": null,
 		"timeRegions": [],
 		"timeShift": null,
-		"title": "Command Calls / sec",
+		"title": "Used sockets",
 		"tooltip": {
-		  "msResolution": true,
 		  "shared": true,
 		  "sort": 0,
-		  "value_type": "cumulative"
+		  "value_type": "individual"
 		},
 		"type": "graph",
 		"xaxis": {
@@ -1125,38 +770,527 @@
 		  "align": false,
 		  "alignLevel": null
 		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"decimals": 0,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 6,
+		  "w": 14,
+		  "x": 10,
+		  "y": 12
+		},
+		"hiddenSeries": false,
+		"id": 24,
+		"legend": {
+		  "alignAsTable": true,
+		  "avg": true,
+		  "current": true,
+		  "max": false,
+		  "min": false,
+		  "rightSide": true,
+		  "show": true,
+		  "total": true,
+		  "values": true
+		},
+		"lines": true,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(rate(traefik_service_requests_total{protocol=~\"http|https\"}[$interval])) by (service)",
+			"format": "time_series",
+			"interval": "",
+			"intervalFactor": 2,
+			"legendFormat": "{{service}} ",
+			"refId": "A",
+			"step": 240
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "Access to services",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": false
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"fill": 7,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 7,
+		  "w": 12,
+		  "x": 0,
+		  "y": 18
+		},
+		"hiddenSeries": false,
+		"id": 30,
+		"legend": {
+		  "alignAsTable": true,
+		  "avg": true,
+		  "current": true,
+		  "max": true,
+		  "min": false,
+		  "rightSide": true,
+		  "show": true,
+		  "sort": "avg",
+		  "sortDesc": true,
+		  "total": false,
+		  "values": true
+		},
+		"lines": true,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [],
+		"spaceLength": 10,
+		"stack": true,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(traefik_entrypoint_open_connections) by (method)",
+			"format": "time_series",
+			"intervalFactor": 1,
+			"legendFormat": "{{ method }}",
+			"refId": "A"
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "ENTRYPOINT - Open Connections",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": false
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"fill": 7,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 7,
+		  "w": 12,
+		  "x": 12,
+		  "y": 18
+		},
+		"hiddenSeries": false,
+		"id": 28,
+		"legend": {
+		  "alignAsTable": true,
+		  "avg": true,
+		  "current": true,
+		  "max": true,
+		  "min": false,
+		  "rightSide": true,
+		  "show": true,
+		  "sort": "avg",
+		  "sortDesc": true,
+		  "total": false,
+		  "values": true
+		},
+		"lines": true,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [],
+		"spaceLength": 10,
+		"stack": true,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(traefik_service_open_connections) by (method)",
+			"format": "time_series",
+			"intervalFactor": 1,
+			"legendFormat": "{{ method }}",
+			"refId": "A"
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "SERVICE - Open Connections",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": false
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"datasource": "Prometheus",
+		"decimals": 0,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 7,
+		  "w": 24,
+		  "x": 0,
+		  "y": 25
+		},
+		"hiddenSeries": false,
+		"id": 12,
+		"legend": {
+		  "alignAsTable": true,
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "rightSide": true,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"links": [],
+		"nullPointMode": "null",
+		"options": {
+		  "dataLinks": []
+		},
+		"percentage": false,
+		"pointradius": 5,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "/^[^234].*/",
+			"transform": "negative-Y"
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"expr": "sum(increase(traefik_service_requests_total{protocol=~\"$protocol\"}[$interval])) by (code)",
+			"format": "time_series",
+			"intervalFactor": 2,
+			"legendFormat": "{{code}}",
+			"refId": "A",
+			"step": 120
+		  }
+		],
+		"thresholds": [],
+		"timeFrom": null,
+		"timeRegions": [],
+		"timeShift": null,
+		"title": "Status Code Count ",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "buckets": null,
+		  "mode": "time",
+		  "name": null,
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"decimals": 0,
+			"format": "short",
+			"label": "",
+			"logBase": 1,
+			"max": null,
+			"min": "0",
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"label": null,
+			"logBase": 1,
+			"max": null,
+			"min": null,
+			"show": false
+		  }
+		],
+		"yaxis": {
+		  "align": false,
+		  "alignLevel": null
+		}
 	  }
 	],
 	"refresh": "10s",
-	"schemaVersion": 18,
+	"schemaVersion": 21,
 	"style": "dark",
 	"tags": [
-	  "prometheus",
-	  "redis"
+	  "traefik",
+	  "prometheus"
 	],
 	"templating": {
 	  "list": [
 		{
 		  "allValue": null,
-		  "current": {},
+		  "current": {
+			"text": "traefik",
+			"value": "traefik"
+		  },
 		  "datasource": "Prometheus",
-		  "definition": "label_values(redis_up, instance)",
+		  "definition": "",
 		  "hide": 0,
 		  "includeAll": false,
-		  "label": null,
+		  "label": "Job:",
 		  "multi": false,
-		  "name": "instance",
+		  "name": "job",
 		  "options": [],
-		  "query": "label_values(redis_up, instance)",
-		  "refresh": 2,
+		  "query": "label_values(job)",
+		  "refresh": 1,
 		  "regex": "",
 		  "skipUrlSync": false,
-		  "sort": 1,
+		  "sort": 2,
 		  "tagValuesQuery": "",
 		  "tags": [],
 		  "tagsQuery": "",
 		  "type": "query",
 		  "useTags": false
+		},
+		{
+		  "allValue": null,
+		  "current": {
+			"selected": false,
+			"text": "All",
+			"value": "$__all"
+		  },
+		  "datasource": "Prometheus",
+		  "definition": "label_values(traefik_service_requests_total, protocol)",
+		  "hide": 0,
+		  "includeAll": true,
+		  "label": "Service:",
+		  "multi": true,
+		  "name": "protocol",
+		  "options": [],
+		  "query": "label_values(traefik_service_requests_total, protocol)",
+		  "refresh": 1,
+		  "regex": "",
+		  "skipUrlSync": false,
+		  "sort": 0,
+		  "tagValuesQuery": "",
+		  "tags": [],
+		  "tagsQuery": "",
+		  "type": "query",
+		  "useTags": false
+		},
+		{
+		  "auto": true,
+		  "auto_count": 30,
+		  "auto_min": "10s",
+		  "current": {
+			"selected": false,
+			"text": "auto",
+			"value": "$__auto_interval_interval"
+		  },
+		  "hide": 0,
+		  "label": "Interval",
+		  "name": "interval",
+		  "options": [
+			{
+			  "selected": true,
+			  "text": "auto",
+			  "value": "$__auto_interval_interval"
+			},
+			{
+			  "selected": false,
+			  "text": "1m",
+			  "value": "1m"
+			},
+			{
+			  "selected": false,
+			  "text": "10m",
+			  "value": "10m"
+			},
+			{
+			  "selected": false,
+			  "text": "30m",
+			  "value": "30m"
+			},
+			{
+			  "selected": false,
+			  "text": "1h",
+			  "value": "1h"
+			},
+			{
+			  "selected": false,
+			  "text": "6h",
+			  "value": "6h"
+			},
+			{
+			  "selected": false,
+			  "text": "12h",
+			  "value": "12h"
+			},
+			{
+			  "selected": false,
+			  "text": "1d",
+			  "value": "1d"
+			},
+			{
+			  "selected": false,
+			  "text": "7d",
+			  "value": "7d"
+			},
+			{
+			  "selected": false,
+			  "text": "14d",
+			  "value": "14d"
+			},
+			{
+			  "selected": false,
+			  "text": "30d",
+			  "value": "30d"
+			}
+		  ],
+		  "query": "1m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
+		  "refresh": 2,
+		  "skipUrlSync": false,
+		  "type": "interval"
 		}
 	  ]
 	},
@@ -1189,7 +1323,8 @@
 		"30d"
 	  ]
 	},
-	"timezone": "browser",
-	"title": "Redis Dashboard for Prometheus Redis Exporter 1.x",
-	"version": 12
+	"timezone": "",
+	"title": "Traefik 2",
+	"uid": "3ipsWfViz",
+	"version": 1
   }

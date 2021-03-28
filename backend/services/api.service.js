@@ -99,6 +99,7 @@ module.exports = {
 			template: {
 				labels: [
 					"traefik.enable=true",
+					"traefik.http.routers.api.entrypoints=http",
 					"traefik.http.routers.api.rule=PathPrefix(`/`)",
 					"traefik.http.services.api.loadbalancer.server.port=4000"
 				]
