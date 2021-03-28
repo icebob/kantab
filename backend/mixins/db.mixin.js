@@ -12,7 +12,7 @@ const TESTING = process.env.NODE_ENV === "test";
 
 module.exports = function (collection, opts = {}) {
 	let adapter;
-	if (TESTING) {
+	if (TESTING || process.env.ONLY_GENERATE) {
 		adapter = new DbService.MemoryAdapter();
 	} else {
 		if (process.env.NEDB_FOLDER) {

@@ -47,5 +47,10 @@ module.exports = {
 		fs.writeFileSync(common.filename, content, "utf8");
 
 		broker.logger.info(`Docker Compose file generated. Filename: ${common.filename}`);
+
+		if (process.env.ONLY_GENERATE) {
+			broker.logger.info(`Shutting down...`);
+			broker.stop();
+		}
 	}
 };

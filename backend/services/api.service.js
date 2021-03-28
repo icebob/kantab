@@ -97,13 +97,10 @@ module.exports = {
 	metadata: {
 		dockerCompose: {
 			template: {
-				ports: ["4000:4000"],
 				labels: [
 					"traefik.enable=true",
-					"traefik.backend=kantab",
-					"traefik.port=4000",
-					"traefik.frontend.entryPoints=http",
-					"traefik.frontend.rule=PathPrefix:/"
+					"traefik.http.routers.api.rule=PathPrefix(`/`)",
+					"traefik.http.services.api.loadbalancer.server.port=4000"
 				]
 			}
 		}

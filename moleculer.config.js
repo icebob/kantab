@@ -160,12 +160,25 @@ module.exports = {
 					nats: {
 						image: "nats:2",
 						ports: ["4222:4222"],
-						restart: "unless-stopped"
+						restart: "unless-stopped",
+						command: ["nats-server", "-m", "8222"]
+					},
+
+					nats_exporter: {
+						image: "natsio/prometheus-nats-exporter:latest",
+						command: ["-varz", "http://nats:8222"]
 					},
 
 					redis: {
 						image: "redis:6-alpine",
 						restart: "unless-stopped"
+					},
+
+					redis_exporter: {
+						image: "oliver006/redis_exporter:alpine",
+						environment: {
+							REDIS_ADDR: "redis://redis:6379"
+						}
 					},
 
 					mongo: {
@@ -174,20 +187,28 @@ module.exports = {
 						restart: "unless-stopped"
 					},
 
+					mongo_exporter: {
+						image: "bitnami/mongodb-exporter:latest",
+						environment: {
+							MONGODB_URI: "mongodb://mongo:27017"
+						},
+						command: ["--compatible-mode"]
+					},
+
 					traefik: {
-						image: "traefik:1.7.6",
-						command:
-							"--web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false",
-						ports: ["3000:80", "3001:8080"],
-						volumes: [
-							"/var/run/docker.sock:/var/run/docker.sock",
-							"/dev/null:/traefik.toml"
+						image: "traefik:2.4",
+						command: [
+							"--api.insecure=true", // Don't do that in production!
+							"--providers.docker=true",
+							"--providers.docker.exposedbydefault=false"
 						],
+						ports: ["3000:80", "3001:8080"],
+						volumes: ["/var/run/docker.sock:/var/run/docker.sock:ro"],
 						restart: "unless-stopped"
 					},
 
 					prometheus: {
-						image: "prom/prometheus:v2.6.0",
+						image: "prom/prometheus:v2.25.0",
 						volumes: [
 							"./monitoring/prometheus/:/etc/prometheus/",
 							"prometheus_data:/prometheus"
@@ -215,7 +236,7 @@ module.exports = {
 					},
 
 					grafana: {
-						image: "grafana/grafana:5.4.2",
+						image: "grafana/grafana:6.5.0",
 						depends_on: ["prometheus"],
 						ports: ["9000:3000"],
 						volumes: [

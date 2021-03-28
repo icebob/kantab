@@ -5,28 +5,46 @@ services:
     ports:
       - '4222:4222'
     restart: unless-stopped
+    command:
+      - '-m'
+      - '8222'
+  nats_exporter:
+    image: natsio/prometheus-nats-exporter:latest
+    command:
+      - '-varz'
+      - http://nats:8222
   redis:
     image: redis:6-alpine
     restart: unless-stopped
+  redis_exporter:
+    image: oliver006/redis_exporter:alpine
+    environment:
+      REDIS_ADDR: redis://redis:6379
   mongo:
     image: mongo:4
     volumes:
       - mongo_data:/data/db
     restart: unless-stopped
+  mongo_exporter:
+    image: bitnami/mongodb-exporter:latest
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    command:
+      - '--compatible-mode'
   traefik:
-    image: traefik:1.7.6
-    command: >-
-      --web --docker --docker.domain=docker.localhost --logLevel=INFO
-      --docker.exposedbydefault=false
+    image: traefik:2.4
+    command:
+      - '--api.insecure=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
     ports:
       - '3000:80'
       - '3001:8080'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /dev/null:/traefik.toml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
   prometheus:
-    image: prom/prometheus:v2.6.0
+    image: prom/prometheus:v2.25.0
     volumes:
       - ./monitoring/prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
@@ -52,7 +70,7 @@ services:
       - '--config.file=/etc/alertmanager/config.yml'
       - '--storage.path=/alertmanager'
   grafana:
-    image: grafana/grafana:5.4.2
+    image: grafana/grafana:6.5.0
     depends_on:
       - prometheus
     ports:
@@ -63,7 +81,7 @@ services:
     env_file:
       - ./monitoring/grafana/config.monitoring
     restart: unless-stopped
-  v1-accounts:
+  v1_accounts:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -78,7 +96,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: accounts.service.js
-  v1-acl:
+  v1_acl:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -94,14 +112,10 @@ services:
     environment:
       SERVICES: acl.service.js
   api:
-    ports:
-      - '4000:4000'
     labels:
       - traefik.enable=true
-      - traefik.backend=kantab
-      - traefik.port=4000
-      - traefik.frontend.entryPoints=http
-      - traefik.frontend.rule=PathPrefix:/
+      - traefik.http.routers.api.rule=PathPrefix(`/`)
+      - traefik.http.services.api.loadbalancer.server.port=4000
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -116,7 +130,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: api.service.js
-  v1-boards:
+  v1_boards:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -131,7 +145,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: boards.service.js
-  v1-card-activities:
+  v1_card_activities:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -146,7 +160,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: card.activities.service.js
-  v1-card-attachments:
+  v1_card_attachments:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -161,7 +175,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: card.attachments.service.js
-  v1-card-checklists:
+  v1_card_checklists:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -176,7 +190,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: card.checklists.service.js
-  v1-cards:
+  v1_cards:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -191,7 +205,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: cards.service.js
-  v1-config:
+  v1_config:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -223,7 +237,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: laboratory.service.js
-  v1-lists:
+  v1_lists:
     image: kantab
     env_file: docker-compose.env
     volumes:
@@ -238,7 +252,7 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: lists.service.js
-  v1-mail:
+  v1_mail:
     image: kantab
     env_file: docker-compose.env
     volumes:
