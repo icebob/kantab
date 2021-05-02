@@ -111,7 +111,7 @@ module.exports = {
 		events: true,
 		exporter: [
 			//"Laboratory"
-			/*!isProd
+			!isProd
 				? {
 						type: "Console",
 						options: {
@@ -120,7 +120,7 @@ module.exports = {
 							logger: console.log
 						}
 				  }
-				: null*/
+				: null
 		]
 	},
 

@@ -56,6 +56,7 @@
     "connect-history-api-fallback": "1.6.0",
     "cookie": "^0.4.1",
     "cross-env": "^7.0.3",
+    "database": "github:moleculerjs/database",
     "dotenv": "^8.2.0",
     "execa": "^5.0.0",
     "glob": "^7.1.6",

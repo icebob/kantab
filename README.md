@@ -1,5 +1,5 @@
 [![Moleculer](https://badgen.net/badge/Powered%20by/Moleculer/0e83cd)](https://moleculer.services)
-[![Build Status](https://badgen.net/travis/icebob/kantab/master)](https://travis-ci.org/icebob/kantab)
+[![CI test](https://github.com/icebob/kantab/actions/workflows/ci.yml/badge.svg)](https://github.com/icebob/kantab/actions/workflows/ci.yml)
 [![Coverage Status](https://badgen.net/coveralls/c/github/icebob/kantab/master)](https://coveralls.io/github/icebob/kantab?branch=master)
 
 # KanTab
@@ -99,3 +99,10 @@ The OpenAPI UI is available on http://localhost/openapi
 - `test:e2e`: Run E2E tests
 - `dc:up`: Start the stack in production with Docker Compose
 - `dc:down`: Stop the stack in production with Docker Compose
+
+
+## Contact
+
+Copyright (C) 2021 Icebob
+
+[![@icebob](https://img.shields.io/badge/github-icebob-green.svg)](https://github.com/icebob) [![@icebob](https://img.shields.io/badge/twitter-Icebobcsi-blue.svg)](https://twitter.com/Icebobcsi)
