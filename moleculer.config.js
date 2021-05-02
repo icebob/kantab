@@ -129,7 +129,8 @@ module.exports = {
 
 	// Register custom middlewares
 	middlewares: [
-		require("./backend/middlewares/check-permissions.middleare"),
+		require("./backend/middlewares/async-context.middleware"),
+		require("./backend/middlewares/check-permissions.middleware"),
 		require("./backend/middlewares/find-entity.middleware"),
 		require("./backend/middlewares/docker-compose-generator.middleware"),
 		require("./backend/middlewares/prometheus-file-generator.middleware")

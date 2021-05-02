@@ -4,10 +4,14 @@ const _ = require("lodash");
 const path = require("path");
 const mkdir = require("mkdirp").sync;
 const DbService = require("database").Service;
+const HashIds = require("hashids/cjs");
+const ObjectID = require("mongodb").ObjectID;
 
 const TESTING = process.env.NODE_ENV === "test";
 
 module.exports = function (opts = {}) {
+	const hashids = new HashIds(process.env.HASHID_SALT);
+
 	if (TESTING || process.env.ONLY_GENERATE) {
 		opts = _.defaultsDeep(opts, {
 			adapter: "NeDB"
@@ -26,7 +30,10 @@ module.exports = function (opts = {}) {
 			opts = _.defaultsDeep(opts, {
 				adapter: {
 					type: "MongoDB",
-					options: { uri: process.env.MONGO_URI || "mongodb://localhost/kantab" }
+					options: {
+						uri: process.env.MONGO_URI || "mongodb://localhost/kantab",
+						collection: opts.collection
+					}
 				}
 			});
 		}
@@ -34,6 +41,17 @@ module.exports = function (opts = {}) {
 
 	const schema = {
 		mixins: [DbService(opts)],
+
+		methods: {
+			encodeID(id) {
+				if (ObjectID.isValid(id)) id = id.toString();
+				return hashids.encodeHex(id);
+			},
+
+			decodeID(id) {
+				return hashids.decodeHex(id);
+			}
+		},
 
 		async started() {
 			/* istanbul ignore next */

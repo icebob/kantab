@@ -31,28 +31,29 @@ module.exports = {
 	name: "acl",
 	version: 1,
 
-	mixins: [DbService("roles"), ConfigLoader([]), Memoize()],
+	mixins: [
+		DbService({ actionVisibility: C.VISIBILITY_PROTECTED, collection: "roles" }),
+		ConfigLoader([]),
+		Memoize()
+	],
 
 	/**
 	 * Service settings
 	 */
 	settings: {
 		fields: {
-			id: {
-				type: "string",
-				readonly: true,
-				primaryKey: true,
-				secure: true,
-				columnName: "_id"
-			},
+			id: { type: "string", primaryKey: true, secure: true, columnName: "_id" },
+			key: { type: "string", empty: false, required: true },
 			name: { type: "string" },
-			description: { type: "string" },
-			permissions: { type: "array" },
-			inherits: { type: "array" },
+			permissions: { type: "array", items: "string" },
+			inherits: { type: "array", items: "string" },
 			status: { type: "number", default: 1 },
-			createdAt: { type: "number", updateable: false, default: Date.now },
-			updatedAt: { type: "number", readonly: true, updateDefault: Date.now }
+			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
+			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() }
 		},
+
+		// Indexes on collection
+		indexes: [{ fields: "key", unique: true }],
 
 		permissions: ["boards.create", "boards.read", "boards.edit", "boards.remove"]
 	},
@@ -73,30 +74,10 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
-		// Change visibility of default actions
-		create: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		list: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		find: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		get: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		update: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		remove: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-
 		can: {
 			visibility: C.VISIBILITY_PUBLIC,
 			cache: {
-				keys: ["#roles", "permissions"]
+				keys: ["roles", "permissions"]
 			},
 			params: {
 				roles: { type: "array", items: "string" },
@@ -110,7 +91,7 @@ module.exports = {
 		hasAccess: {
 			visibility: C.VISIBILITY_PUBLIC,
 			cache: {
-				keys: ["#roles", "permissions"]
+				keys: ["roles", "permissions"]
 			},
 			params: {
 				roles: { type: "array", items: "string" },
@@ -133,14 +114,7 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.assignPermission(
-					ctx,
-					ctx.locals.entity,
-					ctx.params.permission
-				);
-				const json = await this.transformDocuments(ctx, {}, role);
-				this.entityChanged("updated", json, ctx);
-				return json;
+				return await this.assignPermission(ctx.locals.entity, ctx.params.permission);
 			}
 		},
 
@@ -157,14 +131,7 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.revokePermission(
-					ctx,
-					ctx.locals.entity,
-					ctx.params.permission
-				);
-				const json = await this.transformDocuments(ctx, {}, role);
-				this.entityChanged("updated", json, ctx);
-				return json;
+				return await this.revokePermission(ctx.locals.entity, ctx.params.permission);
 			}
 		},
 
@@ -181,14 +148,7 @@ module.exports = {
 				permissions: { type: "array", items: "string" }
 			},
 			async handler(ctx) {
-				const role = await this.syncPermissions(
-					ctx,
-					ctx.locals.entity,
-					ctx.params.permissions
-				);
-				const json = await this.transformDocuments(ctx, {}, role);
-				this.entityChanged("updated", json, ctx);
-				return json;
+				return await this.syncPermissions(ctx.locals.entity, ctx.params.permissions);
 			}
 		}
 	},
@@ -204,16 +164,15 @@ module.exports = {
 	methods: {
 		/**
 		 * Assigns the given permission to the role.
-		 * @param {Context} ctx
 		 * @param {Object} role
 		 * @param {string} permission
 		 */
-		async assignPermission(ctx, role, permission) {
+		async assignPermission(role, permission) {
 			if (role.permissions.indexOf(permission) === -1) {
 				return await this.updateEntity(
-					ctx,
+					this.getContext(),
 					{
-						id: role._id,
+						id: role.id,
 						$addToSet: {
 							permissions: permission
 						},
@@ -230,16 +189,15 @@ module.exports = {
 		/**
 		 * Revokes the given permission from the role.
 		 *
-		 * @param {Context} ctx
 		 * @param {Object} role
 		 * @param {string} permission
 		 */
-		async revokePermission(ctx, role, permission) {
+		async revokePermission(role, permission) {
 			if (role.permissions.indexOf(permission) !== -1) {
 				return await this.updateEntity(
-					ctx,
+					this.getContext(),
 					{
-						id: role._id,
+						id: role.id,
 						$pull: {
 							permissions: permission
 						},
@@ -256,15 +214,14 @@ module.exports = {
 		/**
 		 * Syncs the given permissions with the role. This will revoke any permissions not supplied.
 		 *
-		 * @param {Context} ctx
 		 * @param {Object} role
 		 * @param {Array<String>} permissions
 		 */
-		async syncPermissions(ctx, role, permissions) {
+		async syncPermissions(role, permissions) {
 			return await this.updateEntity(
-				ctx,
+				this.getContext(),
 				{
-					id: role._id,
+					id: role.id,
 					$set: {
 						permissions: permissions
 					}
@@ -283,8 +240,8 @@ module.exports = {
 			return await this.memoize("permissions", roleNames, async () => {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
-				const roles = await this.findEntities(null, {
-					query: { name: { $in: roleNames } }
+				const roles = await this.findEntities(this.getContext(), {
+					query: { key: { $in: roleNames } }
 				});
 				const permissions = await this.Promise.mapSeries(roles, async role => {
 					let res = role.permissions ? Array.from(role.permissions) : [];
@@ -311,8 +268,8 @@ module.exports = {
 			let res = Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
 			if (!res) {
 				// Check inherits
-				const entities = await this.findEntities(null, {
-					query: { name: { $in: roleNames } }
+				const entities = await this.findEntities(this.getContext(), {
+					query: { key: { $in: roleNames } }
 				});
 				if (Array.isArray(entities) && entities.length > 0) {
 					const inherits = _.uniq(
@@ -375,18 +332,18 @@ module.exports = {
 		 * Seed an empty collection with an `admin` and a `user` roles.
 		 */
 		async seedDB() {
-			const res = await this.createEntities([
+			const res = await this.createEntities(null, [
 				// Administrator
 				{
-					name: "administrator",
-					description: "System Administrator",
+					key: "administrator",
+					name: "System Administrator",
 					permissions: ["**"]
 				},
 
 				// User
 				{
-					name: "user",
-					description: "Registered User",
+					key: "user",
+					name: "Registered User",
 					permissions: [
 						"boards.create",
 						"boards.read",

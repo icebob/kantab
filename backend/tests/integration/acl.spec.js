@@ -5,7 +5,7 @@ const AclService = require("../../services/acl.service");
 const ConfigService = require("../../services/config.service");
 
 const FindEntityMiddleware = require("../../middlewares/find-entity.middleware");
-const CheckPermissionsMiddleware = require("../../middlewares/check-permissions.middleare");
+const CheckPermissionsMiddleware = require("../../middlewares/check-permissions.middleware");
 
 describe("Test Access-Control logic", () => {
 	describe("Test ACL service CRUD actions", () => {

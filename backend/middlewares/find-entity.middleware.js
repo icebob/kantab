@@ -1,7 +1,5 @@
 "use strict";
 
-const { MoleculerClientError } = require("moleculer").Errors;
-
 module.exports = {
 	name: "FindEntity",
 
@@ -11,15 +9,9 @@ module.exports = {
 		if (action.needEntity) {
 			return async function FindEntityMiddleware(ctx) {
 				const svc = ctx.service;
-				const entity = await svc.getById(ctx.params.id, true);
-				if (!entity)
-					throw new MoleculerClientError(
-						"Entity not found!",
-						400,
-						"ERR_ENTITY_NOT_FOUND"
-					);
-
-				ctx.locals.entity = entity;
+				ctx.locals.entity = await svc.resolveEntities(ctx, ctx.params, {
+					throwOnError: true
+				});
 
 				// Call the handler
 				return handler(ctx);
