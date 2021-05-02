@@ -8,7 +8,6 @@ const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 
 const DbService = require("../mixins/db.mixin");
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 const C = require("../constants");
@@ -22,11 +21,7 @@ module.exports = {
 	name: "accounts",
 	version: 1,
 
-	mixins: [
-		DbService("accounts"),
-		CacheCleaner(["cache.clean.accounts"]),
-		ConfigLoader(["site.**", "mail.**", "accounts.**"])
-	],
+	mixins: [DbService("accounts"), ConfigLoader(["site.**", "mail.**", "accounts.**"])],
 
 	/**
 	 * Service dependencies
@@ -317,7 +312,7 @@ module.exports = {
 				}
 
 				// Create new user
-				const user = await this.adapter.insert(entity);
+				const user = await this.createEntity(ctx, entity);
 
 				// Send email
 				if (user.verified) {
@@ -342,7 +337,9 @@ module.exports = {
 			},
 			rest: "POST /verify",
 			async handler(ctx) {
-				const user = await this.adapter.findOne({ verificationToken: ctx.params.token });
+				const user = await this.findEntity(ctx, {
+					query: { verificationToken: ctx.params.token }
+				});
 				if (!user)
 					throw new MoleculerClientError(
 						"Invalid verification token!",
@@ -350,12 +347,17 @@ module.exports = {
 						"INVALID_TOKEN"
 					);
 
-				const res = await this.adapter.updateById(user._id, {
-					$set: {
-						verified: true,
-						verificationToken: null
-					}
-				});
+				const res = await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						$set: {
+							verified: true,
+							verificationToken: null
+						}
+					},
+					{ raw: true }
+				);
 
 				// Send welcome email
 				this.sendMail(ctx, res, "welcome");
@@ -383,11 +385,16 @@ module.exports = {
 						"ERR_USER_ALREADY_DISABLED"
 					);
 
-				const res = await this.adapter.updateById(user._id, {
-					$set: {
-						status: 0
-					}
-				});
+				const res = await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						$set: {
+							status: 0
+						}
+					},
+					{ raw: true }
+				);
 
 				return {
 					status: res.status
@@ -412,11 +419,16 @@ module.exports = {
 						"ERR_USER_ALREADY_ENABLED"
 					);
 
-				const res = await this.adapter.updateById(user._id, {
-					$set: {
-						status: 1
-					}
-				});
+				const res = await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						$set: {
+							status: 1
+						}
+					},
+					{ raw: true }
+				);
 
 				return {
 					status: res.status
@@ -440,7 +452,9 @@ module.exports = {
 						"ERR_PASSWORDLESS_DISABLED"
 					);
 
-				const user = await this.adapter.findOne({ passwordlessToken: ctx.params.token });
+				const user = await this.findEntity(ctx, {
+					query: { passwordlessToken: ctx.params.token }
+				});
 				if (!user) throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
 
 				// Check status
@@ -457,11 +471,16 @@ module.exports = {
 
 				// Verified account if not
 				if (!user.verified) {
-					await this.adapter.updateById(user._id, {
-						$set: {
-							verified: true
-						}
-					});
+					await this.updateEntity(
+						ctx,
+						{
+							id: user.id,
+							$set: {
+								verified: true
+							}
+						},
+						{ raw: true }
+					);
 				}
 
 				return {
@@ -507,12 +526,17 @@ module.exports = {
 					);
 
 				// Save the token to user
-				await this.adapter.updateById(user._id, {
-					$set: {
-						resetToken: token,
-						resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
-					}
-				});
+				await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						$set: {
+							resetToken: token,
+							resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
+						}
+					},
+					{ raw: true }
+				);
 
 				// Send a passwordReset email
 				this.sendMail(ctx, user, "reset-password", { token });
@@ -532,7 +556,9 @@ module.exports = {
 			rest: "POST /reset-password",
 			async handler(ctx) {
 				// Check the token & expires
-				const user = await this.adapter.findOne({ resetToken: ctx.params.token });
+				const user = await this.findEntity(ctx, {
+					query: { resetToken: ctx.params.token }
+				});
 				if (!user) throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
 
 				// Check status
@@ -547,15 +573,20 @@ module.exports = {
 					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
 
 				// Change the password
-				await this.adapter.updateById(user._id, {
-					$set: {
-						password: await bcrypt.hash(ctx.params.password, 10),
-						passwordless: false,
-						verified: true,
-						resetToken: null,
-						resetTokenExpires: null
-					}
-				});
+				await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						$set: {
+							password: await bcrypt.hash(ctx.params.password, 10),
+							passwordless: false,
+							verified: true,
+							resetToken: null,
+							resetTokenExpires: null
+						}
+					},
+					{ raw: true }
+				);
 
 				// Send password-changed email
 				this.sendMail(ctx, user, "password-changed");
@@ -576,7 +607,12 @@ module.exports = {
 				profile: { type: "object" }
 			},
 			async handler(ctx) {
-				const res = await this.link(ctx.params.id, ctx.params.provider, ctx.params.profile);
+				const res = await this.link(
+					ctx,
+					ctx.params.id,
+					ctx.params.provider,
+					ctx.params.profile
+				);
 				return this.transformDocuments(ctx, {}, res);
 			}
 		},
@@ -593,7 +629,7 @@ module.exports = {
 				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
 				if (!id) throw new MoleculerClientError("Missing user ID!", 400, "MISSING_USER_ID");
 
-				const res = await this.unlink(id, ctx.params.provider);
+				const res = await this.unlink(ctx, id, ctx.params.provider);
 				return this.transformDocuments(ctx, {}, res);
 			}
 		},
@@ -623,7 +659,7 @@ module.exports = {
 				}
 
 				// Get user
-				const user = await this.adapter.findOne(query);
+				const user = await this.findEntity(ctx, { query });
 				if (!user)
 					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
 
@@ -724,7 +760,7 @@ module.exports = {
 				const query = { [`socialLinks.${provider}`]: profile.socialID };
 				if (ctx.meta.user) {
 					// There is logged in user. Link to the logged in user
-					let user = await this.adapter.findOne(query);
+					let user = await this.findEntity(ctx, { query });
 					if (user) {
 						if (user._id != ctx.meta.userID)
 							throw new MoleculerClientError(
@@ -738,7 +774,7 @@ module.exports = {
 						return this.transformDocuments(ctx, {}, user);
 					} else {
 						// Not found linked account. Create the link
-						user = await this.link(ctx.meta.userID, provider, profile);
+						user = await this.link(ctx, ctx.meta.userID, provider, profile);
 
 						user.token = await this.getToken(user);
 						return this.transformDocuments(ctx, {}, user);
@@ -754,7 +790,7 @@ module.exports = {
 
 					let foundBySocialID = false;
 
-					let user = await this.adapter.findOne(query);
+					let user = await this.findEntity(ctx, { query });
 					if (user) {
 						// User found.
 						foundBySocialID = true;
@@ -777,7 +813,7 @@ module.exports = {
 
 						if (!foundBySocialID) {
 							// Not found linked account. Create the link
-							user = await this.link(user._id, provider, profile);
+							user = await this.link(ctx, user._id, provider, profile);
 						}
 
 						user.token = await this.getToken(user);
@@ -804,7 +840,7 @@ module.exports = {
 						avatar: profile.avatar
 					});
 
-					user = await this.link(user.id, provider, profile);
+					user = await this.link(ctx, user.id, provider, profile);
 
 					user.token = await this.getToken(user);
 
@@ -823,18 +859,23 @@ module.exports = {
 			rest: "POST /enable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.meta.userID);
+				const user = await this.resolveEntities(ctx, { id: ctx.meta.userID });
 				if (!user) throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
 				if (!ctx.params.token && (!user.totp || !user.totp.enabled)) {
 					// Generate a TOTP secret and send back otpauthURL & secret
 					const secret = speakeasy.generateSecret({ length: 10 });
-					await this.adapter.updateById(ctx.meta.userID, {
-						$set: {
-							"totp.enabled": false,
-							"totp.secret": secret.base32
-						}
-					});
+					await this.updateEntity(
+						ctx,
+						{
+							id: ctx.meta.userID,
+							$set: {
+								"totp.enabled": false,
+								"totp.secret": secret.base32
+							}
+						},
+						{ raw: true }
+					);
 
 					const otpauthURL = speakeasy.otpauthURL({
 						secret: secret.ascii,
@@ -856,11 +897,16 @@ module.exports = {
 							"TWOFACTOR_INVALID_TOKEN"
 						);
 
-					await this.adapter.updateById(ctx.meta.userID, {
-						$set: {
-							"totp.enabled": true
-						}
-					});
+					await this.updateEntity(
+						ctx,
+						{
+							id: ctx.meta.userID,
+							$set: {
+								"totp.enabled": true
+							}
+						},
+						{ raw: true }
+					);
 
 					return true;
 				}
@@ -877,7 +923,7 @@ module.exports = {
 			rest: "GET /disable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.meta.userID);
+				const user = await this.resolveEntities(ctx, { id: ctx.meta.userID });
 				if (!user) throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
 				if (!user.totp || !user.totp.enabled)
@@ -895,12 +941,17 @@ module.exports = {
 						"TWOFACTOR_INVALID_TOKEN"
 					);
 
-				await this.adapter.updateById(ctx.meta.userID, {
-					$set: {
-						"totp.enabled": false,
-						"totp.secret": null
-					}
-				});
+				await this.updateEntity(
+					ctx,
+					{
+						id: ctx.meta.userID,
+						$set: {
+							"totp.enabled": false,
+							"totp.secret": null
+						}
+					},
+					{ raw: true }
+				);
 
 				return true;
 			}
@@ -916,7 +967,7 @@ module.exports = {
 				id: "string"
 			},
 			async handler(ctx) {
-				const user = await this.adapter.findById(ctx.params.id);
+				const user = await this.resolveEntities(ctx);
 				if (!user) throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 
 				if (!user.totp || !user.totp.enabled)
@@ -997,25 +1048,35 @@ module.exports = {
 			});
 		},
 
-		async link(id, provider, profile) {
-			return await this.adapter.updateById(id, {
-				$set: {
-					[`socialLinks.${provider}`]: profile.socialID,
-					verified: true, // if not verified yet via email
-					verificationToken: null
-				}
-			});
+		async link(ctx, id, provider, profile) {
+			return await this.updateEntity(
+				ctx,
+				{
+					id,
+					$set: {
+						[`socialLinks.${provider}`]: profile.socialID,
+						verified: true, // if not verified yet via email
+						verificationToken: null
+					}
+				},
+				{ raw: true }
+			);
 		},
 
 		/**
 		 * Unlink account from a social account
 		 */
-		async unlink(id, provider) {
-			return await this.adapter.updateById(id, {
-				$unset: {
-					[`socialLinks.${provider}`]: 1
-				}
-			});
+		async unlink(ctx, id, provider) {
+			return await this.updateEntity(
+				ctx,
+				{
+					id,
+					$unset: {
+						[`socialLinks.${provider}`]: 1
+					}
+				},
+				{ raw: true }
+			);
 		},
 
 		/**
@@ -1027,12 +1088,17 @@ module.exports = {
 		async sendMagicLink(ctx, user) {
 			const token = this.generateToken();
 
-			const usr = await this.adapter.updateById(user._id, {
-				$set: {
-					passwordlessToken: token,
-					passwordlessTokenExpires: Date.now() + 3600 * 1000 // 1 hour
-				}
-			});
+			const usr = await this.updateEntity(
+				ctx,
+				{
+					id: user._id,
+					$set: {
+						passwordlessToken: token,
+						passwordlessTokenExpires: Date.now() + 3600 * 1000 // 1 hour
+					}
+				},
+				{ raw: true }
+			);
 
 			return await this.sendMail(ctx, usr, "magic-link", { token });
 		},
@@ -1076,7 +1142,7 @@ module.exports = {
 		 * @param {String} email
 		 */
 		async getUserByEmail(ctx, email) {
-			return await this.adapter.findOne({ email });
+			return await this.findEntity(ctx, { query: { email } });
 		},
 
 		/**
@@ -1086,7 +1152,7 @@ module.exports = {
 		 * @param {String} username
 		 */
 		async getUserByUsername(ctx, username) {
-			return await this.adapter.findOne({ username });
+			return await this.findEntity(ctx, { query: { username } });
 		},
 
 		/**
@@ -1140,7 +1206,7 @@ module.exports = {
 		 * Seed an empty collection with an `admin` and a `test` users.
 		 */
 		async seedDB() {
-			const res = await this.adapter.insertMany([
+			const res = await this.createEntities([
 				// Administrator
 				{
 					username: "admin",

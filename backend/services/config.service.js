@@ -125,7 +125,7 @@ module.exports = {
 					);
 				} else {
 					const { changed, item } = await this.set(ctx, ctx.params.key, ctx.params.value);
-					if (changed) this.broker.broadcast(`config.changed.changed`, item);
+					if (changed) this.broker.broadcast(`config.changed`, item);
 
 					return item;
 				}

@@ -3,7 +3,6 @@
 const _ = require("lodash");
 
 const DbService = require("../mixins/db.mixin");
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
@@ -16,7 +15,7 @@ module.exports = {
 
 	mixins: [
 		DbService("card-checklists"),
-		CacheCleaner(["cache.clean.cards", "cache.clean.card.checklists", "cache.clean.accounts"]),
+		//CacheCleaner(["cache.clean.cards", "cache.clean.card.checklists", "cache.clean.accounts"]),
 		ConfigLoader([])
 	],
 
@@ -29,7 +28,7 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
-		fields: [
+		/*fields: [
 			"_id",
 			"board",
 			"card",
@@ -42,7 +41,7 @@ module.exports = {
 			"options",
 			"createdAt",
 			"updatedAt"
-		]
+		]*/
 	},
 
 	/**

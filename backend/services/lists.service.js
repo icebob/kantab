@@ -3,7 +3,6 @@
 const _ = require("lodash");
 
 const DbService = require("../mixins/db.mixin");
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
@@ -16,7 +15,7 @@ module.exports = {
 
 	mixins: [
 		DbService("lists"),
-		CacheCleaner(["cache.clean.lists", "cache.clean.boards", "cache.clean.accounts"]),
+		//CacheCleaner(["cache.clean.lists", "cache.clean.boards", "cache.clean.accounts"]),
 		ConfigLoader([])
 	],
 

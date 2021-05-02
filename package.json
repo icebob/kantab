@@ -1,6 +1,6 @@
 {
   "name": "kantab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Kanban board application with Moleculer microservices & Vue.js",
   "scripts": {
     "dev": "moleculer-runner --env --repl --hot backend/services",

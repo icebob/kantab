@@ -13,7 +13,7 @@
 			"args": [
 				"--hot",
 				"--env",
-				"backend/services"
+				"backend/services/config.service.js"
 			]
 		},
 		{

@@ -2,7 +2,6 @@
 
 const _ = require("lodash");
 const DbService = require("../mixins/db.mixin");
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const Memoize = require("../mixins/memoize.mixin");
 const { match } = require("moleculer").Utils;
 const ConfigLoader = require("../mixins/config.mixin");
@@ -32,7 +31,7 @@ module.exports = {
 	name: "acl",
 	version: 1,
 
-	mixins: [DbService("roles"), CacheCleaner(["cache.clean.acl"]), ConfigLoader([]), Memoize()],
+	mixins: [DbService("roles"), ConfigLoader([]), Memoize()],
 
 	/**
 	 * Service settings
@@ -134,7 +133,11 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.assignPermission(ctx.locals.entity, ctx.params.permission);
+				const role = await this.assignPermission(
+					ctx,
+					ctx.locals.entity,
+					ctx.params.permission
+				);
 				const json = await this.transformDocuments(ctx, {}, role);
 				this.entityChanged("updated", json, ctx);
 				return json;
@@ -154,7 +157,11 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.revokePermission(ctx.locals.entity, ctx.params.permission);
+				const role = await this.revokePermission(
+					ctx,
+					ctx.locals.entity,
+					ctx.params.permission
+				);
 				const json = await this.transformDocuments(ctx, {}, role);
 				this.entityChanged("updated", json, ctx);
 				return json;
@@ -174,7 +181,11 @@ module.exports = {
 				permissions: { type: "array", items: "string" }
 			},
 			async handler(ctx) {
-				const role = await this.syncPermissions(ctx.locals.entity, ctx.params.permissions);
+				const role = await this.syncPermissions(
+					ctx,
+					ctx.locals.entity,
+					ctx.params.permissions
+				);
 				const json = await this.transformDocuments(ctx, {}, role);
 				this.entityChanged("updated", json, ctx);
 				return json;
@@ -193,19 +204,25 @@ module.exports = {
 	methods: {
 		/**
 		 * Assigns the given permission to the role.
+		 * @param {Context} ctx
 		 * @param {Object} role
 		 * @param {string} permission
 		 */
-		async assignPermission(role, permission) {
+		async assignPermission(ctx, role, permission) {
 			if (role.permissions.indexOf(permission) === -1) {
-				return await this.adapter.updateById(role._id, {
-					$addToSet: {
-						permissions: permission
+				return await this.updateEntity(
+					ctx,
+					{
+						id: role._id,
+						$addToSet: {
+							permissions: permission
+						},
+						$set: {
+							updatedAt: Date.now()
+						}
 					},
-					$set: {
-						updatedAt: Date.now()
-					}
-				});
+					{ raw: true }
+				);
 			}
 			return role;
 		},
@@ -213,19 +230,25 @@ module.exports = {
 		/**
 		 * Revokes the given permission from the role.
 		 *
+		 * @param {Context} ctx
 		 * @param {Object} role
 		 * @param {string} permission
 		 */
-		async revokePermission(role, permission) {
+		async revokePermission(ctx, role, permission) {
 			if (role.permissions.indexOf(permission) !== -1) {
-				return await this.adapter.updateById(role._id, {
-					$pull: {
-						permissions: permission
+				return await this.updateEntity(
+					ctx,
+					{
+						id: role._id,
+						$pull: {
+							permissions: permission
+						},
+						$set: {
+							updatedAt: Date.now()
+						}
 					},
-					$set: {
-						updatedAt: Date.now()
-					}
-				});
+					{ raw: true }
+				);
 			}
 			return role;
 		},
@@ -233,15 +256,21 @@ module.exports = {
 		/**
 		 * Syncs the given permissions with the role. This will revoke any permissions not supplied.
 		 *
+		 * @param {Context} ctx
 		 * @param {Object} role
 		 * @param {Array<String>} permissions
 		 */
-		async syncPermissions(role, permissions) {
-			return await this.adapter.updateById(role._id, {
-				$set: {
-					permissions: permissions
-				}
-			});
+		async syncPermissions(ctx, role, permissions) {
+			return await this.updateEntity(
+				ctx,
+				{
+					id: role._id,
+					$set: {
+						permissions: permissions
+					}
+				},
+				{ raw: true }
+			);
 		},
 
 		/**
@@ -254,7 +283,9 @@ module.exports = {
 			return await this.memoize("permissions", roleNames, async () => {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
-				const roles = await this.adapter.find({ query: { name: { $in: roleNames } } });
+				const roles = await this.findEntities(null, {
+					query: { name: { $in: roleNames } }
+				});
 				const permissions = await this.Promise.mapSeries(roles, async role => {
 					let res = role.permissions ? Array.from(role.permissions) : [];
 
@@ -280,7 +311,9 @@ module.exports = {
 			let res = Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
 			if (!res) {
 				// Check inherits
-				const entities = await this.adapter.find({ query: { name: { $in: roleNames } } });
+				const entities = await this.findEntities(null, {
+					query: { name: { $in: roleNames } }
+				});
 				if (Array.isArray(entities) && entities.length > 0) {
 					const inherits = _.uniq(
 						_.compact(_.flattenDeep(entities.map(entity => entity.inherits)))
@@ -342,14 +375,12 @@ module.exports = {
 		 * Seed an empty collection with an `admin` and a `user` roles.
 		 */
 		async seedDB() {
-			const res = await this.adapter.insertMany([
+			const res = await this.createEntities([
 				// Administrator
 				{
 					name: "administrator",
 					description: "System Administrator",
-					permissions: ["**"],
-					status: 1,
-					createdAt: Date.now()
+					permissions: ["**"]
 				},
 
 				// User
@@ -362,9 +393,7 @@ module.exports = {
 						"boards.update",
 						"boards.remove",
 						"cards.create"
-					],
-					status: 1,
-					createdAt: Date.now()
+					]
 				}
 			]);
 
