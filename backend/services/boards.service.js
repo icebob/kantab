@@ -1,10 +1,10 @@
 "use strict";
 
 const _ = require("lodash");
+const slugify = require("slugify");
 
 const DbService = require("../mixins/db.mixin");
-const ConfigLoader = require("../mixins/config.mixin");
-const SecureID = require("../mixins/secure-id.mixin");
+//const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
@@ -15,10 +15,9 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("boards"),
+		DbService("boards")
 		//CacheCleaner(["cache.clean.boards", "cache.clean.accounts"]),
-		SecureID(),
-		ConfigLoader([])
+		//ConfigLoader([])
 	],
 
 	/**
@@ -41,34 +40,33 @@ module.exports = {
 				columnName: "_id"
 			},
 			owner: {
-				required: true,
+				readonly: true,
 				populate: {
 					action: "v1.accounts.resolve",
 					fields: ["id", "username", "fullName", "avatar"]
 				},
-				set: (value, entity, ctx) => entity.owner || ctx.meta.user.id
+				// TODO: validate via accounts.resolve
+				onCreate: (value, entity, ctx) => ctx.meta.user.id
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
 				type: "string",
 				readonly: true,
-				set: (value, entity, ctx) => `${entity.title}-slug`
+				set: (value, entity) => slugify(`${entity.title}`, { lower: true })
 			},
 			description: { type: "string", required: false, trim: true },
-			position: { type: "number", hidden: true, default: 0 },
+			position: { type: "number", integer: true, default: 0 },
 			archived: { type: "boolean", default: false },
 			public: { type: "boolean", default: false },
-			stars: { type: "number", default: 0 },
-			labels: { type: "array" },
-			members: { type: "array" },
+			stars: { type: "number", integer: true, min: 0, default: 0 },
+			labels: { type: "array", items: "string|no-empty" },
+			members: { type: "array", items: "string|no-empty" },
 			options: { type: "object" },
-			createdAt: { type: "date", readonly: true, setOnCreate: () => Date.now() },
-			updatedAt: { type: "date", readonly: true, setOnUpdate: () => Date.now() },
+			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
+			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
 			archivedAt: { type: "date" },
-			deletedAt: { type: "date", setOnDelete: () => Date.now() }
+			deletedAt: { type: "date", readonly: true, onDelete: () => Date.now() }
 		},
-		strict: true, // TODO
-		softDelete: true, // TODO
 
 		graphql: {
 			type: `
@@ -76,7 +74,7 @@ module.exports = {
 					id: String!,
 					owner: User!,
 					title: String!,
-					slug: String,
+					slug: String!,
 					description: String,
 					position: Int,
 					archived: Boolean,

@@ -4,7 +4,7 @@ const _ = require("lodash");
 const DbService = require("../mixins/db.mixin");
 const Memoize = require("../mixins/memoize.mixin");
 const { match } = require("moleculer").Utils;
-const ConfigLoader = require("../mixins/config.mixin");
+//const ConfigLoader = require("../mixins/config.mixin");
 const C = require("../constants");
 
 /**
@@ -33,7 +33,7 @@ module.exports = {
 
 	mixins: [
 		DbService({ actionVisibility: C.VISIBILITY_PROTECTED, collection: "roles" }),
-		ConfigLoader([]),
+		//ConfigLoader([]),
 		Memoize()
 	],
 

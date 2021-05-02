@@ -3,7 +3,7 @@
 const _ = require("lodash");
 
 const DbService = require("../mixins/db.mixin");
-const ConfigLoader = require("../mixins/config.mixin");
+//const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
@@ -14,9 +14,9 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("card-attachments"),
+		DbService("card-attachments")
 		//CacheCleaner(["cache.clean.cards", "cache.clean.card.attachments", "cache.clean.accounts"]),
-		ConfigLoader([])
+		//ConfigLoader([])
 	],
 
 	/**
@@ -49,15 +49,7 @@ module.exports = {
 	/**
 	 * Actions
 	 */
-	actions: {
-		// Change visibility of default actions
-		create: {},
-		list: {},
-		find: {},
-		get: {},
-		update: {},
-		remove: {}
-	},
+	actions: {},
 
 	/**
 	 * Events

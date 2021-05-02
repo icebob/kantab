@@ -41,31 +41,40 @@ module.exports = {
 		fields: {
 			id: {
 				type: "string",
-				readonly: true,
 				primaryKey: true,
 				secure: true,
 				columnName: "_id"
 			},
-			username: { type: "string", maxlength: 50, required: true },
-			fullName: { type: "string", maxlength: 50, required: true },
-			email: { type: "string", maxlength: 100, required: true },
+			username: { type: "string", maxlength: 50, required: true, trim: true },
+			fullName: { type: "string", maxlength: 50, required: true, trim: true },
+			email: { type: "email", maxlength: 100, required: true, trim: true },
 			password: { type: "string", minlength: 6, maxlength: 60, hidden: true },
 			avatar: { type: "string" },
-			roles: { required: true },
+			roles: { type: "array", items: "string|no-empty", readonly: true },
 			socialLinks: { type: "object" },
 			status: { type: "number", default: 1 },
 			plan: { type: "string", required: true },
 			verified: { type: "boolean", default: false },
 			token: { type: "string", readonly: true },
-			"totp.enabled": { type: "boolean", default: false },
+			totp: {
+				type: "object",
+				properites: {
+					enabled: { type: "boolean", default: false }
+				}
+			},
 			passwordless: { type: "boolean", default: false },
 			passwordlessTokenExpires: { hidden: true },
 			resetTokenExpires: { hidden: true },
 			verificationToken: { hidden: true },
-			createdAt: { type: "number", updateable: false, default: Date.now },
-			updatedAt: { type: "number", readonly: true, updateDefault: Date.now },
-			lastLoginAt: { type: "number" }
+			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
+			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
+			lastLoginAt: { type: "number", readonly: true }
 		},
+
+		indexes: [
+			{ fields: "username", unique: true },
+			{ fields: "email", unique: true }
+		],
 
 		graphql: {
 			type: `

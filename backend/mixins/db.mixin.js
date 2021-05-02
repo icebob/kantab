@@ -10,7 +10,7 @@ const ObjectID = require("mongodb").ObjectID;
 const TESTING = process.env.NODE_ENV === "test";
 
 module.exports = function (opts = {}) {
-	const hashids = new HashIds(process.env.HASHID_SALT);
+	const hashids = new HashIds(process.env.HASHID_SALT || "K4nTa3");
 
 	if (TESTING || process.env.ONLY_GENERATE) {
 		opts = _.defaultsDeep(opts, {

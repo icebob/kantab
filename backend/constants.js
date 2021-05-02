@@ -9,5 +9,9 @@ module.exports = {
 	VISIBILITY_PRIVATE: "private",
 	VISIBILITY_PROTECTED: "protected",
 	VISIBILITY_PUBLIC: "public",
-	VISIBILITY_PUBLISHED: "published"
+	VISIBILITY_PUBLISHED: "published",
+
+	TOKEN_TYPE_VERIFICATION: "verification",
+	TOKEN_TYPE_PASSWORD_RESET: "password-reset",
+	TOKEN_TYPE_API_KEY: "api-key"
 };

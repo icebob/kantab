@@ -77,7 +77,7 @@ module.exports = {
 				key: [{ type: "string" }, { type: "array", items: "string" }]
 			},
 			async handler(ctx) {
-				return await this.get(ctx, ctx.params.key);
+				return await this.get(ctx.params.key);
 			}
 		},
 
@@ -117,15 +117,15 @@ module.exports = {
 				if (Array.isArray(ctx.params)) {
 					return this.Promise.all(
 						ctx.params.map(async p => {
-							let { changed, item } = await this.set(ctx, p.key, p.value);
-							if (changed) this.broker.broadcast(`config.changed`, item);
+							let { changed, item } = await this.set(p.key, p.value);
+							if (changed) ctx.broadcast(`config.changed`, item);
 
 							return item;
 						})
 					);
 				} else {
-					const { changed, item } = await this.set(ctx, ctx.params.key, ctx.params.value);
-					if (changed) this.broker.broadcast(`config.changed`, item);
+					const { changed, item } = await this.set(ctx.params.key, ctx.params.value);
+					if (changed) ctx.broadcast(`config.changed`, item);
 
 					return item;
 				}
@@ -147,17 +147,17 @@ module.exports = {
 		migrate: {
 			cache: false,
 			visibility: "protected",
-			handler(ctx) {
+			handler() {
 				return this.Promise.all(
 					Object.keys(this.settings.defaultConfig).map(async key => {
 						const value = this.settings.defaultConfig[key];
-						const item = await this.get(ctx, key);
+						const item = await this.get(key);
 						if (!item) {
 							this.logger.info(`Save new config: "${key}" =`, value);
-							return this.set(ctx, key, value, true);
+							return this.set(key, value, true);
 						} else if (item.isDefault && !_.isEqual(item.value, value)) {
 							this.logger.info(`Update default config: "${key}" =`, value);
-							return this.set(ctx, key, value, true);
+							return this.set(key, value, true);
 						}
 					})
 				);
@@ -173,32 +173,30 @@ module.exports = {
 		 * Get configurations by key(s).
 		 *
 		 * @methods
-		 * @param {Context} ctx
 		 * @param {String|Array<String>} key Config key
 		 * @returns {Object|Array<Object>}
 		 */
-		async get(ctx, key) {
+		async get(key) {
 			if (Array.isArray(key)) {
-				const res = await this.Promise.all(key.map(k => this.getOne(ctx, k)));
+				const res = await this.Promise.all(key.map(k => this.getOne(k)));
 				return _.uniqBy(_.flattenDeep(res), item => item.key);
 			}
 
-			return await this.getOne(ctx, key);
+			return await this.getOne(key);
 		},
 
 		/**
 		 * Get configurations by one key (can contain wildcards).
 		 *
 		 * @methods
-		 * @param {Context} ctx
 		 * @param {String} key Config key
 		 * @returns {Object|Array<Object>}
 		 */
-		async getOne(ctx, key) {
+		async getOne(key) {
 			if (key.indexOf("*") == -1 && key.indexOf("?") == -1)
-				return await this.findEntity(ctx, { query: { key } });
+				return await this.findEntity(this.getContext(), { query: { key } });
 
-			return await this.getByMask(ctx, key);
+			return await this.getByMask(key);
 		},
 
 		/**
@@ -208,8 +206,8 @@ module.exports = {
 		 * @param {String} mask Key mask
 		 * @returns {Array<Object>}
 		 */
-		async getByMask(ctx, mask) {
-			const allItems = await ctx.call(`${this.fullName}.all`);
+		async getByMask(mask) {
+			const allItems = await (this.getContext() || this.broker).call(`${this.fullName}.all`);
 
 			/* istanbul ignore next */
 			if (!allItems) return [];
@@ -221,14 +219,14 @@ module.exports = {
 		 * Set a configuration value.
 		 *
 		 * @methods
-		 * @param {Context} ctx
 		 * @param {String} key Key
 		 * @param {any} value Value
 		 * @param {Boolean} isDefault
 		 *
 		 * @returns {Object}
 		 */
-		async set(ctx, key, value, isDefault = false) {
+		async set(key, value, isDefault = false) {
+			const ctx = this.getContext();
 			const item = await this.findEntity(ctx, { query: { key } }, { transform: false });
 			if (item != null) {
 				if (!_.isEqual(item.value, value)) {
@@ -254,7 +252,7 @@ module.exports = {
 
 			// Create a new one
 			return {
-				item: await this.createEntity(null, { key, value, isDefault }),
+				item: await this.createEntity(ctx, { key, value, isDefault }),
 				changed: true,
 				new: true
 			};
