@@ -12,13 +12,13 @@ describe("Test login page with username & password", () => {
 	it("Try to login with wrong username", () => {
 		cy.login("unknow", "test");
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.error").should("contain", "User not found!");
+		cy.get(".alert.error").should("contain", "Account is not registered.");
 	});
 
 	it("Try to login with wrong password", () => {
 		cy.login("test", "wrongpass");
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.error").should("contain", "Wrong password!");
+		cy.get(".alert.error").should("contain", "Wrong password");
 	});
 
 	it("Login with correct data", () => {

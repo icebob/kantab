@@ -3,7 +3,7 @@
 const _ = require("lodash");
 const path = require("path");
 const mkdir = require("mkdirp").sync;
-const DbService = require("database").Service;
+const DbService = require("@moleculer/database").Service;
 const HashIds = require("hashids/cjs");
 const ObjectID = require("mongodb").ObjectID;
 

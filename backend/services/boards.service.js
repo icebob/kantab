@@ -15,7 +15,7 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("boards")
+		DbService()
 		//CacheCleaner(["cache.clean.boards", "cache.clean.accounts"]),
 		//ConfigLoader([])
 	],
@@ -23,7 +23,7 @@ module.exports = {
 	/**
 	 * Service dependencies
 	 */
-	dependencies: [{ name: "accounts", version: 1 }],
+	//dependencies: [{ name: "accounts", version: 1 }],
 
 	/**
 	 * Service settings
@@ -34,7 +34,6 @@ module.exports = {
 		fields: {
 			id: {
 				type: "string",
-				readonly: true,
 				primaryKey: true,
 				secure: true,
 				columnName: "_id"
@@ -46,13 +45,14 @@ module.exports = {
 					fields: ["id", "username", "fullName", "avatar"]
 				},
 				// TODO: validate via accounts.resolve
-				onCreate: (value, entity, ctx) => ctx.meta.user.id
+				onCreate: (value, entity, field, ctx) => ctx.meta.userID
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
 				type: "string",
-				readonly: true,
-				set: (value, entity) => slugify(`${entity.title}`, { lower: true })
+				/*readonly: true,*/
+				set: (value, entity) =>
+					entity.title ? slugify(entity.title, { lower: true }) : value
 			},
 			description: { type: "string", required: false, trim: true },
 			position: { type: "number", integer: true, default: 0 },

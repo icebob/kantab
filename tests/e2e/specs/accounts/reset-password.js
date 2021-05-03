@@ -80,7 +80,7 @@ describe("Test forgot password flow", () => {
 	it("Try login with old password", () => {
 		cy.login(user.email, user.password);
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.error").should("contain", "Wrong password!");
+		cy.get(".alert.error").should("contain", "Wrong password.");
 	});
 
 	it("Login with new password", () => {

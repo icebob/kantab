@@ -8,11 +8,50 @@ const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 
 const DbService = require("../mixins/db.mixin");
+const { generateValidatorSchemaFromFields } = require("@moleculer/database");
 const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 const C = require("../constants");
 
 const HASH_SALT_ROUND = 10;
+const TOKEN_EXPIRATION = 60 * 60 * 1000; // 1 hour
+
+const FIELDS = {
+	id: { type: "string", primaryKey: true, secure: true, columnName: "_id" },
+	username: { type: "string", max: 50, empty: false, required: true, trim: true },
+	fullName: { type: "string", max: 100, empty: false, required: true, trim: true },
+	email: { type: "email", max: 254, empty: false, required: true, trim: true },
+	password: { type: "string", min: 6, max: 60, hidden: true },
+	passwordless: { type: "boolean", default: false },
+	avatar: { type: "string", max: 255 },
+	roles: {
+		type: "array",
+		items: "string|no-empty",
+		default() {
+			return this.config["accounts.defaultRoles"];
+		}
+	},
+	socialLinks: { type: "object", default: () => ({}) },
+	status: { type: "number", default: 1 },
+	plan: {
+		type: "string",
+		default() {
+			return this.config["accounts.defaultPlan"];
+		}
+	},
+	verified: { type: "boolean", default: false },
+	token: { type: "string", virtual: true }, // filled only in login response
+	totp: {
+		type: "object",
+		properties: {
+			enabled: { type: "boolean", default: false },
+			secret: { type: "string", hidden: true }
+		}
+	},
+	createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
+	updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
+	lastLoginAt: { type: "number", readonly: true }
+};
 
 /**
  * Account service
@@ -21,7 +60,10 @@ module.exports = {
 	name: "accounts",
 	version: 1,
 
-	mixins: [DbService("accounts"), ConfigLoader(["site.**", "mail.**", "accounts.**"])],
+	mixins: [
+		DbService({ actionVisibility: C.VISIBILITY_PROTECTED }),
+		ConfigLoader(["site.**", "mail.**", "accounts.**"])
+	],
 
 	/**
 	 * Service dependencies
@@ -38,38 +80,7 @@ module.exports = {
 			sendMail: "v1.mail.send"
 		},
 
-		fields: {
-			id: {
-				type: "string",
-				primaryKey: true,
-				secure: true,
-				columnName: "_id"
-			},
-			username: { type: "string", maxlength: 50, required: true, trim: true },
-			fullName: { type: "string", maxlength: 50, required: true, trim: true },
-			email: { type: "email", maxlength: 100, required: true, trim: true },
-			password: { type: "string", minlength: 6, maxlength: 60, hidden: true },
-			avatar: { type: "string" },
-			roles: { type: "array", items: "string|no-empty", readonly: true },
-			socialLinks: { type: "object" },
-			status: { type: "number", default: 1 },
-			plan: { type: "string", required: true },
-			verified: { type: "boolean", default: false },
-			token: { type: "string", readonly: true },
-			totp: {
-				type: "object",
-				properites: {
-					enabled: { type: "boolean", default: false }
-				}
-			},
-			passwordless: { type: "boolean", default: false },
-			passwordlessTokenExpires: { hidden: true },
-			resetTokenExpires: { hidden: true },
-			verificationToken: { hidden: true },
-			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
-			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
-			lastLoginAt: { type: "number", readonly: true }
-		},
+		fields: FIELDS,
 
 		indexes: [
 			{ fields: "username", unique: true },
@@ -117,35 +128,6 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
-		// Change visibility of default actions
-		create: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		list: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		find: {
-			visibility: C.VISIBILITY_PROTECTED,
-			graphql: {
-				query: "users(limit: Int, offset: Int, sort: String): [User]"
-			}
-		},
-		get: {
-			visibility: C.VISIBILITY_PROTECTED,
-			graphql: {
-				query: "user(id: String): User"
-			}
-		},
-		update: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		replace: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		remove: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-
 		/**
 		 * Get user by JWT token (for API GW authentication)
 		 *
@@ -155,6 +137,7 @@ module.exports = {
 		 * @returns {Object} Resolved user
 		 */
 		resolveToken: {
+			visibility: "public",
 			cache: {
 				keys: ["token"],
 				ttl: 60 * 60 // 1 hour
@@ -167,21 +150,10 @@ module.exports = {
 				if (!decoded.id)
 					throw new MoleculerClientError("Invalid token", 401, "INVALID_TOKEN");
 
-				const user = await this.getById(decoded.id);
-				if (!user)
-					throw new MoleculerClientError("User is not registered", 401, "USER_NOT_FOUND");
+				const user = await this.resolveEntities(ctx, decoded, { transform: false });
+				this.checkUser(user);
 
-				if (!user.verified)
-					throw new MoleculerClientError(
-						"Please activate your account!",
-						401,
-						"ERR_ACCOUNT_NOT_VERIFIED"
-					);
-
-				if (user.status !== 1)
-					throw new MoleculerClientError("User is disabled", 401, "USER_DISABLED");
-
-				return await this.transformDocuments(ctx, {}, user);
+				return await this.transformResult(null, user, {}, ctx);
 			}
 		},
 
@@ -201,30 +173,15 @@ module.exports = {
 				query: "me: User"
 			},
 			async handler(ctx) {
-				if (!ctx.meta.userID) {
-					return null;
-					//throw new MoleculerClientError("There is no logged in user!", 400, "NO_LOGGED_IN_USER");
-				}
+				if (!ctx.meta.userID) return null;
 
-				const user = await this.getById(ctx.meta.userID);
-				if (!user) {
+				const user = await this.resolveEntities(ctx, { id: ctx.meta.userID });
+				try {
+					this.checkUser(user);
+					return user;
+				} catch (err) {
 					return null;
-					//throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
 				}
-
-				// Check verified
-				if (!user.verified) {
-					return null;
-					//throw new MoleculerClientError("Please activate your account!", 400, "ERR_ACCOUNT_NOT_VERIFIED");
-				}
-
-				// Check status
-				if (user.status !== 1) {
-					return null;
-					//throw new MoleculerClientError("Account is disabled!", 400, "ERR_ACCOUNT_DISABLED");
-				}
-
-				return await this.transformDocuments(ctx, {}, user);
 			}
 		},
 
@@ -233,13 +190,10 @@ module.exports = {
 		 *
 		 */
 		register: {
-			params: {
-				username: { type: "string", min: 3, optional: true },
-				password: { type: "string", min: 8, optional: true },
-				email: { type: "email" },
-				fullName: { type: "string", min: 2 },
-				avatar: { type: "string", optional: true }
-			},
+			params: generateValidatorSchemaFromFields(
+				_.pick(FIELDS, ["username", "fullName", "email", "password", "avatar"]),
+				{ type: "create" }
+			),
 			rest: "POST /register",
 			async handler(ctx) {
 				if (!this.config["accounts.signup.enabled"])
@@ -249,11 +203,10 @@ module.exports = {
 						"ERR_SIGNUP_DISABLED"
 					);
 
-				const params = Object.assign({}, ctx.params);
-				const entity = {};
+				const entity = Object.assign({}, ctx.params);
 
 				// Verify email
-				let found = await this.getUserByEmail(ctx, params.email);
+				let found = await this.getUserByEmail(ctx, entity.email);
 				if (found)
 					throw new MoleculerClientError(
 						"Email has already been registered.",
@@ -263,7 +216,7 @@ module.exports = {
 
 				// Verify username
 				if (this.config["accounts.username.enabled"]) {
-					if (!ctx.params.username) {
+					if (!entity.username) {
 						throw new MoleculerClientError(
 							"Username can't be empty.",
 							400,
@@ -271,27 +224,17 @@ module.exports = {
 						);
 					}
 
-					let found = await this.getUserByUsername(ctx, params.username);
+					let found = await this.getUserByUsername(ctx, entity.username);
 					if (found)
 						throw new MoleculerClientError(
 							"Username has already been registered.",
 							400,
 							"ERR_USERNAME_EXISTS"
 						);
-
-					entity.username = params.username;
+				} else {
+					// Usename is not enabled
+					delete entity.username;
 				}
-
-				// Set basic data
-				entity.email = params.email;
-				entity.fullName = params.fullName;
-				entity.roles = this.config["accounts.defaultRoles"];
-				entity.plan = this.config["accounts.defaultPlan"];
-				entity.avatar = params.avatar;
-				entity.socialLinks = {};
-				entity.createdAt = Date.now();
-				entity.verified = true;
-				entity.status = 1;
 
 				if (!entity.avatar) {
 					// Default avatar as Gravatar
@@ -300,12 +243,12 @@ module.exports = {
 				}
 
 				// Generate passwordless token or hash password
-				if (params.password) {
+				if (entity.password) {
 					entity.passwordless = false;
-					entity.password = await bcrypt.hash(params.password, 10);
+					entity.password = await bcrypt.hash(entity.password, 10);
 				} else if (this.config["accounts.passwordless.enabled"]) {
 					entity.passwordless = true;
-					entity.password = this.generateToken();
+					entity.password = null;
 				} else {
 					throw new MoleculerClientError(
 						"Password can't be empty.",
@@ -315,10 +258,7 @@ module.exports = {
 				}
 
 				// Generate verification token
-				if (this.config["accounts.verification.enabled"]) {
-					entity.verified = false;
-					entity.verificationToken = this.generateToken();
-				}
+				entity.verified = !this.config["accounts.verification.enabled"];
 
 				// Create new user
 				const user = await this.createEntity(ctx, entity);
@@ -329,11 +269,16 @@ module.exports = {
 					this.sendMail(ctx, user, "welcome");
 					user.token = await this.getToken(user);
 				} else {
+					const token = await this.generateToken(
+						C.TOKEN_TYPE_VERIFICATION,
+						user.id,
+						TOKEN_EXPIRATION
+					);
 					// Send verification email
-					this.sendMail(ctx, user, "activate", { token: entity.verificationToken });
+					this.sendMail(ctx, user, "activate", { token });
 				}
 
-				return this.transformDocuments(ctx, {}, user);
+				return user;
 			}
 		},
 
@@ -346,33 +291,38 @@ module.exports = {
 			},
 			rest: "POST /verify",
 			async handler(ctx) {
-				const user = await this.findEntity(ctx, {
-					query: { verificationToken: ctx.params.token }
+				const token = await ctx.call("v1.tokens.check", {
+					type: C.TOKEN_TYPE_VERIFICATION,
+					token: ctx.params.token
 				});
-				if (!user)
+				if (!token) {
 					throw new MoleculerClientError(
-						"Invalid verification token!",
+						"Invalid or expired verification token.",
 						400,
 						"INVALID_TOKEN"
 					);
+				}
 
-				const res = await this.updateEntity(
-					ctx,
-					{
-						id: user.id,
-						$set: {
-							verified: true,
-							verificationToken: null
-						}
-					},
-					{ raw: true }
-				);
+				let user = await this.resolveEntities(ctx, { id: token.owner });
+				this.checkUser(user, { noVerification: true });
+
+				user = await this.updateEntity(ctx, {
+					id: token.owner,
+					verified: true
+				});
+
+				// Remove token
+				await ctx.call("v1.tokens.remove", {
+					type: C.TOKEN_TYPE_VERIFICATION,
+					token: ctx.params.token
+				});
 
 				// Send welcome email
-				this.sendMail(ctx, res, "welcome");
+				// No need to wait it.
+				this.sendMail(ctx, user, "welcome");
 
 				return {
-					token: await this.getToken(res)
+					token: await this.getToken(user)
 				};
 			}
 		},
@@ -389,23 +339,18 @@ module.exports = {
 				const user = ctx.locals.entity;
 				if (user.status == 0)
 					throw new MoleculerClientError(
-						"Account has already been disabled!",
+						"Account has already been disabled.",
 						400,
 						"ERR_USER_ALREADY_DISABLED"
 					);
 
-				const res = await this.updateEntity(
-					ctx,
-					{
-						id: user.id,
-						$set: {
-							status: 0
-						}
-					},
-					{ raw: true }
-				);
+				const res = await this.updateEntity(ctx, {
+					id: user.id,
+					status: 0
+				});
 
 				return {
+					id: user.id,
 					status: res.status
 				};
 			}
@@ -423,223 +368,20 @@ module.exports = {
 				const user = ctx.locals.entity;
 				if (user.status == 1)
 					throw new MoleculerClientError(
-						"Account has already been enabled!",
+						"Account has already been enabled.",
 						400,
 						"ERR_USER_ALREADY_ENABLED"
 					);
 
-				const res = await this.updateEntity(
-					ctx,
-					{
-						id: user.id,
-						$set: {
-							status: 1
-						}
-					},
-					{ raw: true }
-				);
+				const res = await this.updateEntity(ctx, {
+					id: user.id,
+					status: 1
+				});
 
 				return {
+					id: user.id,
 					status: res.status
 				};
-			}
-		},
-
-		/**
-		 * Check passwordless token
-		 */
-		passwordless: {
-			params: {
-				token: { type: "string" }
-			},
-			rest: "POST /passwordless",
-			async handler(ctx) {
-				if (!this.config["accounts.passwordless.enabled"])
-					throw new MoleculerClientError(
-						"Passwordless login is not allowed.",
-						400,
-						"ERR_PASSWORDLESS_DISABLED"
-					);
-
-				const user = await this.findEntity(ctx, {
-					query: { passwordlessToken: ctx.params.token }
-				});
-				if (!user) throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
-
-				// Check status
-				if (user.status !== 1)
-					throw new MoleculerClientError(
-						"Account is disabled!",
-						400,
-						"ERR_ACCOUNT_DISABLED"
-					);
-
-				// Check token expiration
-				if (user.passwordlessTokenExpires < Date.now())
-					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
-
-				// Verified account if not
-				if (!user.verified) {
-					await this.updateEntity(
-						ctx,
-						{
-							id: user.id,
-							$set: {
-								verified: true
-							}
-						},
-						{ raw: true }
-					);
-				}
-
-				return {
-					token: await this.getToken(user)
-				};
-			}
-		},
-
-		/**
-		 * Start "forgot password" process
-		 */
-		forgotPassword: {
-			params: {
-				email: { type: "email" }
-			},
-			rest: "POST /forgot-password",
-			async handler(ctx) {
-				const token = this.generateToken();
-
-				const user = await this.getUserByEmail(ctx, ctx.params.email);
-				// Check email is exist
-				if (!user)
-					throw new MoleculerClientError(
-						"Email is not registered.",
-						400,
-						"ERR_EMAIL_NOT_FOUND"
-					);
-
-				// Check verified
-				if (!user.verified)
-					throw new MoleculerClientError(
-						"Please activate your account!",
-						400,
-						"ERR_ACCOUNT_NOT_VERIFIED"
-					);
-
-				// Check status
-				if (user.status !== 1)
-					throw new MoleculerClientError(
-						"Account is disabled!",
-						400,
-						"ERR_ACCOUNT_DISABLED"
-					);
-
-				// Save the token to user
-				await this.updateEntity(
-					ctx,
-					{
-						id: user.id,
-						$set: {
-							resetToken: token,
-							resetTokenExpires: Date.now() + 3600 * 1000 // 1 hour
-						}
-					},
-					{ raw: true }
-				);
-
-				// Send a passwordReset email
-				this.sendMail(ctx, user, "reset-password", { token });
-
-				return true;
-			}
-		},
-
-		/**
-		 * Reset password
-		 */
-		resetPassword: {
-			params: {
-				token: { type: "string" },
-				password: { type: "string", min: 8 }
-			},
-			rest: "POST /reset-password",
-			async handler(ctx) {
-				// Check the token & expires
-				const user = await this.findEntity(ctx, {
-					query: { resetToken: ctx.params.token }
-				});
-				if (!user) throw new MoleculerClientError("Invalid token!", 400, "INVALID_TOKEN");
-
-				// Check status
-				if (user.status !== 1)
-					throw new MoleculerClientError(
-						"Account is disabled!",
-						400,
-						"ERR_ACCOUNT_DISABLED"
-					);
-
-				if (user.resetTokenExpires < Date.now())
-					throw new MoleculerClientError("Token expired!", 400, "TOKEN_EXPIRED");
-
-				// Change the password
-				await this.updateEntity(
-					ctx,
-					{
-						id: user.id,
-						$set: {
-							password: await bcrypt.hash(ctx.params.password, 10),
-							passwordless: false,
-							verified: true,
-							resetToken: null,
-							resetTokenExpires: null
-						}
-					},
-					{ raw: true }
-				);
-
-				// Send password-changed email
-				this.sendMail(ctx, user, "password-changed");
-
-				return {
-					token: await this.getToken(user)
-				};
-			}
-		},
-
-		/**
-		 * Link account to a social account
-		 */
-		link: {
-			params: {
-				id: { type: "string" },
-				provider: { type: "string" },
-				profile: { type: "object" }
-			},
-			async handler(ctx) {
-				const res = await this.link(
-					ctx,
-					ctx.params.id,
-					ctx.params.provider,
-					ctx.params.profile
-				);
-				return this.transformDocuments(ctx, {}, res);
-			}
-		},
-
-		/**
-		 * Unlink account from a social account
-		 */
-		unlink: {
-			params: {
-				id: { type: "string", optional: true },
-				provider: { type: "string" }
-			},
-			async handler(ctx) {
-				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
-				if (!id) throw new MoleculerClientError("Missing user ID!", 400, "MISSING_USER_ID");
-
-				const res = await this.unlink(ctx, id, ctx.params.provider);
-				return this.transformDocuments(ctx, {}, res);
 			}
 		},
 
@@ -650,70 +392,54 @@ module.exports = {
 			params: {
 				email: { type: "string", optional: false },
 				password: { type: "string", optional: true },
-				token: { type: "string", optional: true }
+				token: { type: "string", optional: true, convert: true }
 			},
 			rest: "POST /login",
 			graphql: {
 				mutation: "login(email: String!, password: String, token: String): LoginToken"
 			},
 			async handler(ctx) {
-				let query;
+				// Get user by email
+				let _user = await this.getUserByEmail(ctx, ctx.params.email, { transform: false });
 
-				if (this.config["accounts.username.enabled"]) {
-					query = {
-						$or: [{ email: ctx.params.email }, { username: ctx.params.email }]
-					};
-				} else {
-					query = { email: ctx.params.email };
+				if (!_user && this.config["accounts.username.enabled"]) {
+					// Get user by username
+					_user = await this.getUserByUsername(ctx, ctx.params.email, {
+						transform: false
+					});
 				}
 
-				// Get user
-				const user = await this.findEntity(ctx, { query });
-				if (!user)
-					throw new MoleculerClientError("User not found!", 400, "ERR_USER_NOT_FOUND");
-
-				// Check verified
-				if (!user.verified) {
-					throw new MoleculerClientError(
-						"Please activate your account!",
-						400,
-						"ERR_ACCOUNT_NOT_VERIFIED"
-					);
-				}
-
-				// Check status
-				if (user.status !== 1) {
-					throw new MoleculerClientError(
-						"Account is disabled!",
-						400,
-						"ERR_ACCOUNT_DISABLED"
-					);
-				}
+				this.checkUser(_user);
 
 				// Check passwordless login
-				if (user.passwordless == true && ctx.params.password)
+				if (_user.passwordless == true && ctx.params.password) {
 					throw new MoleculerClientError(
-						"This is a passwordless account! Please login without password.",
+						"This is a passwordless account. Please login without password.",
 						400,
 						"ERR_PASSWORDLESS_WITH_PASSWORD"
 					);
+				}
+
+				const user = await this.transformResult(null, _user, {}, ctx);
 
 				// Authenticate
 				if (ctx.params.password) {
 					// Login with password
-					if (!(await bcrypt.compare(ctx.params.password, user.password)))
+					if (!(await bcrypt.compare(ctx.params.password, _user.password))) {
 						throw new MoleculerClientError(
-							"Wrong password!",
+							"Wrong password.",
 							400,
 							"ERR_WRONG_PASSWORD"
 						);
+					}
 				} else if (this.config["accounts.passwordless.enabled"]) {
-					if (!this.config["mail.enabled"])
+					if (!this.config["mail.enabled"]) {
 						throw new MoleculerClientError(
 							"Passwordless login is not available because mail transporter is not configured.",
 							400,
 							"ERR_PASSWORDLESS_UNAVAILABLE"
 						);
+					}
 
 					// Send magic link
 					await this.sendMagicLink(ctx, user);
@@ -731,20 +457,22 @@ module.exports = {
 				}
 
 				// Check Two-factor authentication
-				if (user.totp && user.totp.enabled) {
-					if (!ctx.params.token)
+				if (_user.totp && _user.totp.enabled) {
+					if (!ctx.params.token) {
 						throw new MoleculerClientError(
 							"Two-factor authentication is enabled. Please give the 2FA code.",
 							400,
 							"ERR_MISSING_2FA_CODE"
 						);
+					}
 
-					if (!(await this.verify2FA(user.totp.secret, ctx.params.token)))
+					if (!(await this.verify2FA(_user.totp.secret, ctx.params.token))) {
 						throw new MoleculerClientError(
-							"Invalid 2FA token!",
+							"Invalid 2FA token.",
 							400,
 							"TWOFACTOR_INVALID_TOKEN"
 						);
+					}
 				}
 
 				return {
@@ -771,7 +499,7 @@ module.exports = {
 					// There is logged in user. Link to the logged in user
 					let user = await this.findEntity(ctx, { query });
 					if (user) {
-						if (user._id != ctx.meta.userID)
+						if (user.id != ctx.meta.userID)
 							throw new MoleculerClientError(
 								"This social account has been linked to another account.",
 								400,
@@ -780,22 +508,23 @@ module.exports = {
 
 						// Same user
 						user.token = await this.getToken(user);
-						return this.transformDocuments(ctx, {}, user);
+						return user;
 					} else {
 						// Not found linked account. Create the link
 						user = await this.link(ctx, ctx.meta.userID, provider, profile);
 
 						user.token = await this.getToken(user);
-						return this.transformDocuments(ctx, {}, user);
+						return user;
 					}
 				} else {
 					// No logged in user
-					if (!profile.email)
+					if (!profile.email) {
 						throw new MoleculerClientError(
 							"Missing e-mail address in social profile",
 							400,
 							"ERR_NO_SOCIAL_EMAIL"
 						);
+					}
 
 					let foundBySocialID = false;
 
@@ -812,7 +541,7 @@ module.exports = {
 						// Check status
 						if (user.status !== 1) {
 							throw new MoleculerClientError(
-								"Account is disabled!",
+								"Account is disabled.",
 								400,
 								"ACCOUNT_DISABLED"
 							);
@@ -822,15 +551,12 @@ module.exports = {
 
 						if (!foundBySocialID) {
 							// Not found linked account. Create the link
-							user = await this.link(ctx, user._id, provider, profile);
+							user = await this.link(ctx, user.id, provider, profile);
 						}
 
 						user.token = await this.getToken(user);
 
-						// TODO: Hack to handle wrong "entity._id.toHexString is not a function" error in mongo adapter
-						user._id = this.decodeID(user._id);
-
-						return this.transformDocuments(ctx, {}, user);
+						return user;
 					}
 
 					if (!this.config["accounts.signup.enabled"])
@@ -843,7 +569,7 @@ module.exports = {
 					// Create a new user and link
 					user = await ctx.call(`${this.fullName}.register`, {
 						username: profile.username || profile.email.split("@")[0],
-						password: await bcrypt.genSalt(),
+						password: null,
 						email: profile.email,
 						fullName: profile.fullName,
 						avatar: profile.avatar
@@ -853,8 +579,174 @@ module.exports = {
 
 					user.token = await this.getToken(user);
 
-					return this.transformDocuments(ctx, {}, user);
+					return user;
 				}
+			}
+		},
+
+		/**
+		 * Check passwordless token
+		 */
+		passwordless: {
+			params: {
+				token: { type: "string" }
+			},
+			rest: "POST /passwordless",
+			async handler(ctx) {
+				if (!this.config["accounts.passwordless.enabled"])
+					throw new MoleculerClientError(
+						"Passwordless login is not allowed.",
+						400,
+						"ERR_PASSWORDLESS_DISABLED"
+					);
+
+				const token = await ctx.call("v1.tokens.check", {
+					type: C.TOKEN_TYPE_PASSWORDLESS,
+					token: ctx.params.token
+				});
+				if (!token)
+					throw new MoleculerClientError(
+						"Invalid or expired passwordless token.",
+						400,
+						"INVALID_TOKEN"
+					);
+
+				const user = await this.resolveEntities(ctx, { id: token.owner });
+
+				// Check status
+				if (user.status !== 1) {
+					throw new MoleculerClientError(
+						"Account is disabled.",
+						400,
+						"ERR_ACCOUNT_DISABLED"
+					);
+				}
+
+				// Verified account if not
+				if (!user.verified) {
+					await this.updateEntity(ctx, {
+						id: user.id,
+						verified: true
+					});
+				}
+
+				// Remove token
+				await ctx.call("v1.tokens.remove", {
+					type: C.TOKEN_TYPE_PASSWORDLESS,
+					token: ctx.params.token
+				});
+
+				return {
+					token: await this.getToken(user)
+				};
+			}
+		},
+
+		/**
+		 * Start "forgot password" process
+		 */
+		forgotPassword: {
+			params: {
+				email: { type: "email" }
+			},
+			rest: "POST /forgot-password",
+			async handler(ctx) {
+				const user = await this.getUserByEmail(ctx, ctx.params.email);
+				this.checkUser(user);
+
+				// Generate a reset token
+				const token = await this.generateToken(
+					C.TOKEN_TYPE_PASSWORD_RESET,
+					user.id,
+					TOKEN_EXPIRATION
+				);
+
+				// Send a passwordReset email
+				await this.sendMail(ctx, user, "reset-password", { token });
+
+				return true;
+			}
+		},
+
+		/**
+		 * Reset password
+		 */
+		resetPassword: {
+			params: {
+				token: { type: "string" },
+				password: FIELDS.password
+			},
+			rest: "POST /reset-password",
+			async handler(ctx) {
+				const token = await ctx.call("v1.tokens.check", {
+					type: C.TOKEN_TYPE_PASSWORD_RESET,
+					token: ctx.params.token
+				});
+				if (!token) {
+					throw new MoleculerClientError(
+						"Invalid or expired password reset token.",
+						400,
+						"INVALID_TOKEN"
+					);
+				}
+
+				let user = await this.resolveEntities(ctx, { id: token.owner });
+				this.checkUser(user, { noVerification: true });
+
+				// Change the password
+				user = await this.updateEntity(ctx, {
+					id: user.id,
+					password: await this.hashPassword(ctx.params.password),
+					passwordless: false,
+					verified: true
+				});
+
+				// Remove token
+				await ctx.call("v1.tokens.remove", {
+					type: C.TOKEN_TYPE_PASSWORD_RESET,
+					token: ctx.params.token
+				});
+
+				// Send password-changed email
+				this.sendMail(ctx, user, "password-changed");
+
+				return {
+					token: await this.getToken(user)
+				};
+			}
+		},
+
+		/**
+		 * Link account to a social account
+		 */
+		link: {
+			params: {
+				id: { type: "string", optional: true },
+				provider: { type: "string" },
+				profile: { type: "object" }
+			},
+			async handler(ctx) {
+				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
+				if (!id) throw new MoleculerClientError("Missing user ID.", 400, "MISSING_USER_ID");
+
+				return await this.link(ctx, ctx.params.id, ctx.params.provider, ctx.params.profile);
+			}
+		},
+
+		/**
+		 * Unlink account from a social account
+		 */
+		unlink: {
+			rest: "GET /unlink",
+			params: {
+				id: { type: "string", optional: true },
+				provider: { type: "string" }
+			},
+			async handler(ctx) {
+				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
+				if (!id) throw new MoleculerClientError("Missing user ID.", 400, "MISSING_USER_ID");
+
+				return await this.unlink(ctx, id, ctx.params.provider);
 			}
 		},
 
@@ -863,32 +755,32 @@ module.exports = {
 		 */
 		enable2Fa: {
 			params: {
-				token: { type: "string", optional: true }
+				token: { type: "string", optional: true, convert: true }
 			},
 			rest: "POST /enable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
-				const user = await this.resolveEntities(ctx, { id: ctx.meta.userID });
-				if (!user) throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+				const _user = await this.resolveEntities(
+					ctx,
+					{ id: ctx.meta.userID },
+					{ transform: false }
+				);
+				this.checkUser(_user);
 
-				if (!ctx.params.token && (!user.totp || !user.totp.enabled)) {
+				if (!ctx.params.token && (!_user.totp || !_user.totp.enabled)) {
 					// Generate a TOTP secret and send back otpauthURL & secret
 					const secret = speakeasy.generateSecret({ length: 10 });
-					await this.updateEntity(
-						ctx,
-						{
-							id: ctx.meta.userID,
-							$set: {
-								"totp.enabled": false,
-								"totp.secret": secret.base32
-							}
-						},
-						{ raw: true }
-					);
+					await this.updateEntity(ctx, {
+						id: ctx.meta.userID,
+						totp: {
+							enabled: false,
+							secret: secret.base32
+						}
+					});
 
 					const otpauthURL = speakeasy.otpauthURL({
 						secret: secret.ascii,
-						label: ctx.meta.user.email,
+						label: _user.email,
 						issuer: this.configObj.site.name
 					});
 
@@ -898,24 +790,20 @@ module.exports = {
 					};
 				} else {
 					// Verify the token with secret
-					const secret = user.totp.secret;
-					if (!(await this.verify2FA(secret, ctx.params.token)))
+					if (!(await this.verify2FA(_user.totp.secret, ctx.params.token))) {
 						throw new MoleculerClientError(
-							"Invalid token!",
+							"Invalid token.",
 							400,
 							"TWOFACTOR_INVALID_TOKEN"
 						);
+					}
 
-					await this.updateEntity(
-						ctx,
-						{
-							id: ctx.meta.userID,
-							$set: {
-								"totp.enabled": true
-							}
-						},
-						{ raw: true }
-					);
+					await this.updateEntity(ctx, {
+						id: ctx.meta.userID,
+						totp: {
+							enabled: true
+						}
+					});
 
 					return true;
 				}
@@ -927,40 +815,41 @@ module.exports = {
 		 */
 		disable2Fa: {
 			params: {
-				token: "string"
+				token: { type: "string", convert: true }
 			},
 			rest: "GET /disable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
 			async handler(ctx) {
-				const user = await this.resolveEntities(ctx, { id: ctx.meta.userID });
-				if (!user) throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+				const _user = await this.resolveEntities(
+					ctx,
+					{ id: ctx.meta.userID },
+					{ transform: false }
+				);
+				this.checkUser(_user);
 
-				if (!user.totp || !user.totp.enabled)
+				if (!_user.totp || !_user.totp.enabled)
 					throw new MoleculerClientError(
-						"Two-factor authentication is not enabled!",
+						"Two-factor authentication is not enabled.",
 						400,
 						"TWOFACTOR_NOT_ENABLED"
 					);
 
-				const secret = user.totp.secret;
-				if (!(await this.verify2FA(secret, ctx.params.token)))
+				const secret = _user.totp.secret;
+				if (!(await this.verify2FA(secret, ctx.params.token))) {
 					throw new MoleculerClientError(
-						"Invalid token!",
+						"Invalid token.",
 						400,
 						"TWOFACTOR_INVALID_TOKEN"
 					);
+				}
 
-				await this.updateEntity(
-					ctx,
-					{
-						id: ctx.meta.userID,
-						$set: {
-							"totp.enabled": false,
-							"totp.secret": null
-						}
-					},
-					{ raw: true }
-				);
+				await this.updateEntity(ctx, {
+					id: ctx.meta.userID,
+					totp: {
+						enabled: false,
+						secret: null
+					}
+				});
 
 				return true;
 			}
@@ -976,15 +865,16 @@ module.exports = {
 				id: "string"
 			},
 			async handler(ctx) {
-				const user = await this.resolveEntities(ctx);
-				if (!user) throw new MoleculerClientError("User not found!", 400, "USER_NOT_FOUND");
+				const user = await this.resolveEntities(ctx, ctx.params, { transform: false });
+				this.checkUser(user);
 
-				if (!user.totp || !user.totp.enabled)
+				if (!user.totp || !user.totp.secret) {
 					throw new MoleculerClientError(
-						"Two-factor authentication is not enabled!",
+						"Two-factor authentication is not enabled.",
 						400,
 						"TWOFACTOR_NOT_ENABLED"
 					);
+				}
 
 				const secret = user.totp.secret;
 				const token = this.generate2FaToken(secret);
@@ -1003,8 +893,36 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
+		/**
+		 * Check the user fields (verified, status)
+		 * @param {Object} user
+		 * @param {Object?} opts
+		 */
+		checkUser(user, opts = {}) {
+			if (!user) {
+				throw new MoleculerClientError("Account is not registered.", 401, "USER_NOT_FOUND");
+			}
+
+			if (!opts.noVerification && !user.verified) {
+				throw new MoleculerClientError(
+					"Please activate your account.",
+					401,
+					"ERR_ACCOUNT_NOT_VERIFIED"
+				);
+			}
+
+			if (user.status !== 1) {
+				throw new MoleculerClientError("Account is disabled.", 401, "USER_DISABLED");
+			}
+		},
+
+		/**
+		 * Generate a JWT login for user.
+		 * @param {Object} user
+		 * @returns {String}
+		 */
 		async getToken(user) {
-			return await this.generateJWT({ id: user._id.toString() });
+			return await this.generateJWT({ id: user.id.toString() });
 		},
 
 		/**
@@ -1058,34 +976,25 @@ module.exports = {
 		},
 
 		async link(ctx, id, provider, profile) {
-			return await this.updateEntity(
-				ctx,
-				{
-					id,
-					$set: {
-						[`socialLinks.${provider}`]: profile.socialID,
-						verified: true, // if not verified yet via email
-						verificationToken: null
-					}
+			return await this.updateEntity(ctx, {
+				id,
+				socialLinks: {
+					[provider]: profile.socialID
 				},
-				{ raw: true }
-			);
+				verified: true // if not verified yet via email
+			});
 		},
 
 		/**
 		 * Unlink account from a social account
 		 */
 		async unlink(ctx, id, provider) {
-			return await this.updateEntity(
-				ctx,
-				{
-					id,
-					$unset: {
-						[`socialLinks.${provider}`]: 1
-					}
-				},
-				{ raw: true }
-			);
+			return await this.updateEntity(ctx, {
+				id,
+				socialLinks: {
+					[provider]: null
+				}
+			});
 		},
 
 		/**
@@ -1095,21 +1004,13 @@ module.exports = {
 		 * @param {Object} user
 		 */
 		async sendMagicLink(ctx, user) {
-			const token = this.generateToken();
-
-			const usr = await this.updateEntity(
-				ctx,
-				{
-					id: user._id,
-					$set: {
-						passwordlessToken: token,
-						passwordlessTokenExpires: Date.now() + 3600 * 1000 // 1 hour
-					}
-				},
-				{ raw: true }
+			const token = await this.generateToken(
+				C.TOKEN_TYPE_PASSWORDLESS,
+				user.id,
+				TOKEN_EXPIRATION
 			);
 
-			return await this.sendMail(ctx, usr, "magic-link", { token });
+			return await this.sendMail(ctx, user, "magic-link", { token });
 		},
 
 		/**
@@ -1134,11 +1035,11 @@ module.exports = {
 							site: this.configObj.site
 						})
 					},
-					{ retries: 3, timeout: 5000 }
+					{ retries: 3, timeout: 10 * 1000 }
 				);
 			} catch (err) {
 				/* istanbul ignore next */
-				this.logger.error("Send mail error!", err);
+				this.logger.error("Send mail error.", err);
 				/* istanbul ignore next */
 				throw err;
 			}
@@ -1149,9 +1050,10 @@ module.exports = {
 		 *
 		 * @param {Context} ctx
 		 * @param {String} email
+		 * @param {Object?} opts
 		 */
-		async getUserByEmail(ctx, email) {
-			return await this.findEntity(ctx, { query: { email } });
+		async getUserByEmail(ctx, email, opts) {
+			return await this.findEntity(ctx, { query: { email } }, opts);
 		},
 
 		/**
@@ -1159,18 +1061,27 @@ module.exports = {
 		 *
 		 * @param {Context} ctx
 		 * @param {String} username
+		 * @param {Object?} opts
 		 */
-		async getUserByUsername(ctx, username) {
-			return await this.findEntity(ctx, { query: { username } });
+		async getUserByUsername(ctx, username, opts) {
+			return await this.findEntity(ctx, { query: { username } }, opts);
 		},
 
 		/**
-		 * Generate a token
+		 * Generate a token for user
 		 *
-		 * @param {Number} len Token length
+		 * @param {String} type
+		 * @param {String} owner
+		 * @param {Number?} expiration
 		 */
-		generateToken(len = 25) {
-			return crypto.randomBytes(len).toString("hex");
+		async generateToken(type, owner, expiration) {
+			const res = await (this.getContext() || this.broker).call("v1.tokens.generate", {
+				type,
+				owner,
+				expiry: expiration ? Date.now() + expiration : null
+			});
+
+			return res.token;
 		},
 
 		/**
@@ -1215,39 +1126,29 @@ module.exports = {
 		 * Seed an empty collection with an `admin` and a `test` users.
 		 */
 		async seedDB() {
-			const res = await this.createEntities([
+			const res = await this.createEntities(null, [
 				// Administrator
 				{
 					username: "admin",
-					password: await this.hashPassword("admin"),
 					fullName: "Administrator",
 					email: "admin@kantab.io",
+					password: await this.hashPassword("admin"),
 					avatar:
 						"https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
 					roles: ["administrator"],
-					socialLinks: {},
-					status: 1,
 					plan: "full",
-					verified: true,
-					passwordless: false,
-					createdAt: Date.now()
+					verified: true
 				},
 
 				// Test user
 				{
 					username: "test",
-					password: await this.hashPassword("test"),
 					fullName: "Test User",
 					email: "test@kantab.io",
+					password: await this.hashPassword("test"),
 					avatar:
 						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
-					roles: ["user"],
-					socialLinks: {},
-					status: 1,
-					plan: "free",
-					verified: true,
-					passwordless: false,
-					createdAt: Date.now()
+					verified: true
 				}
 			]);
 

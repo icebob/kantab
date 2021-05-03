@@ -49,14 +49,15 @@
     "prettier": "^2.2.1"
   },
   "dependencies": {
+    "@moleculer/database": "github:moleculerjs/database",
     "@moleculer/lab": "^0.6.0",
     "accept": "3.1.3",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
     "connect-history-api-fallback": "1.6.0",
     "cookie": "^0.4.1",
+    "cron": "^1.8.2",
     "cross-env": "^7.0.3",
-    "database": "github:moleculerjs/database",
     "dotenv": "^8.2.0",
     "execa": "^5.0.0",
     "glob": "^7.1.6",
@@ -92,7 +93,7 @@
     "uid-generator": "2.0.0"
   },
   "engines": {
-    "node": ">= 8.x.x"
+    "node": ">= 12.x.x"
   },
   "jest": {
     "coverageDirectory": "../coverage",
