@@ -40,7 +40,7 @@ export default new Vuex.Store({
 		async init({ state, commit, dispatch }) {
 			try {
 				await dispatch("getMe");
-				await dispatch("getSupporterSocialAuthProviders");
+				await dispatch("getSupportedSocialAuthProviders");
 			} catch (err) {
 				console.log("Error", err);
 				//Raven.captureException(err);
@@ -64,7 +64,7 @@ export default new Vuex.Store({
 			return user;
 		},
 
-		async getSupporterSocialAuthProviders({ commit }) {
+		async getSupportedSocialAuthProviders({ commit }) {
 			const providers = await axios.get("/auth/supported-social-auth-providers");
 			commit("SET_AUTH_PROVIDERS", providers);
 

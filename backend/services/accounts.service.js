@@ -900,19 +900,19 @@ module.exports = {
 		 */
 		checkUser(user, opts = {}) {
 			if (!user) {
-				throw new MoleculerClientError("Account is not registered.", 401, "USER_NOT_FOUND");
+				throw new MoleculerClientError("Account is not registered.", 400, "USER_NOT_FOUND");
 			}
 
 			if (!opts.noVerification && !user.verified) {
 				throw new MoleculerClientError(
 					"Please activate your account.",
-					401,
+					400,
 					"ERR_ACCOUNT_NOT_VERIFIED"
 				);
 			}
 
 			if (user.status !== 1) {
-				throw new MoleculerClientError("Account is disabled.", 401, "USER_DISABLED");
+				throw new MoleculerClientError("Account is disabled.", 400, "USER_DISABLED");
 			}
 		},
 
