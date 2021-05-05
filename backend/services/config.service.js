@@ -118,13 +118,15 @@ module.exports = {
 					return this.Promise.all(
 						ctx.params.map(async p => {
 							let { changed, item } = await this.set(p.key, p.value);
+							item = await this.transformResult(null, item, {}, ctx);
 							if (changed) ctx.broadcast(`config.changed`, item);
 
 							return item;
 						})
 					);
 				} else {
-					const { changed, item } = await this.set(ctx.params.key, ctx.params.value);
+					let { changed, item } = await this.set(ctx.params.key, ctx.params.value);
+					item = await this.transformResult(null, item, {}, ctx);
 					if (changed) ctx.broadcast(`config.changed`, item);
 
 					return item;
