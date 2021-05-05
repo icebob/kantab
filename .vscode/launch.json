@@ -44,8 +44,8 @@
 			"name": "Jest",
 			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
 			"args": [
-				"-c",
-				"jest.backend.config.js",
+				"--testMatch",
+				"**/integration/**/*.spec.js",
 				"--runInBand"
 			],
 			"cwd": "${workspaceRoot}",

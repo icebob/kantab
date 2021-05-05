@@ -42,16 +42,18 @@ module.exports = function (opts = {}) {
 	const schema = {
 		mixins: [DbService(opts)],
 
-		methods: {
-			encodeID(id) {
-				if (ObjectID.isValid(id)) id = id.toString();
-				return hashids.encodeHex(id);
-			},
+		methods: !TESTING
+			? {
+					encodeID(id) {
+						if (ObjectID.isValid(id)) id = id.toString();
+						return hashids.encodeHex(id);
+					},
 
-			decodeID(id) {
-				return hashids.decodeHex(id);
-			}
-		},
+					decodeID(id) {
+						return hashids.decodeHex(id);
+					}
+			  }
+			: undefined,
 
 		async started() {
 			/* istanbul ignore next */

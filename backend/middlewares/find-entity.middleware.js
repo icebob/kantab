@@ -10,7 +10,7 @@ module.exports = {
 			return async function FindEntityMiddleware(ctx) {
 				const svc = ctx.service;
 				ctx.locals.entity = await svc.resolveEntities(ctx, ctx.params, {
-					throwOnError: true
+					throwIfNotExist: true
 				});
 
 				// Call the handler
