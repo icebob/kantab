@@ -426,11 +426,7 @@ module.exports = {
 				if (ctx.params.password) {
 					// Login with password
 					if (!(await bcrypt.compare(ctx.params.password, _user.password))) {
-						throw new MoleculerClientError(
-							"Wrong password.",
-							400,
-							"ERR_WRONG_PASSWORD"
-						);
+						throw new MoleculerClientError("Wrong password.", 400, "WRONG_PASSWORD");
 					}
 				} else if (this.config["accounts.passwordless.enabled"]) {
 					if (!this.config["mail.enabled"]) {
@@ -452,7 +448,7 @@ module.exports = {
 					throw new MoleculerClientError(
 						"Passwordless login is not allowed.",
 						400,
-						"ERR_PASSWORDLESS_DISABLED"
+						"PASSWORDLESS_DISABLED"
 					);
 				}
 
@@ -597,7 +593,7 @@ module.exports = {
 					throw new MoleculerClientError(
 						"Passwordless login is not allowed.",
 						400,
-						"ERR_PASSWORDLESS_DISABLED"
+						"PASSWORDLESS_DISABLED"
 					);
 
 				const token = await ctx.call("v1.tokens.check", {
@@ -615,11 +611,7 @@ module.exports = {
 
 				// Check status
 				if (user.status !== 1) {
-					throw new MoleculerClientError(
-						"Account is disabled.",
-						400,
-						"ERR_ACCOUNT_DISABLED"
-					);
+					throw new MoleculerClientError("Account is disabled.", 400, "ACCOUNT_DISABLED");
 				}
 
 				// Verified account if not
@@ -900,19 +892,23 @@ module.exports = {
 		 */
 		checkUser(user, opts = {}) {
 			if (!user) {
-				throw new MoleculerClientError("Account is not registered.", 400, "USER_NOT_FOUND");
+				throw new MoleculerClientError(
+					"Account is not registered.",
+					400,
+					"ACCOUNT_NOT_FOUND"
+				);
 			}
 
 			if (!opts.noVerification && !user.verified) {
 				throw new MoleculerClientError(
 					"Please activate your account.",
 					400,
-					"ERR_ACCOUNT_NOT_VERIFIED"
+					"ACCOUNT_NOT_VERIFIED"
 				);
 			}
 
 			if (user.status !== 1) {
-				throw new MoleculerClientError("Account is disabled.", 400, "USER_DISABLED");
+				throw new MoleculerClientError("Account is disabled.", 400, "ACCOUNT_DISABLED");
 			}
 		},
 
