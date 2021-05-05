@@ -1486,7 +1486,6 @@ describe("Test Accounts service", () => {
 			beforeAll(async () => {
 				await setConf(broker, "accounts.username.enabled", false);
 				await setConf(broker, "accounts.verification.enabled", false);
-				await broker.Promise.delay(2000);
 			});
 
 			it("should not contain username if this feature is disabled", async () => {
