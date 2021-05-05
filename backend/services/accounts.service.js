@@ -18,7 +18,7 @@ const TOKEN_EXPIRATION = 60 * 60 * 1000; // 1 hour
 
 const FIELDS = {
 	id: { type: "string", primaryKey: true, secure: true, columnName: "_id" },
-	username: { type: "string", max: 50, empty: false, required: true, trim: true },
+	username: { type: "string", max: 50, empty: false, required: false, trim: true },
 	fullName: { type: "string", max: 100, empty: false, required: true, trim: true },
 	email: { type: "email", max: 254, empty: false, required: true, trim: true },
 	password: { type: "string", min: 6, max: 60, hidden: true },
@@ -200,7 +200,7 @@ module.exports = {
 					throw new MoleculerClientError(
 						"Sign up is not available.",
 						400,
-						"ERR_SIGNUP_DISABLED"
+						"SIGNUP_DISABLED"
 					);
 
 				const entity = Object.assign({}, ctx.params);
@@ -211,7 +211,7 @@ module.exports = {
 					throw new MoleculerClientError(
 						"Email has already been registered.",
 						400,
-						"ERR_EMAIL_EXISTS"
+						"EMAIL_EXISTS"
 					);
 
 				// Verify username
@@ -220,7 +220,7 @@ module.exports = {
 						throw new MoleculerClientError(
 							"Username can't be empty.",
 							400,
-							"ERR_USERNAME_EMPTY"
+							"USERNAME_EMPTY"
 						);
 					}
 
@@ -229,7 +229,7 @@ module.exports = {
 						throw new MoleculerClientError(
 							"Username has already been registered.",
 							400,
-							"ERR_USERNAME_EXISTS"
+							"USERNAME_EXISTS"
 						);
 				} else {
 					// Usename is not enabled
@@ -253,7 +253,7 @@ module.exports = {
 					throw new MoleculerClientError(
 						"Password can't be empty.",
 						400,
-						"ERR_PASSWORD_EMPTY"
+						"PASSWORD_EMPTY"
 					);
 				}
 
@@ -416,7 +416,7 @@ module.exports = {
 					throw new MoleculerClientError(
 						"This is a passwordless account. Please login without password.",
 						400,
-						"ERR_PASSWORDLESS_WITH_PASSWORD"
+						"PASSWORDLESS_WITH_PASSWORD"
 					);
 				}
 
@@ -433,7 +433,7 @@ module.exports = {
 						throw new MoleculerClientError(
 							"Passwordless login is not available because mail transporter is not configured.",
 							400,
-							"ERR_PASSWORDLESS_UNAVAILABLE"
+							"PASSWORDLESS_UNAVAILABLE"
 						);
 					}
 
@@ -499,7 +499,7 @@ module.exports = {
 							throw new MoleculerClientError(
 								"This social account has been linked to another account.",
 								400,
-								"ERR_SOCIAL_ACCOUNT_MISMATCH"
+								"SOCIAL_ACCOUNT_MISMATCH"
 							);
 
 						// Same user
@@ -518,7 +518,7 @@ module.exports = {
 						throw new MoleculerClientError(
 							"Missing e-mail address in social profile",
 							400,
-							"ERR_NO_SOCIAL_EMAIL"
+							"NO_SOCIAL_EMAIL"
 						);
 					}
 
@@ -559,7 +559,7 @@ module.exports = {
 						throw new MoleculerClientError(
 							"Sign up is not available",
 							400,
-							"ERR_SIGNUP_DISABLED"
+							"SIGNUP_DISABLED"
 						);
 
 					// Create a new user and link
