@@ -3,86 +3,79 @@
 const _ = require("lodash");
 const path = require("path");
 const mkdir = require("mkdirp").sync;
-//const DbService		= require("moleculer-db");
-const DbService = require("./database");
-const MongoAdapter = require("moleculer-db-adapter-mongo");
+const DbService = require("@moleculer/database").Service;
+const HashIds = require("hashids/cjs");
+const ObjectID = require("mongodb").ObjectID;
 
 const TESTING = process.env.NODE_ENV === "test";
-//const ISMONGO = !process.env.NEDB_FOLDER;
 
-module.exports = function (collection, opts = {}) {
-	let adapter;
+module.exports = function (opts = {}) {
+	const hashids = new HashIds(process.env.HASHID_SALT || "K4nTa3");
+
 	if (TESTING || process.env.ONLY_GENERATE) {
-		adapter = new DbService.MemoryAdapter();
+		opts = _.defaultsDeep(opts, {
+			adapter: "NeDB"
+		});
 	} else {
 		if (process.env.NEDB_FOLDER) {
 			const dir = path.resolve(process.env.NEDB_FOLDER);
 			mkdir(dir);
-			adapter = new DbService.MemoryAdapter({ filename: path.join(dir, `${collection}.db`) });
-		} else {
-			adapter = new MongoAdapter(process.env.MONGO_URI || "mongodb://localhost/kantab", {
-				useNewUrlParser: true,
-				useUnifiedTopology: true
+			opts = _.defaultsDeep(opts, {
+				adapter: {
+					type: "NeDB",
+					options: { filename: path.join(dir, `${opts.collection}.db`) }
+				}
 			});
-			// Mongo has an internal reconnect logic
-			opts.autoReconnect = false;
+		} else {
+			opts = _.defaultsDeep(opts, {
+				adapter: {
+					type: "MongoDB",
+					options: {
+						uri: process.env.MONGO_URI || "mongodb://localhost/kantab",
+						collection: opts.collection
+					}
+				}
+			});
 		}
 	}
 
 	const schema = {
-		mixins: [DbService(adapter, opts)],
-		collection,
+		mixins: [DbService(opts)],
 
-		methods: {
-			entityChanged(type, json, ctx) {
-				return this.clearCache().then(() => {
-					const eventName = `${this.name}.entity.${type}`;
-					this.broker.broadcast(eventName, { meta: ctx.meta, entity: json });
-				});
-			}
+		methods: !TESTING
+			? {
+					encodeID(id) {
+						if (ObjectID.isValid(id)) id = id.toString();
+						return hashids.encodeHex(id);
+					},
 
-			/*encodeID(id) {
-				return id != null ? id.toString() : null;
-			},
+					decodeID(id) {
+						return hashids.decodeHex(id);
+					}
+			  }
+			: undefined,
 
-			decodeID(id) {
-				if (typeof id === "string" && this.adapter.stringToObjectID)
-					return this.adapter.stringToObjectID(id);
-
-				return id;
-			}
-			*/
-		},
-
-		async afterConnected() {
-			this.logger.info("Connected to database.");
+		async started() {
 			/* istanbul ignore next */
 			if (!TESTING) {
-				// Create indexes
-				if (this.settings.indexes) {
-					try {
-						if (_.isFunction(this.adapter.collection.createIndex))
-							await this.Promise.all(
-								this.settings.indexes.map(idx =>
-									this.adapter.collection.createIndex(idx)
-								)
-							);
-					} catch (err) {
-						this.logger.error("Unable to create indexes.", err);
-					}
+				try {
+					// Create indexes
+					await this.createIndexes();
+				} catch (err) {
+					this.logger.error("Unable to create indexes.", err);
 				}
 			}
 
 			if (process.env.TEST_E2E) {
 				// Clean collection
-				this.logger.info(`Clear '${collection}' collection before tests...`);
-				await this.adapter.clear();
+				this.logger.info(`Clear '${opts.collection}' collection before tests...`);
+				await this.clearEntities();
 			}
 
 			// Seeding if the DB is empty
-			const count = await this.adapter.count();
+			const count = await this.countEntities(null, {});
 			if (count == 0 && _.isFunction(this.seedDB)) {
-				this.logger.info(`Seed '${collection}' collection...`);
+				this.logger.info(`Seed '${opts.collection}' collection...`);
 				await this.seedDB();
 			}
 		}

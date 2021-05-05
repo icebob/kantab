@@ -13,7 +13,8 @@
 			"args": [
 				"--hot",
 				"--env",
-				"backend/services"
+				"backend/services/config.service.js",
+				"backend/services/accounts.service.js"
 			]
 		},
 		{
@@ -43,8 +44,8 @@
 			"name": "Jest",
 			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
 			"args": [
-				"-c",
-				"jest.backend.config.js",
+				"--testMatch",
+				"**/integration/**/*.spec.js",
 				"--runInBand"
 			],
 			"cwd": "${workspaceRoot}",

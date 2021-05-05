@@ -2,10 +2,9 @@
 
 const _ = require("lodash");
 const DbService = require("../mixins/db.mixin");
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const Memoize = require("../mixins/memoize.mixin");
 const { match } = require("moleculer").Utils;
-const ConfigLoader = require("../mixins/config.mixin");
+//const ConfigLoader = require("../mixins/config.mixin");
 const C = require("../constants");
 
 /**
@@ -32,28 +31,29 @@ module.exports = {
 	name: "acl",
 	version: 1,
 
-	mixins: [DbService("roles"), CacheCleaner(["cache.clean.acl"]), ConfigLoader([]), Memoize()],
+	mixins: [
+		DbService({ actionVisibility: C.VISIBILITY_PROTECTED, collection: "roles" }),
+		//ConfigLoader([]),
+		Memoize()
+	],
 
 	/**
 	 * Service settings
 	 */
 	settings: {
 		fields: {
-			id: {
-				type: "string",
-				readonly: true,
-				primaryKey: true,
-				secure: true,
-				columnName: "_id"
-			},
+			id: { type: "string", primaryKey: true, secure: true, columnName: "_id" },
+			key: { type: "string", empty: false, required: true },
 			name: { type: "string" },
-			description: { type: "string" },
-			permissions: { type: "array" },
-			inherits: { type: "array" },
+			permissions: { type: "array", items: "string" },
+			inherits: { type: "array", items: "string" },
 			status: { type: "number", default: 1 },
-			createdAt: { type: "number", updateable: false, default: Date.now },
-			updatedAt: { type: "number", readonly: true, updateDefault: Date.now }
+			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
+			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() }
 		},
+
+		// Indexes on collection
+		indexes: [{ fields: "key", unique: true }],
 
 		permissions: ["boards.create", "boards.read", "boards.edit", "boards.remove"]
 	},
@@ -74,30 +74,10 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
-		// Change visibility of default actions
-		create: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		list: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		find: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		get: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		update: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-		remove: {
-			visibility: C.VISIBILITY_PROTECTED
-		},
-
 		can: {
 			visibility: C.VISIBILITY_PUBLIC,
 			cache: {
-				keys: ["#roles", "permissions"]
+				keys: ["roles", "permissions"]
 			},
 			params: {
 				roles: { type: "array", items: "string" },
@@ -111,7 +91,7 @@ module.exports = {
 		hasAccess: {
 			visibility: C.VISIBILITY_PUBLIC,
 			cache: {
-				keys: ["#roles", "permissions"]
+				keys: ["roles", "permissions"]
 			},
 			params: {
 				roles: { type: "array", items: "string" },
@@ -134,10 +114,7 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.assignPermission(ctx.locals.entity, ctx.params.permission);
-				const json = await this.transformDocuments(ctx, {}, role);
-				this.entityChanged("updated", json, ctx);
-				return json;
+				return await this.assignPermission(ctx.locals.entity, ctx.params.permission);
 			}
 		},
 
@@ -154,10 +131,7 @@ module.exports = {
 				permission: "string"
 			},
 			async handler(ctx) {
-				const role = await this.revokePermission(ctx.locals.entity, ctx.params.permission);
-				const json = await this.transformDocuments(ctx, {}, role);
-				this.entityChanged("updated", json, ctx);
-				return json;
+				return await this.revokePermission(ctx.locals.entity, ctx.params.permission);
 			}
 		},
 
@@ -174,10 +148,7 @@ module.exports = {
 				permissions: { type: "array", items: "string" }
 			},
 			async handler(ctx) {
-				const role = await this.syncPermissions(ctx.locals.entity, ctx.params.permissions);
-				const json = await this.transformDocuments(ctx, {}, role);
-				this.entityChanged("updated", json, ctx);
-				return json;
+				return await this.syncPermissions(ctx.locals.entity, ctx.params.permissions);
 			}
 		}
 	},
@@ -198,14 +169,19 @@ module.exports = {
 		 */
 		async assignPermission(role, permission) {
 			if (role.permissions.indexOf(permission) === -1) {
-				return await this.adapter.updateById(role._id, {
-					$addToSet: {
-						permissions: permission
+				return await this.updateEntity(
+					this.getContext(),
+					{
+						id: role.id,
+						$addToSet: {
+							permissions: permission
+						},
+						$set: {
+							updatedAt: Date.now()
+						}
 					},
-					$set: {
-						updatedAt: Date.now()
-					}
-				});
+					{ raw: true }
+				);
 			}
 			return role;
 		},
@@ -218,14 +194,19 @@ module.exports = {
 		 */
 		async revokePermission(role, permission) {
 			if (role.permissions.indexOf(permission) !== -1) {
-				return await this.adapter.updateById(role._id, {
-					$pull: {
-						permissions: permission
+				return await this.updateEntity(
+					this.getContext(),
+					{
+						id: role.id,
+						$pull: {
+							permissions: permission
+						},
+						$set: {
+							updatedAt: Date.now()
+						}
 					},
-					$set: {
-						updatedAt: Date.now()
-					}
-				});
+					{ raw: true }
+				);
 			}
 			return role;
 		},
@@ -237,11 +218,16 @@ module.exports = {
 		 * @param {Array<String>} permissions
 		 */
 		async syncPermissions(role, permissions) {
-			return await this.adapter.updateById(role._id, {
-				$set: {
-					permissions: permissions
-				}
-			});
+			return await this.updateEntity(
+				this.getContext(),
+				{
+					id: role.id,
+					$set: {
+						permissions: permissions
+					}
+				},
+				{ raw: true }
+			);
 		},
 
 		/**
@@ -254,7 +240,9 @@ module.exports = {
 			return await this.memoize("permissions", roleNames, async () => {
 				roleNames = Array.isArray(roleNames) ? roleNames : [roleNames];
 
-				const roles = await this.adapter.find({ query: { name: { $in: roleNames } } });
+				const roles = await this.findEntities(this.getContext(), {
+					query: { key: { $in: roleNames } }
+				});
 				const permissions = await this.Promise.mapSeries(roles, async role => {
 					let res = role.permissions ? Array.from(role.permissions) : [];
 
@@ -280,7 +268,9 @@ module.exports = {
 			let res = Array.isArray(roleNames) && roleNames.indexOf(role) !== -1;
 			if (!res) {
 				// Check inherits
-				const entities = await this.adapter.find({ query: { name: { $in: roleNames } } });
+				const entities = await this.findEntities(this.getContext(), {
+					query: { key: { $in: roleNames } }
+				});
 				if (Array.isArray(entities) && entities.length > 0) {
 					const inherits = _.uniq(
 						_.compact(_.flattenDeep(entities.map(entity => entity.inherits)))
@@ -342,29 +332,25 @@ module.exports = {
 		 * Seed an empty collection with an `admin` and a `user` roles.
 		 */
 		async seedDB() {
-			const res = await this.adapter.insertMany([
+			const res = await this.createEntities(null, [
 				// Administrator
 				{
-					name: "administrator",
-					description: "System Administrator",
-					permissions: ["**"],
-					status: 1,
-					createdAt: Date.now()
+					key: "administrator",
+					name: "System Administrator",
+					permissions: ["**"]
 				},
 
 				// User
 				{
-					name: "user",
-					description: "Registered User",
+					key: "user",
+					name: "Registered User",
 					permissions: [
 						"boards.create",
 						"boards.read",
 						"boards.update",
 						"boards.remove",
 						"cards.create"
-					],
-					status: 1,
-					createdAt: Date.now()
+					]
 				}
 			]);
 

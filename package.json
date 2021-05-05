@@ -1,6 +1,6 @@
 {
   "name": "kantab",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Kanban board application with Moleculer microservices & Vue.js",
   "scripts": {
     "dev": "moleculer-runner --env --repl --hot backend/services",
@@ -9,7 +9,7 @@
     "lint": "eslint backend",
     "lint:fix": "eslint backend --fix",
     "deps": "npm-check -u",
-    "ci": "jest -c jest.backend.config.js --watch",
+    "ci:backend": "jest --watch",
     "ci:e2e": "cross-env TEST_E2E=open MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "test": "npm run test:backend",
     "test:backend": "jest --coverage --no-cache",
@@ -49,12 +49,14 @@
     "prettier": "^2.2.1"
   },
   "dependencies": {
+    "@moleculer/database": "github:moleculerjs/database",
     "@moleculer/lab": "^0.6.0",
     "accept": "3.1.3",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
     "connect-history-api-fallback": "1.6.0",
     "cookie": "^0.4.1",
+    "cron": "^1.8.2",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "execa": "^5.0.0",
@@ -85,12 +87,13 @@
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "2.0.0",
     "pug": "^3.0.2",
+    "slugify": "^1.5.1",
     "speakeasy": "2.0.0",
     "swagger-ui-dist": "^3.45.1",
     "uid-generator": "2.0.0"
   },
   "engines": {
-    "node": ">= 8.x.x"
+    "node": ">= 12.x.x"
   },
   "jest": {
     "coverageDirectory": "../coverage",

@@ -46,7 +46,7 @@ describe("Test forgot password flow", () => {
 		cy.forgotPassword("chuck.norris@notfound.me");
 
 		cy.url().should("equal", `${baseUrl}/forgot-password`);
-		cy.get(".alert.error").should("contain", "Email is not registered.");
+		cy.get(".alert.error").should("contain", "Account is not registered.");
 	});
 
 	it("Try with correct email", () => {
@@ -80,7 +80,7 @@ describe("Test forgot password flow", () => {
 	it("Try login with old password", () => {
 		cy.login(user.email, user.password);
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.error").should("contain", "Wrong password!");
+		cy.get(".alert.error").should("contain", "Wrong password.");
 	});
 
 	it("Login with new password", () => {

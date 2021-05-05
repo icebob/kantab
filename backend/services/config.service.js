@@ -2,8 +2,6 @@
 
 const _ = require("lodash");
 const DbService = require("../mixins/db.mixin");
-const { ValidationError } = require("moleculer").Errors;
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
 const { match } = require("moleculer").Utils;
 
 /**
@@ -13,10 +11,7 @@ module.exports = {
 	name: "config",
 	version: 1,
 
-	mixins: [
-		DbService("configurations", { createActions: false }),
-		CacheCleaner(["cache.clean.config"])
-	],
+	mixins: [DbService({ createActions: false })],
 
 	/**
 	 * Service settings
@@ -24,7 +19,7 @@ module.exports = {
 	settings: {
 		defaultConfig: {
 			"site.name": "KanTab",
-			"site.url": process.env.NOW_URL || "http://localhost:4000",
+			"site.url": process.env.SITE_URL || "http://localhost:4000",
 
 			"mail.enabled": true,
 			"mail.from": "no-reply@kantab.io",
@@ -41,15 +36,25 @@ module.exports = {
 
 		// Fields in responses
 		fields: {
-			key: true,
-			value: true,
-			isDefault: true,
-			createdAt: true,
-			updatedAt: true
+			key: { type: "string", empty: false, required: true },
+			value: { type: "any" },
+			isDefault: { type: "boolean", default: true },
+			createdAt: {
+				type: "number",
+				readonly: true,
+				hidden: "byDefault",
+				onCreate: () => Date.now()
+			},
+			updatedAt: {
+				type: "number",
+				readonly: true,
+				hidden: "byDefault",
+				onUpdate: () => Date.now()
+			}
 		},
 
 		// Indexes on collection
-		indexes: [{ key: 1 }]
+		indexes: [{ fields: "key", unique: true }]
 	},
 
 	/**
@@ -64,26 +69,15 @@ module.exports = {
 		 * @returns {Object|Array<String>}
 		 */
 		get: {
-			tracing: false,
+			tracing: process.env.NODE_ENV == "production",
 			cache: {
 				keys: ["key"]
 			},
-			/*params: [
-				{
-					key: "string"
-				},
-				{
-					key: { type: "array", items: "string" }
-				},
-			],*/
+			params: {
+				key: [{ type: "string" }, { type: "array", items: "string" }]
+			},
 			async handler(ctx) {
-				if (ctx.params.key == null)
-					throw new ValidationError(
-						"Param 'key' must be defined.",
-						"ERR_KEY_NOT_DEFINED"
-					);
-
-				return await this.transformDocuments(ctx, {}, await this.get(ctx.params.key));
+				return await this.get(ctx.params.key);
 			}
 		},
 
@@ -96,38 +90,46 @@ module.exports = {
 		 * @returns {Object|Array<Object>}
 		 */
 		set: {
-			/*params: [
-				{
-					key: { type: "string" },
-					value: { type: "any" }
-				},
-				{
-					type: "array", items: {
-						type: "object", props: {
-							key: "string",
-							value: "any"
+			params: {
+				$$root: true,
+				type: "multi",
+				rules: [
+					{
+						type: "object",
+						properties: {
+							key: { type: "string", empty: false, required: true },
+							value: { type: "any" }
+						}
+					},
+					{
+						type: "array",
+						items: {
+							type: "object",
+							properties: {
+								key: { type: "string", empty: false, required: true },
+								value: { type: "any" }
+							}
 						}
 					}
-				}
-			],*/
+				]
+			},
 			async handler(ctx) {
 				if (Array.isArray(ctx.params)) {
 					return this.Promise.all(
 						ctx.params.map(async p => {
-							const { changed, item } = await this.set(p.key, p.value);
-							const res = await this.transformDocuments(ctx, {}, item);
-							if (changed)
-								this.broker.broadcast(`${this.name}.${item.key}.changed`, res);
+							let { changed, item } = await this.set(p.key, p.value);
+							item = await this.transformResult(null, item, {}, ctx);
+							if (changed) ctx.broadcast(`config.changed`, item);
 
-							return res;
+							return item;
 						})
 					);
 				} else {
-					const { changed, item } = await this.set(ctx.params.key, ctx.params.value);
-					const res = await this.transformDocuments(ctx, {}, item);
-					if (changed) this.broker.broadcast(`${this.name}.${item.key}.changed`, res);
+					let { changed, item } = await this.set(ctx.params.key, ctx.params.value);
+					item = await this.transformResult(null, item, {}, ctx);
+					if (changed) ctx.broadcast(`config.changed`, item);
 
-					return res;
+					return item;
 				}
 			}
 		},
@@ -135,8 +137,32 @@ module.exports = {
 		all: {
 			tracing: false,
 			cache: true,
+			visibility: "protected",
+			handler(ctx) {
+				return this.findEntities(ctx, {});
+			}
+		},
+
+		/**
+		 * Run configuration migration. Add missing keys.
+		 */
+		migrate: {
+			cache: false,
+			visibility: "protected",
 			handler() {
-				return this.adapter.find({});
+				return this.Promise.all(
+					Object.keys(this.settings.defaultConfig).map(async key => {
+						const value = this.settings.defaultConfig[key];
+						const item = await this.get(key);
+						if (!item) {
+							this.logger.info(`Save new config: "${key}" =`, value);
+							return this.set(key, value, true);
+						} else if (item.isDefault && !_.isEqual(item.value, value)) {
+							this.logger.info(`Update default config: "${key}" =`, value);
+							return this.set(key, value, true);
+						}
+					})
+				);
 			}
 		}
 	},
@@ -146,7 +172,7 @@ module.exports = {
 	 */
 	methods: {
 		/**
-		 * Get configurations by key.
+		 * Get configurations by key(s).
 		 *
 		 * @methods
 		 * @param {String|Array<String>} key Config key
@@ -154,14 +180,25 @@ module.exports = {
 		 */
 		async get(key) {
 			if (Array.isArray(key)) {
-				const res = await this.Promise.all(key.map(k => this.getByMask(k)));
+				const res = await this.Promise.all(key.map(k => this.getOne(k)));
 				return _.uniqBy(_.flattenDeep(res), item => item.key);
-			} else {
-				if (key.indexOf("*") == -1 && key.indexOf("?") == -1)
-					return await this.adapter.findOne({ key });
-
-				return await this.getByMask(key);
 			}
+
+			return await this.getOne(key);
+		},
+
+		/**
+		 * Get configurations by one key (can contain wildcards).
+		 *
+		 * @methods
+		 * @param {String} key Config key
+		 * @returns {Object|Array<Object>}
+		 */
+		async getOne(key) {
+			if (key.indexOf("*") == -1 && key.indexOf("?") == -1)
+				return await this.findEntity(this.getContext(), { query: { key } });
+
+			return await this.getByMask(key);
 		},
 
 		/**
@@ -172,24 +209,12 @@ module.exports = {
 		 * @returns {Array<Object>}
 		 */
 		async getByMask(mask) {
-			const allItems = await this.broker.call(`${this.fullName}.all`);
+			const allItems = await (this.getContext() || this.broker).call(`${this.fullName}.all`);
 
 			/* istanbul ignore next */
 			if (!allItems) return [];
 
 			return allItems.filter(item => match(item.key, mask));
-		},
-
-		/**
-		 * Check whether a configuration key exists.
-		 *
-		 * @methods
-		 * @param {String} key
-		 * @returns {Boolean}
-		 */
-		async has(key) {
-			const res = await this.adapter.findOne({ key });
-			return res != null;
 		},
 
 		/**
@@ -203,60 +228,43 @@ module.exports = {
 		 * @returns {Object}
 		 */
 		async set(key, value, isDefault = false) {
-			const item = await this.adapter.findOne({ key });
+			const ctx = this.getContext();
+			const item = await this.findEntity(ctx, { query: { key } }, { transform: false });
 			if (item != null) {
 				if (!_.isEqual(item.value, value)) {
 					// Modify
 					return {
-						item: await this.adapter.updateById(item._id, {
-							$set: { value, isDefault, updatedAt: Date.now() }
+						item: await this.updateEntity(ctx, {
+							_id: item._id,
+							value,
+							isDefault
 						}),
-						changed: true
+						changed: true,
+						new: false
 					};
 				}
 
 				// No changes
 				return {
 					item,
-					changed: false
+					changed: false,
+					new: false
 				};
 			}
 
-			// Create new
+			// Create a new one
 			return {
-				item: await this.adapter.insert({ key, value, isDefault, createdAt: Date.now() }),
+				item: await this.createEntity(ctx, { key, value, isDefault }),
 				changed: true,
 				new: true
 			};
-		},
-
-		/**
-		 * Run configuration migration. Add missing keys.
-		 *
-		 * @methods
-		 * @private
-		 */
-		migrateConfig() {
-			return this.Promise.all(
-				Object.keys(this.settings.defaultConfig).map(async key => {
-					const value = this.settings.defaultConfig[key];
-					const item = await this.get(key);
-					if (!item) {
-						this.logger.info(`Save new config: "${key}" =`, value);
-						return this.set(key, value, true);
-					} else if (item.isDefault && !_.isEqual(item.value, value)) {
-						this.logger.info(`Update default config: "${key}" =`, value);
-						return this.set(key, value, true);
-					}
-				})
-			);
 		}
 	},
 
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-		return this.migrateConfig();
+	async started() {
+		return await this.actions.migrate();
 	}
 };

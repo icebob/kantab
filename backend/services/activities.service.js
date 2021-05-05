@@ -3,21 +3,20 @@
 const _ = require("lodash");
 
 const DbService = require("../mixins/db.mixin");
-const CacheCleaner = require("../mixins/cache.cleaner.mixin");
-const ConfigLoader = require("../mixins/config.mixin");
+//const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
 /**
- * Card activities service
+ * Activities service (board, card, ...etc)
  */
 module.exports = {
-	name: "card.activities",
+	name: "activities",
 	version: 1,
 
 	mixins: [
-		DbService("card-activities"),
-		CacheCleaner(["cache.clean.cards", "cache.clean.card.activities", "cache.clean.accounts"]),
-		ConfigLoader([])
+		DbService("activities")
+		//CacheCleaner(["cache.clean.cards", "cache.clean.activities", "cache.clean.accounts"]),
+		//ConfigLoader([])
 	],
 
 	/**
@@ -29,11 +28,11 @@ module.exports = {
 	 * Service settings
 	 */
 	settings: {
-		fields: [
+		/*fields: [
 			"_id",
 			"board",
+			"list",
 			"card",
-			"createdBy",
 
 			"type", // Similar to https://developers.trello.com/reference#action-types
 			"params",
@@ -41,22 +40,14 @@ module.exports = {
 
 			"isSystem",
 			"createdAt",
-			"updatedAt"
-		]
+			"createdBy",
+		]*/
 	},
 
 	/**
 	 * Actions
 	 */
-	actions: {
-		// Change visibility of default actions
-		create: {},
-		list: {},
-		find: {},
-		get: {},
-		update: {},
-		remove: {}
-	},
+	actions: {},
 
 	/**
 	 * Events
