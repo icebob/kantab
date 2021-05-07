@@ -40,17 +40,21 @@ module.exports = {
 			},
 			owner: {
 				readonly: true,
+				required: true,
 				populate: {
 					action: "v1.accounts.resolve",
 					fields: ["id", "username", "fullName", "avatar"]
 				},
-				// TODO: validate via accounts.resolve
-				onCreate: (value, entity, field, ctx) => ctx.meta.userID
+				onCreate: (value, entity, field, ctx) => ctx.meta.userID,
+				validate: (value, entity, field, ctx) =>
+					ctx
+						.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
+						.then(res => !!res)
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
 				type: "string",
-				/*readonly: true,*/
+				readonly: true,
 				set: (value, entity) =>
 					entity.title ? slugify(entity.title, { lower: true }) : value
 			},
@@ -64,7 +68,7 @@ module.exports = {
 			options: { type: "object" },
 			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
 			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
-			archivedAt: { type: "date" },
+			archivedAt: { type: "date", readonly: true },
 			deletedAt: { type: "date", readonly: true, onDelete: () => Date.now() }
 		},
 
