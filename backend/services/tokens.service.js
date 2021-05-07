@@ -50,14 +50,18 @@ module.exports = {
 				values: C.TOKEN_TYPES,
 				required: true
 			},
+			name: { type: "string", max: 255 }, // for user API keys
 			token: { type: "string", required: true },
 			expiry: { type: "number", integer: true },
-			owner: { type: "string", required: true } // TODO: validate via accounts.resolve
+			owner: { type: "string", required: true }, // TODO: validate via accounts.resolve
+			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
+			lastUsedAt: { type: "number", readonly: true, hidden: "byDefault" } // for API keys
 		},
 
 		indexes: [
 			{ fields: "token", unique: true },
 			{ fields: ["type", "token"] },
+			{ fields: ["type", "owner"] },
 			{ fields: "expiry" }
 		]
 	},
@@ -109,10 +113,11 @@ module.exports = {
 					values: C.TOKEN_TYPES
 				},
 				token: { type: "string" },
-				owner: { type: "string", optional: true }
+				owner: { type: "string", optional: true },
+				isUsed: { type: "boolean", default: false }
 			},
 			async handler(ctx) {
-				const entity = await this.findEntity(ctx, {
+				let entity = await this.findEntity(ctx, {
 					query: {
 						type: ctx.params.type,
 						token: this.secureToken(ctx.params.token)
@@ -121,6 +126,14 @@ module.exports = {
 				if (entity) {
 					if (!ctx.params.owner || entity.owner == ctx.params.owner) {
 						if (entity.expiry && entity.expiry < Date.now()) return false;
+
+						if (ctx.params.isUsed) {
+							entity = await this.updateEntity(
+								ctx,
+								{ id: entity.id, lastUsedAt: Date.now() },
+								{ permissive: true }
+							);
+						}
 						return entity;
 					}
 				}

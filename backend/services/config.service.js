@@ -18,8 +18,15 @@ module.exports = {
 	 */
 	settings: {
 		defaultConfig: {
+			// Same structure as https://github.com/thedevdojo/wave/blob/main/storage/dump.sql#L930
 			"site.name": "KanTab",
 			"site.url": process.env.SITE_URL || "http://localhost:4000",
+
+			"seed.accounts.admin.username": "admin", // TODO
+			"seed.accounts.admin.password": "admin", // TODO
+
+			"seed.accounts.test.username": "test", // TODO
+			"seed.accounts.test.password": "test", // TODO
 
 			"mail.enabled": true,
 			"mail.from": "no-reply@kantab.io",
@@ -31,7 +38,11 @@ module.exports = {
 			"accounts.defaultRoles": ["user"],
 			"accounts.defaultPlan": "free",
 			"accounts.jwt.expiresIn": "30d",
-			"accounts.two-factor.enabled": true
+			"accounts.two-factor.enabled": true,
+			"accounts.password.minimum": 6, // TODO
+
+			"tokens.jwt.expires": 60, // TODO
+			"tokens.others.expires": 60 // TODO
 		},
 
 		// Fields in responses

@@ -1,7 +1,11 @@
 # TODO
 
 ## Common 
-- [ ] 
+- [ ] load default values from ENV vars on config, e.g. "site.url" -> SITE_URL, "tokens.jwt.expires" -> TOKENS_JWT_EXPIRES
+- [ ] change `speakeasy` to other lib
+  - [ ] https://www.npmtrends.com/otpauth-vs-otplib-vs-speakeasy
+  - [ ] https://github.com/yeojz/otplib
+  - [ ] https://github.com/hectorm/otpauth
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
