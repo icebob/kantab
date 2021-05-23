@@ -18,10 +18,14 @@
 			]
 		},
 		{
-			"type": "node",
+			"name": "Attach",
+			"port": 9229,
 			"request": "attach",
-			"name": "Attach to Process",
-			"processId": "${command:PickProcess}"
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"type": "pwa-node",
+			"restart": true
 		},
 		{
 			"type": "node",

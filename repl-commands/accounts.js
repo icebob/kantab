@@ -31,7 +31,11 @@ module.exports = {
 	async action(broker, args, { table, kleur, getBorderCharacters }) {
 		//const { options } = args;
 		//console.log(options);
-		const users = await broker.call("v1.accounts.find", { sort: "username" });
+		const users = await broker.call(
+			"v1.accounts.find",
+			{ sort: "username" },
+			{ meta: { $repl: true } }
+		);
 
 		const data = [
 			[

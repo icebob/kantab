@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "description": "Kanban board application with Moleculer microservices & Vue.js",
   "scripts": {
-    "dev": "moleculer-runner --env --repl --hot backend/services",
+    "dev": "node --inspect node_modules/moleculer/bin/moleculer-runner.js --env --repl --hot backend/services",
     "start": "moleculer-runner --env",
     "build:frontend": "cd frontend && npm run build",
     "lint": "eslint backend",

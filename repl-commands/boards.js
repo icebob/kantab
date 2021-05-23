@@ -22,7 +22,7 @@ module.exports = {
 				populate: ["owner"],
 				scope: !!options.user
 			},
-			{ meta: { userID: options.user } }
+			{ meta: { userID: options.user, $repl: true } }
 		);
 
 		const data = [

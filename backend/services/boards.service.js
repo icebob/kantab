@@ -71,7 +71,24 @@ module.exports = {
 			public: { type: "boolean", default: false },
 			//stars: { type: "number", integer: true, min: 0, default: 0 },
 			//starred: { type: "boolean", virtual: true, get: (value, entity, field, ctx) => ctx.call("v1.stars.has", { type: "board", entity: entity.id, user: ctx.meta.userID })},
-			labels: { type: "array", items: "string|no-empty" },
+			labels: {
+				type: "array",
+				onCreate: () => _.cloneDeep(C.DEFAULT_LABELS),
+				items: {
+					type: "object",
+					properties: {
+						id: {
+							type: "number",
+							set(value, entity) {
+								if (value) return value;
+								return this.generateNextLabelID(entity.labels); // TODO entity is not the root entity but the label object
+							}
+						},
+						name: { type: "string", required: true },
+						color: { type: "string", required: true }
+					}
+				}
+			},
 			members: {
 				type: "array",
 				items: "string|no-empty",
@@ -79,9 +96,32 @@ module.exports = {
 				validate: (values, entity, field, ctx) =>
 					ctx
 						.call("v1.accounts.resolve", { id: values, throwIfNotExist: true })
-						.then(res =>
-							res.length == values.length ? true : "One member is not a valid user."
-						)
+						.then(res => {
+							if (res.length == values.length) return res;
+							throw new Error("One member is not a valid user.");
+						})
+						.then(async res => {
+							if (entity.id) {
+								const prevEntity = await ctx.call("v1.boards.resolve", {
+									id: entity.id
+								});
+
+								if (!values.includes(values.owner || prevEntity.owner)) {
+									throw new MoleculerClientError(
+										"The board owner can't be removed from the members.",
+										400,
+										"OWNER_CANT_BE_REMOVED",
+										{
+											board: entity.id,
+											owner: entity.owner,
+											members: values
+										}
+									);
+								}
+							}
+							return res;
+						})
+						.then(() => true)
 						.catch(err => err.message),
 				populate: {
 					action: "v1.accounts.resolve",
@@ -105,10 +145,12 @@ module.exports = {
 					query.public = true;
 				}
 				return query;
-			}
+			},
+
+			notArchived: { archived: false }
 		},
 
-		defaultScopes: ["membership"],
+		defaultScopes: ["membership", "notArchived"],
 
 		graphql: {
 			type: `
@@ -419,7 +461,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: ["boards.read", "$owner"],
+			permissions: ["boards.read", "$member"],
 			graphql: {
 				query: "board(id: String!): Board"
 			}
@@ -474,8 +516,9 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: ["administrator", "$owner"]
+			permissions: ["boards.update", "administrator", "$member"]
 		},
+		replace: false,
 		remove: {
 			openapi: {
 				$path: "DELETE /boards/{id}",
@@ -509,7 +552,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: ["administrator", "$owner"]
+			permissions: ["boards.update", "administrator", "$owner"]
 		},
 
 		// call v1.boards.addMembers --#userID xar8OJo4PMS753GeyN62 --id ZjQ1GMmYretJmgKpqZ14 --members[] xar8OJo4PMS753GeyN62
@@ -520,6 +563,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
+			permissions: ["administrator", "$member"],
 			async handler(ctx) {
 				const newMembers = _.uniq(
 					[].concat(ctx.locals.entity.members || [], ctx.params.members)
@@ -539,23 +583,11 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
+			permissions: ["administrator", "$member"],
 			async handler(ctx) {
 				const newMembers = ctx.locals.entity.members.filter(
 					m => !ctx.params.members.includes(m)
 				);
-
-				if (!newMembers.includes(ctx.locals.entity.owner)) {
-					throw new MoleculerClientError(
-						"The board owner can't be removed from the members.",
-						400,
-						"OWNER_CANT_BE_REMOVED",
-						{
-							board: ctx.params.id,
-							owner: ctx.locals.entity.owner,
-							members: newMembers
-						}
-					);
-				}
 
 				return this.updateEntity(ctx, {
 					id: ctx.params.id,
@@ -571,11 +603,71 @@ module.exports = {
 				owner: "string"
 			},
 			needEntity: true,
+			permissions: ["administrator", "$owner"],
 			async handler(ctx) {
-				return this.updateEntity(ctx, {
-					id: ctx.params.id,
-					owner: ctx.params.owner
-				});
+				return this.updateEntity(
+					ctx,
+					{
+						id: ctx.params.id,
+						owner: ctx.params.owner,
+						members: _.uniq([ctx.params.owner, ...ctx.locals.entity.members])
+					},
+					{ permissive: true }
+				);
+			}
+		},
+
+		archive: {
+			rest: "POST /:id/archive",
+			params: {
+				id: "string"
+			},
+			needEntity: true,
+			permissions: ["administrator", "$owner"],
+			async handler(ctx) {
+				if (ctx.locals.entity.archived)
+					throw new MoleculerClientError(
+						"Board is already archived",
+						400,
+						"BOARD_ALREADY_ARCHIVED",
+						{ board: ctx.locals.entity.id }
+					);
+				return this.updateEntity(
+					ctx,
+					{
+						id: ctx.params.id,
+						archived: true,
+						archivedAt: Date.now()
+					},
+					{ permissive: true }
+				);
+			}
+		},
+
+		unarchive: {
+			rest: "POST /:id/unarchive",
+			params: {
+				id: "string"
+			},
+			needEntity: true,
+			permissions: ["administrator", "$owner"],
+			async handler(ctx) {
+				if (!ctx.locals.entity.archived)
+					throw new MoleculerClientError(
+						"Board is not archived",
+						400,
+						"BOARD_NOT_ARCHIVED",
+						{ board: ctx.locals.entity.id }
+					);
+				return this.updateEntity(
+					ctx,
+					{
+						id: ctx.params.id,
+						archived: false,
+						archivedAt: null
+					},
+					{ permissive: true }
+				);
 			}
 		}
 	},
@@ -611,6 +703,19 @@ module.exports = {
 				ctx.meta.userID &&
 				ctx.locals.entity.members.includes(ctx.meta.userID)
 			);
+		},
+
+		/**
+		 * Generate an incremental number for labels.
+		 *
+		 * @param {Array} labels
+		 * @returns {Number}
+		 */
+		generateNextLabelID(labels) {
+			if (!labels || labels.length == 0) return 1;
+
+			const max = labels.reduce((m, id) => Math.max(m, id), 0);
+			return max + 1;
 		}
 	},
 
