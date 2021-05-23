@@ -1,6 +1,10 @@
 "use strict";
 
 const C = {
+	STATUS_ACTIVE: 1,
+	STATUS_INACTIVE: 0,
+	STATUS_DELETED: -1,
+
 	ROLE_SYSTEM: "$system",
 	ROLE_EVERYONE: "$everyone",
 	ROLE_AUTHENTICATED: "$authenticated",

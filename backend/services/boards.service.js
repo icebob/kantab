@@ -2,10 +2,11 @@
 
 const _ = require("lodash");
 const slugify = require("slugify");
+const C = require("../constants");
 
 const DbService = require("../mixins/db.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
-//const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
+const { MoleculerClientError } = require("moleculer").Errors;
 
 /**
  * Boards service
@@ -16,14 +17,13 @@ module.exports = {
 
 	mixins: [
 		DbService()
-		//CacheCleaner(["cache.clean.boards", "cache.clean.accounts"]),
 		//ConfigLoader([])
 	],
 
 	/**
 	 * Service dependencies
 	 */
-	//dependencies: [{ name: "accounts", version: 1 }],
+	dependencies: [{ name: "accounts", version: 1 }],
 
 	/**
 	 * Service settings
@@ -43,13 +43,20 @@ module.exports = {
 				required: true,
 				populate: {
 					action: "v1.accounts.resolve",
-					fields: ["id", "username", "fullName", "avatar"]
+					params: {
+						fields: ["id", "username", "fullName", "avatar"]
+					}
 				},
 				onCreate: (value, entity, field, ctx) => ctx.meta.userID,
 				validate: (value, entity, field, ctx) =>
 					ctx
 						.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
-						.then(res => !!res)
+						.then(res =>
+							res && res.status == C.STATUS_ACTIVE
+								? true
+								: `The owner '${value}' is not an active user.`
+						)
+						.catch(err => err.message)
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
@@ -62,15 +69,46 @@ module.exports = {
 			position: { type: "number", integer: true, default: 0 },
 			archived: { type: "boolean", default: false },
 			public: { type: "boolean", default: false },
-			stars: { type: "number", integer: true, min: 0, default: 0 },
+			//stars: { type: "number", integer: true, min: 0, default: 0 },
+			//starred: { type: "boolean", virtual: true, get: (value, entity, field, ctx) => ctx.call("v1.stars.has", { type: "board", entity: entity.id, user: ctx.meta.userID })},
 			labels: { type: "array", items: "string|no-empty" },
-			members: { type: "array", items: "string|no-empty" },
+			members: {
+				type: "array",
+				items: "string|no-empty",
+				onCreate: (value, entity, field, ctx) => (ctx.meta.userID ? [ctx.meta.userID] : []),
+				validate: (values, entity, field, ctx) =>
+					ctx
+						.call("v1.accounts.resolve", { id: values, throwIfNotExist: true })
+						.then(res =>
+							res.length == values.length ? true : "One member is not a valid user."
+						)
+						.catch(err => err.message),
+				populate: {
+					action: "v1.accounts.resolve",
+					params: {
+						fields: ["id", "username", "fullName", "avatar"]
+					}
+				}
+			},
 			options: { type: "object" },
 			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
 			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
 			archivedAt: { type: "date", readonly: true },
 			deletedAt: { type: "date", readonly: true, onDelete: () => Date.now() }
 		},
+
+		scopes: {
+			membership(query, ctx) {
+				if (ctx && ctx.meta.userID) {
+					query.members = ctx.meta.userID;
+				} else {
+					query.public = true;
+				}
+				return query;
+			}
+		},
+
+		defaultScopes: ["membership"],
 
 		graphql: {
 			type: `
@@ -472,6 +510,73 @@ module.exports = {
 			},
 			needEntity: true,
 			permissions: ["administrator", "$owner"]
+		},
+
+		// call v1.boards.addMembers --#userID xar8OJo4PMS753GeyN62 --id ZjQ1GMmYretJmgKpqZ14 --members[] xar8OJo4PMS753GeyN62
+		addMembers: {
+			rest: "POST /:id/add-members",
+			params: {
+				id: "string",
+				members: "string[]"
+			},
+			needEntity: true,
+			async handler(ctx) {
+				const newMembers = _.uniq(
+					[].concat(ctx.locals.entity.members || [], ctx.params.members)
+				);
+
+				return this.updateEntity(ctx, {
+					...ctx.params,
+					members: newMembers
+				});
+			}
+		},
+
+		removeMembers: {
+			rest: "POST /:id/remove-members",
+			params: {
+				id: "string",
+				members: "string[]"
+			},
+			needEntity: true,
+			async handler(ctx) {
+				const newMembers = ctx.locals.entity.members.filter(
+					m => !ctx.params.members.includes(m)
+				);
+
+				if (!newMembers.includes(ctx.locals.entity.owner)) {
+					throw new MoleculerClientError(
+						"The board owner can't be removed from the members.",
+						400,
+						"OWNER_CANT_BE_REMOVED",
+						{
+							board: ctx.params.id,
+							owner: ctx.locals.entity.owner,
+							members: newMembers
+						}
+					);
+				}
+
+				return this.updateEntity(ctx, {
+					id: ctx.params.id,
+					members: newMembers
+				});
+			}
+		},
+
+		transferOwnership: {
+			rest: "POST /:id/transfer-ownership",
+			params: {
+				id: "string",
+				owner: "string"
+			},
+			needEntity: true,
+			async handler(ctx) {
+				return this.updateEntity(ctx, {
+					id: ctx.params.id,
+					owner: ctx.params.owner
+				});
+			}
 		}
 	},
 
@@ -492,6 +597,20 @@ module.exports = {
 		 */
 		async isEntityOwner(ctx) {
 			return !!(ctx.locals.entity && ctx.locals.entity.owner == ctx.meta.userID);
+		},
+
+		/**
+		 * Internal method to check the membership of board.
+		 *
+		 * @param {Context} ctx
+		 * @returns {Promise<Boolean>}
+		 */
+		async isBoardMember(ctx) {
+			return !!(
+				ctx.locals.entity &&
+				ctx.meta.userID &&
+				ctx.locals.entity.members.includes(ctx.meta.userID)
+			);
 		}
 	},
 
