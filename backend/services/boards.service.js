@@ -48,7 +48,7 @@ module.exports = {
 					}
 				},
 				onCreate: (value, entity, field, ctx) => ctx.meta.userID,
-				validate: (value, entity, field, ctx) =>
+				validate: ({ ctx, value }) =>
 					ctx
 						.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
 						.then(res =>
@@ -93,36 +93,32 @@ module.exports = {
 				type: "array",
 				items: "string|no-empty",
 				onCreate: (value, entity, field, ctx) => (ctx.meta.userID ? [ctx.meta.userID] : []),
-				validate: (values, entity, field, ctx) =>
-					ctx
-						.call("v1.accounts.resolve", { id: values, throwIfNotExist: true })
+				validate: ({ ctx, value, params, id }) => {
+					const members = value;
+					return ctx
+						.call("v1.accounts.resolve", { id: members, throwIfNotExist: true })
 						.then(res => {
-							if (res.length == values.length) return res;
+							if (res.length == members.length) return res;
 							throw new Error("One member is not a valid user.");
 						})
 						.then(async res => {
-							if (entity.id) {
-								const prevEntity = await ctx.call("v1.boards.resolve", {
-									id: entity.id
-								});
-
-								if (!values.includes(values.owner || prevEntity.owner)) {
+							if (id) {
+								const prevEntity = await ctx.call("v1.boards.resolve", { id: id });
+								const owner = params.owner || prevEntity.owner;
+								if (!members.includes(owner)) {
 									throw new MoleculerClientError(
 										"The board owner can't be removed from the members.",
 										400,
 										"OWNER_CANT_BE_REMOVED",
-										{
-											board: entity.id,
-											owner: entity.owner,
-											members: values
-										}
+										{ board: id, owner, members }
 									);
 								}
 							}
 							return res;
 						})
 						.then(() => true)
-						.catch(err => err.message),
+						.catch(err => err.message);
+				},
 				populate: {
 					action: "v1.accounts.resolve",
 					params: {
