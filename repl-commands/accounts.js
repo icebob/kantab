@@ -12,7 +12,7 @@ function getStatusString(sta) {
 		case C.STATUS_INACTIVE:
 			return kleur.yellow().bold("Inactive");
 		case C.STATUS_DELETED:
-			return kleur.green().bold("Deleted");
+			return kleur.red().bold("Deleted");
 		default:
 			return sta;
 	}

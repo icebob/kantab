@@ -1,6 +1,13 @@
 "use strict";
 
 const _ = require("lodash");
+const kleur = require("kleur");
+
+function getStatusString(board) {
+	if (board.deletedAt) return kleur.bgRed().white().bold("Deleted");
+	if (board.archived) return kleur.magenta().bold("Archived");
+	return kleur.green().bold("Active");
+}
 
 module.exports = {
 	command: "boards",
@@ -31,7 +38,7 @@ module.exports = {
 				kleur.bold("Title"),
 				kleur.bold("Owner"),
 				kleur.bold("Public"),
-				kleur.bold("Archived")
+				kleur.bold("Status")
 			]
 		];
 
@@ -43,15 +50,15 @@ module.exports = {
 				board.title,
 				board.owner.fullName,
 				board.public ? kleur.magenta().bold("YES") : "Private",
-				board.archived ? kleur.cyan().bold("YES") : "No"
+				getStatusString(board)
 			]);
 		});
 
 		const tableConf = {
 			border: _.mapValues(getBorderCharacters("honeywell"), char => kleur.gray(char)),
 			columns: {
-				5: { alignment: "center" },
-				6: { alignment: "center" }
+				3: { alignment: "center" },
+				4: { alignment: "center" }
 			},
 			drawHorizontalLine: (index, count) =>
 				index == 0 || index == 1 || index == count || hLines.indexOf(index) !== -1

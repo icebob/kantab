@@ -134,7 +134,7 @@ module.exports = {
 			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
 			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
 			archivedAt: { type: "date", readonly: true },
-			deletedAt: { type: "date", readonly: true, onDelete: () => Date.now() }
+			deletedAt: { type: "date", readonly: true, onRemove: () => Date.now() }
 		},
 
 		scopes: {
@@ -147,10 +147,11 @@ module.exports = {
 				return query;
 			},
 
-			notArchived: { archived: false }
+			notArchived: { archived: false },
+			notDeleted: { deletedAt: null }
 		},
 
-		defaultScopes: ["membership", "notArchived"],
+		defaultScopes: ["membership", "notArchived", "notDeleted"],
 
 		graphql: {
 			type: `
