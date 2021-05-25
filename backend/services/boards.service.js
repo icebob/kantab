@@ -47,23 +47,15 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				onCreate: (value, entity, field, ctx) => ctx.meta.userID,
-				validate: ({ ctx, value }) =>
-					ctx
-						.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
-						.then(res =>
-							res && res.status == C.STATUS_ACTIVE
-								? true
-								: `The owner '${value}' is not an active user.`
-						)
-						.catch(err => err.message)
+				onCreate: ({ ctx }) => ctx.meta.userID,
+				validate: "validateOwner"
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
 				type: "string",
 				readonly: true,
-				set: (value, entity) =>
-					entity.title ? slugify(entity.title, { lower: true }) : value
+				set: ({ value, params }) =>
+					params.title ? slugify(params.title, { lower: true }) : value
 			},
 			description: { type: "string", required: false, trim: true },
 			position: { type: "number", integer: true, default: 0 },
@@ -79,9 +71,9 @@ module.exports = {
 					properties: {
 						id: {
 							type: "number",
-							set(value, entity) {
+							set({ value, root }) {
 								if (value) return value;
-								return this.generateNextLabelID(entity.labels); // TODO entity is not the root entity but the label object
+								return this.generateNextLabelID(root.labels);
 							}
 						},
 						name: { type: "string", required: true },
@@ -92,33 +84,8 @@ module.exports = {
 			members: {
 				type: "array",
 				items: "string|no-empty",
-				onCreate: (value, entity, field, ctx) => (ctx.meta.userID ? [ctx.meta.userID] : []),
-				validate: ({ ctx, value, params, id }) => {
-					const members = value;
-					return ctx
-						.call("v1.accounts.resolve", { id: members, throwIfNotExist: true })
-						.then(res => {
-							if (res.length == members.length) return res;
-							throw new Error("One member is not a valid user.");
-						})
-						.then(async res => {
-							if (id) {
-								const prevEntity = await ctx.call("v1.boards.resolve", { id: id });
-								const owner = params.owner || prevEntity.owner;
-								if (!members.includes(owner)) {
-									throw new MoleculerClientError(
-										"The board owner can't be removed from the members.",
-										400,
-										"OWNER_CANT_BE_REMOVED",
-										{ board: id, owner, members }
-									);
-								}
-							}
-							return res;
-						})
-						.then(() => true)
-						.catch(err => err.message);
-				},
+				onCreate: ({ ctx }) => (ctx.meta.userID ? [ctx.meta.userID] : []),
+				validate: "validateMembers",
 				populate: {
 					action: "v1.accounts.resolve",
 					params: {
@@ -134,6 +101,8 @@ module.exports = {
 		},
 
 		scopes: {
+			// List only boards where the logged in user is a member.
+			// If no logged in user, list only public boards.
 			membership(query, ctx) {
 				if (ctx && ctx.meta.userID) {
 					query.members = ctx.meta.userID;
@@ -143,7 +112,10 @@ module.exports = {
 				return query;
 			},
 
+			// List the non-archived boards
 			notArchived: { archived: false },
+
+			// List the not deleted boards
 			notDeleted: { deletedAt: null }
 		},
 
@@ -711,8 +683,51 @@ module.exports = {
 		generateNextLabelID(labels) {
 			if (!labels || labels.length == 0) return 1;
 
-			const max = labels.reduce((m, id) => Math.max(m, id), 0);
+			const max = labels.reduce((m, lbl) => Math.max(m, lbl.id || 0), 0);
 			return max + 1;
+		},
+
+		/**
+		 * Validate the `members` property of board.
+		 */
+		validateMembers({ ctx, value, params, id, entity }) {
+			const members = value;
+			return ctx
+				.call("v1.accounts.resolve", { id: members, throwIfNotExist: true })
+				.then(res => {
+					if (res.length == members.length) return res;
+					throw new Error("One member is not a valid user.");
+				})
+				.then(async res => {
+					if (id) {
+						const owner = params.owner || entity.owner;
+						if (!members.includes(owner)) {
+							throw new MoleculerClientError(
+								"The board owner can't be removed from the members.",
+								400,
+								"OWNER_CANT_BE_REMOVED",
+								{ board: id, owner, members }
+							);
+						}
+					}
+					return res;
+				})
+				.then(() => true)
+				.catch(err => err.message);
+		},
+
+		/**
+		 * Validate the `owner` property of board.
+		 */
+		validateOwner({ ctx, value }) {
+			return ctx
+				.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
+				.then(res =>
+					res && res.status == C.STATUS_ACTIVE
+						? true
+						: `The owner '${value}' is not an active user.`
+				)
+				.catch(err => err.message);
 		}
 	},
 
