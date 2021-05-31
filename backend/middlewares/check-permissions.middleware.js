@@ -2,6 +2,7 @@
 
 const _ = require("lodash");
 const { MoleculerClientError } = require("moleculer").Errors;
+const C = require("../constants");
 
 module.exports = {
 	name: "CheckPermissions",
@@ -23,7 +24,14 @@ module.exports = {
 				}
 
 				if (_.isString(p)) {
-					if (p == "$owner") {
+					if (p == C.ROLE_AUTHENTICATED) {
+						// Check if user is logged in
+						return permFuncs.push(async ctx => {
+							return !!ctx.meta.userID;
+						});
+					}
+
+					if (p == C.ROLE_OWNER) {
 						// Check if user is owner of the entity
 						return permFuncs.push(async ctx => {
 							if (_.isFunction(ctx.service.isEntityOwner))
@@ -32,8 +40,8 @@ module.exports = {
 						});
 					}
 
-					if (p == "$member") {
-						// Check if user is owner of the entity
+					if (p == C.ROLE_MEMBER) {
+						// Check if user is member of the entity
 						return permFuncs.push(async ctx => {
 							if (_.isFunction(ctx.service.isBoardMember))
 								return ctx.service.isBoardMember.call(this, ctx);
@@ -48,20 +56,17 @@ module.exports = {
 
 			return async function CheckPermissionsMiddleware(ctx) {
 				let res = false;
-				const roles = ctx.meta.roles;
-				if (ctx.meta.$repl) res = true;
 
-				if (!res && roles) {
-					if (permNames.length > 0) {
-						res = await ctx.call("v1.acl.hasAccess", { roles, permissions: permNames });
-					}
-				}
+				if (ctx.meta.$repl) res = true;
+				if (ctx.meta.roles && ctx.meta.roles.includes(C.ROLE_ADMINISTRATOR)) res = true;
+				if (permFuncs.length == 0) res = true;
+
 				if (res !== true) {
 					if (permFuncs.length > 0) {
 						const results = await ctx.broker.Promise.all(
 							permFuncs.map(async fn => fn.call(this, ctx))
 						);
-						res = results.find(r => !!r);
+						res = results.some(r => !!r);
 					}
 
 					if (res !== true)

@@ -8,9 +8,6 @@ const isProd = process.env.NODE_ENV == "production";
 
 // More info about options: https://moleculer.services/docs/0.13/broker.html#Broker-options
 module.exports = {
-	namespace: "",
-	nodeID: null,
-
 	logger:
 		process.env.TEST_E2E == "run"
 			? false
@@ -19,6 +16,7 @@ module.exports = {
 						type: "Console",
 						options: {
 							formatter: "short",
+							colors: !isProd,
 							moduleColors: true,
 							//autoPadding: true
 							objectPrinter: o =>
@@ -34,9 +32,12 @@ module.exports = {
 					},
 					"Laboratory"
 			  ],
+
 	logLevel: "info",
 
 	serializer: "JSON",
+
+	cacher: "MemoryLRU",
 
 	//requestTimeout: 10 * 1000,
 	retryPolicy: {
@@ -79,9 +80,6 @@ module.exports = {
 		maxQueueSize: 100
 	},
 
-	// Enable action & event parameter validation. More info: https://moleculer.services/docs/0.14/validating.html
-	validator: true,
-
 	// Enable/disable built-in metrics function. More info: https://moleculer.services/docs/0.14/metrics.html
 	metrics: {
 		enabled: true,
@@ -116,7 +114,7 @@ module.exports = {
 				? {
 						type: "Console",
 						options: {
-							width: 100,
+							width: 120,
 							colors: true,
 							logger: console.log
 						}
@@ -124,9 +122,6 @@ module.exports = {
 				: null
 		]
 	},
-
-	internalServices: true,
-	internalMiddlewares: true,
 
 	// Register custom middlewares
 	middlewares: [

@@ -145,6 +145,9 @@ module.exports = {
 			}
 		},
 
+		/**
+		 * Get all config settings.
+		 */
 		all: {
 			tracing: false,
 			cache: true,

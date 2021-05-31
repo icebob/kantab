@@ -101,21 +101,6 @@ services:
     restart: unless-stopped
     environment:
       SERVICES: accounts.service.js
-  v1_acl:
-    image: kantab
-    env_file: docker-compose.env
-    volumes:
-      - app_data:/app/data
-      - ./monitoring/prometheus:/app/monitoring/prometheus
-    expose:
-      - 3030
-    depends_on:
-      - mongo
-      - nats
-      - redis
-    restart: unless-stopped
-    environment:
-      SERVICES: acl.service.js
   v1_activities:
     image: kantab
     env_file: docker-compose.env

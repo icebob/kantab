@@ -8,7 +8,9 @@ const C = {
 	ROLE_SYSTEM: "$system",
 	ROLE_EVERYONE: "$everyone",
 	ROLE_AUTHENTICATED: "$authenticated",
+	ROLE_MEMBER: "$member",
 	ROLE_OWNER: "$owner",
+	ROLE_ADMINISTRATOR: "administrator",
 
 	VISIBILITY_PRIVATE: "private",
 	VISIBILITY_PROTECTED: "protected",

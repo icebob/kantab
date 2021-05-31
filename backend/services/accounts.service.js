@@ -1129,8 +1129,7 @@ module.exports = {
 					fullName: "Administrator",
 					email: "admin@kantab.io",
 					password: await this.hashPassword("admin"),
-					avatar:
-						"https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
+					avatar: "https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
 					roles: ["administrator"],
 					plan: "full",
 					verified: true
@@ -1142,8 +1141,7 @@ module.exports = {
 					fullName: "Test User",
 					email: "test@kantab.io",
 					password: await this.hashPassword("test"),
-					avatar:
-						"https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
+					avatar: "https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
 					verified: true
 				}
 			]);

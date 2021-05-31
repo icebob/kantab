@@ -5,6 +5,7 @@ const slugify = require("slugify");
 const C = require("../constants");
 
 const DbService = require("../mixins/db.mixin");
+const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
 
@@ -16,7 +17,8 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService()
+		DbService(),
+		ChecksMixin
 		//ConfigLoader([])
 	],
 
@@ -55,7 +57,9 @@ module.exports = {
 				type: "string",
 				readonly: true,
 				set: ({ value, params }) =>
-					params.title ? slugify(params.title, { lower: true }) : value
+					params.title
+						? slugify(params.title, { lower: true, remove: /[*+~.()'"!:@]/g })
+						: value
 			},
 			description: { type: "string", required: false, trim: true },
 			position: { type: "number", integer: true, default: 0 },
@@ -116,7 +120,10 @@ module.exports = {
 			notArchived: { archived: false },
 
 			// List the not deleted boards
-			notDeleted: { deletedAt: null }
+			notDeleted: { deletedAt: null },
+
+			// List public boards
+			public: { public: true }
 		},
 
 		defaultScopes: ["membership", "notArchived", "notDeleted"],
@@ -242,7 +249,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: ["boards.create"],
+			permissions: [C.ROLE_AUTHENTICATED],
 			graphql: {
 				mutation: "createBoard(title: String!, description: String): Board"
 			}
@@ -345,7 +352,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: ["boards.read"]
+			permissions: []
 		},
 		find: {
 			rest: "GET /find",
@@ -367,7 +374,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: ["boards.read"],
+			permissions: [],
 			graphql: {
 				query: "boards(limit: Int, offset: Int, sort: String): [Board]"
 			}
@@ -392,7 +399,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: ["boards.read"],
+			permissions: [],
 			graphql: {
 				query: "boardsCount: Int"
 			}
@@ -430,7 +437,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: ["boards.read", "$member"],
+			permissions: [C.ROLE_MEMBER],
 			graphql: {
 				query: "board(id: String!): Board"
 			}
@@ -485,7 +492,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: ["boards.update", "administrator", "$member"]
+			permissions: [C.ROLE_MEMBER]
 		},
 		replace: false,
 		remove: {
@@ -521,7 +528,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: ["boards.update", "administrator", "$owner"]
+			permissions: [C.ROLE_OWNER]
 		},
 
 		// call v1.boards.addMembers --#userID xar8OJo4PMS753GeyN62 --id ZjQ1GMmYretJmgKpqZ14 --members[] xar8OJo4PMS753GeyN62
@@ -532,7 +539,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: ["administrator", "$member"],
+			permissions: [C.ROLE_MEMBER],
 			async handler(ctx) {
 				const newMembers = _.uniq(
 					[].concat(ctx.locals.entity.members || [], ctx.params.members)
@@ -540,7 +547,8 @@ module.exports = {
 
 				return this.updateEntity(ctx, {
 					...ctx.params,
-					members: newMembers
+					members: newMembers,
+					scope: false
 				});
 			}
 		},
@@ -552,7 +560,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: ["administrator", "$member"],
+			permissions: [C.ROLE_MEMBER],
 			async handler(ctx) {
 				const newMembers = ctx.locals.entity.members.filter(
 					m => !ctx.params.members.includes(m)
@@ -560,7 +568,8 @@ module.exports = {
 
 				return this.updateEntity(ctx, {
 					id: ctx.params.id,
-					members: newMembers
+					members: newMembers,
+					scope: false
 				});
 			}
 		},
@@ -572,14 +581,15 @@ module.exports = {
 				owner: "string"
 			},
 			needEntity: true,
-			permissions: ["administrator", "$owner"],
+			permissions: [C.ROLE_OWNER],
 			async handler(ctx) {
 				return this.updateEntity(
 					ctx,
 					{
 						id: ctx.params.id,
 						owner: ctx.params.owner,
-						members: _.uniq([ctx.params.owner, ...ctx.locals.entity.members])
+						members: _.uniq([ctx.params.owner, ...ctx.locals.entity.members]),
+						scope: false
 					},
 					{ permissive: true }
 				);
@@ -592,7 +602,7 @@ module.exports = {
 				id: "string"
 			},
 			needEntity: true,
-			permissions: ["administrator", "$owner"],
+			permissions: [C.ROLE_OWNER],
 			async handler(ctx) {
 				if (ctx.locals.entity.archived)
 					throw new MoleculerClientError(
@@ -606,7 +616,8 @@ module.exports = {
 					{
 						id: ctx.params.id,
 						archived: true,
-						archivedAt: Date.now()
+						archivedAt: Date.now(),
+						scope: false
 					},
 					{ permissive: true }
 				);
@@ -619,7 +630,8 @@ module.exports = {
 				id: "string"
 			},
 			needEntity: true,
-			permissions: ["administrator", "$owner"],
+			defaultScopes: ["membership", "notDeleted"],
+			permissions: [C.ROLE_OWNER],
 			async handler(ctx) {
 				if (!ctx.locals.entity.archived)
 					throw new MoleculerClientError(
@@ -633,7 +645,8 @@ module.exports = {
 					{
 						id: ctx.params.id,
 						archived: false,
-						archivedAt: null
+						archivedAt: null,
+						scope: false
 					},
 					{ permissive: true }
 				);
@@ -650,30 +663,6 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
-		/**
-		 * Internal method to check the owner of entity. (called from CheckPermission middleware)
-		 *
-		 * @param {Context} ctx
-		 * @returns {Promise<Boolean>}
-		 */
-		async isEntityOwner(ctx) {
-			return !!(ctx.locals.entity && ctx.locals.entity.owner == ctx.meta.userID);
-		},
-
-		/**
-		 * Internal method to check the membership of board.
-		 *
-		 * @param {Context} ctx
-		 * @returns {Promise<Boolean>}
-		 */
-		async isBoardMember(ctx) {
-			return !!(
-				ctx.locals.entity &&
-				ctx.meta.userID &&
-				ctx.locals.entity.members.includes(ctx.meta.userID)
-			);
-		},
-
 		/**
 		 * Generate an incremental number for labels.
 		 *
