@@ -8,6 +8,7 @@ const DbService = require("../mixins/db.mixin");
 const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
+const { generateType } = require("../libs/graphql-generator");
 
 /**
  * Boards service
@@ -50,7 +51,8 @@ module.exports = {
 					}
 				},
 				onCreate: ({ ctx }) => ctx.meta.userID,
-				validate: "validateOwner"
+				validate: "validateOwner",
+				graphqlType: "User"
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
@@ -95,13 +97,29 @@ module.exports = {
 					params: {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
-				}
+				},
+				graphqlType: "User"
 			},
 			options: { type: "object" },
-			createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
-			updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
-			archivedAt: { type: "date", readonly: true },
-			deletedAt: { type: "date", readonly: true, onRemove: () => Date.now() }
+			createdAt: {
+				type: "number",
+				readonly: true,
+				onCreate: () => Date.now(),
+				graphqlType: "Float"
+			},
+			updatedAt: {
+				type: "number",
+				readonly: true,
+				onUpdate: () => Date.now(),
+				graphqlType: "Float"
+			},
+			archivedAt: { type: "number", readonly: true, graphqlType: "Float" },
+			deletedAt: {
+				type: "number",
+				readonly: true,
+				onRemove: () => Date.now(),
+				graphqlType: "Float"
+			}
 		},
 
 		scopes: {
@@ -128,6 +146,8 @@ module.exports = {
 
 		defaultScopes: ["membership", "notArchived", "notDeleted"],
 
+		graphqlType: "Board",
+
 		graphql: {
 			type: `
 				type Board {
@@ -139,8 +159,9 @@ module.exports = {
 					position: Int,
 					archived: Boolean,
 					public: Boolean,
+					labels: [Label]!,
 					stars: Int,
-					members: [User],
+					members: [User]!,
 					# options: Object,
 					createdAt: Float,
 					updatedAt: Float,
@@ -728,7 +749,9 @@ module.exports = {
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {},
+	started() {
+		console.log(generateType("Board", this));
+	},
 
 	/**
 	 * Service stopped lifecycle event handler

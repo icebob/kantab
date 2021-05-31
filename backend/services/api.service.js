@@ -191,7 +191,7 @@ module.exports = {
 				// Verify JWT token
 				const user = await ctx.call("v1.accounts.resolveToken", { token });
 				if (user) {
-					this.logger.info("User authenticated via JWT.", {
+					this.logger.debug("User authenticated via JWT.", {
 						username: user.username,
 						email: user.email,
 						id: user.id
