@@ -150,6 +150,12 @@ module.exports = {
 
 		graphql: {
 			type: `
+				type Label {
+					id: String!,
+					name: String!
+					color: String!
+				}
+
 				type Board {
 					id: String!,
 					owner: User!,
@@ -373,7 +379,22 @@ module.exports = {
 					}
 				}
 			},
-			permissions: []
+			permissions: [],
+			cache: {
+				keys: [
+					"page",
+					"pageSize",
+					"fields",
+					"sort",
+					"search",
+					"searchFields",
+					"collation",
+					"scope",
+					"populate",
+					"query",
+					"#userID"
+				]
+			}
 		},
 		find: {
 			rest: "GET /find",
