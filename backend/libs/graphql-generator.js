@@ -1,5 +1,24 @@
 "use strict";
 
+// Similar:
+//   https://github.com/mcollina/mercurius-auto-schema
+
+/*
+ - [ ] Use "input" types for mutations. "CreateBoardInput", "UpdateBoardInput", "ReplaceBoardInput"
+		createBoard(input: CreateBoardInput!): Board!
+		updateBoard(input: UpdateBoardInput!): Board!
+		replaceBoard(input: ReplaceBoardInput!): Board!
+		removeBoard(id: String!): String!
+
+ - [ ] Type for listing "BoardListParams"
+		type BoardListParams {
+			limit: Int
+			offset: Int
+			...
+		}
+
+*/
+
 module.exports = {
 	generateType(name, schema) {
 		const res = [`type ${name} {`];
