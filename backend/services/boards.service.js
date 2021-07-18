@@ -8,7 +8,7 @@ const DbService = require("../mixins/db.mixin");
 const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
-const { generateType } = require("../libs/graphql-generator");
+const { generateCRUDGraphQL } = require("../libs/graphql-generator");
 
 /**
  * Boards service
@@ -771,7 +771,7 @@ module.exports = {
 	 * Service started lifecycle event handler
 	 */
 	started() {
-		console.log(generateType("Board", this));
+		console.log(generateCRUDGraphQL("board", this));
 	},
 
 	/**
