@@ -1,31 +1,13 @@
 "use strict";
 
 const pluralize = require("pluralize");
+const _ = require("lodash");
 
 // Similar:
 //   https://github.com/mcollina/mercurius-auto-schema
 //   https://strapi.io/documentation/developer-docs/latest/development/plugins/graphql.html#shadow-crud
-//   https://github.com/strapi/strapi/blob/master/packages/strapi-plugin-graphql/lib/graphql-generator.js
+//   https://github.com/strapi/strapi/blob/master/packages/strapi-plugin-graphql/services/type-builder.js
 //	 https://keystonejs.com/docs/apis/graphql
-
-// Other tools
-//   https://github.com/plurals/pluralize
-
-/*
- - [ ] Use "input" types for mutations. "CreateBoardInput", "UpdateBoardInput", "ReplaceBoardInput"
-		createBoard(input: CreateBoardInput!): Board!
-		updateBoard(id: String!, input: UpdateBoardInput!): Board!
-		replaceBoard(id: String!, input: ReplaceBoardInput!): Board!
-		removeBoard(id: String!): String!
-
- - [ ] Type for listing "BoardListParams"
-		type BoardListParams {
-			limit: Int
-			offset: Int
-			...
-		}
-
-*/
 
 function capitalize(str) {
 	return str[0].toUpperCase() + str.slice(1);
@@ -41,15 +23,22 @@ function convertTypeToGraphQLType(type) {
 	return type;
 }
 
+function getGraphqlType(field, isInput) {
+	return isInput ? field.graphqlInputType || field.graphqlType : field.graphqlType;
+}
+
 function generateEntityGraphQLType(res, typeName, fields, kind) {
-	const content = [`type ${typeName} {`];
+	const content = ["{"];
 
 	const entries = Object.entries(fields);
-	entries.forEach(([name, field], idx) => {
+	entries.forEach(([name, field]) => {
 		// Primary key forbidden on create
 		if (field.primaryKey && kind == "create" && field.generated != "user") return null;
+		// Skip virtual fields in create/update/replace
+		if (field.virtual && kind) return null;
 
-		let type = field.graphqlType || field.type || "string";
+		let gType = getGraphqlType(field, !!kind);
+		let type = gType || field.type || "string";
 		type = convertTypeToGraphQLType(type);
 
 		// Skip not-well defined fields
@@ -58,26 +47,40 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 
 		if (field.type == "array") {
 			if (field.items.type == "object") {
-				const subTypeName =
-					field.items.graphqlName || `${res.entityName}${capitalize(pluralize(name, 1))}`;
-				if (!kind) generateEntityGraphQLType(res, subTypeName, field.items.properties);
+				let gType = getGraphqlType(field.items, !!kind);
+				let subTypeName = gType || `${res.entityName}${capitalize(pluralize(name, 1))}`;
+				if (kind) subTypeName = `${kind}${capitalize(subTypeName)}Input`;
+				generateEntityGraphQLType(res, subTypeName, field.items.properties, kind);
 				type = `[${subTypeName}]`;
 			} else {
-				type = `[${convertTypeToGraphQLType(field.graphqlType || field.items.type)}]`;
+				type = `[${convertTypeToGraphQLType(gType || field.items.type)}]`;
 			}
 		}
 
 		// Required
 		// If there is `set` we can't set the required maybe the value will be set in the `set`
-		if (field.required && kind != "update" && !field.set) type += "!";
+		if (field.required && kind != "update" && !field.set && !field.onCreate) type += "!";
 		else if (field.primaryKey) type += "!";
 
 		content.push(`    ${name}: ${type}`);
+
+		if (!kind && _.isPlainObject(field.populate)) {
+			if (field.populate.action) {
+				if (!res.resolvers[typeName]) res.resolvers[typeName] = {};
+
+				res.resolvers[typeName][name] = {
+					action: field.populate.action,
+					rootParams: field.populate.graphqlRootParams || {
+						[name]: "id"
+					}
+				};
+			}
+		}
 	});
 
 	content.push("}");
 
-	res.types.push(content.join("\n"));
+	res[kind ? "inputs" : "types"][typeName] = content.join("\n");
 }
 
 function generateMutation(res, fields, kind) {
@@ -89,71 +92,10 @@ function generateMutation(res, fields, kind) {
 		case "update":
 		case "replace":
 			generateEntityGraphQLType(res, inputName, fields, kind);
-			res.mutations.push(`${mutationName}(input: ${inputName}!): ${res.entityName}!`);
-			break;
+			return `${mutationName}(input: ${inputName}!): ${res.entityName}!`;
 		case "delete":
-			res.mutations.push(`${mutationName}(id: String!): String!`);
-			break;
+			return `${mutationName}(id: String!): String!`;
 	}
-}
-
-function generateCRUDMutations(res, fields) {
-	generateMutation(res, fields, "create");
-	generateMutation(res, fields, "update");
-	generateMutation(res, fields, "replace");
-	generateMutation(res, fields, "delete");
-}
-
-function generateCRUDQueries(res, fields) {
-	// Find
-	res.queries.push(
-		`${uncapitalize(
-			pluralize(res.entityName)
-		)}(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], populate: [String], query: JSON): [${
-			res.entityName
-		}]`
-	);
-
-	// List
-	const listResName = `${res.entityName}List`;
-	res.types.push(
-		[
-			`type ${listResName} {`,
-			"    total: Int!",
-			"    page: Int!",
-			"    pageSize: Int!",
-			"    totalPages: Int!",
-			"    rows: [${res.entityName}]!",
-			"}"
-		].join("\n")
-	);
-
-	res.queries.push(
-		`${uncapitalize(
-			pluralize(res.entityName)
-		)}List(page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], populate: [String], query: JSON): ${listResName}`
-	);
-
-	// Count
-	res.queries.push(
-		`${uncapitalize(
-			pluralize(res.entityName)
-		)}Count(search: String, searchFields: [String], scope: [String], query: JSON): Int!`
-	);
-
-	// Get
-	res.queries.push(
-		`${uncapitalize(
-			pluralize(res.entityName, 1)
-		)}(id: String!, fields: [String], scopes: [String], populate: [String]): Board`
-	);
-
-	// Resolve
-	res.queries.push(
-		`${uncapitalize(
-			pluralize(res.entityName)
-		)}ByIds(id: [String]!, fields: [String], scopes: [String], populate: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
-	);
 }
 
 function generateCRUDGraphQL(name, schema) {
@@ -161,19 +103,135 @@ function generateCRUDGraphQL(name, schema) {
 	if (schema.settings.fields) {
 		const res = {
 			entityName,
-			types: [],
-			queries: [],
-			mutations: []
+			inputs: {},
+			types: {},
+			actions: {},
+			resolvers: {}
+			//queries: [],
+			//mutations: []
 		};
-		generateEntityGraphQLType(res, entityName, schema.settings.fields);
-		generateCRUDQueries(res, schema.settings.fields);
-		generateCRUDMutations(res, schema.settings.fields);
+
+		if (schema.actions) {
+			if (!schema.settings.graphql) schema.settings.graphql = {};
+
+			generateEntityGraphQLType(res, entityName, schema.settings.fields);
+
+			Object.keys(schema.actions).forEach(actionName => {
+				const actionDef = schema.actions[actionName];
+				if (actionDef.graphql == null) {
+					// CREATE action
+					if (actionName == "create") {
+						actionDef.graphql = {
+							mutation: generateMutation(res, schema.settings.fields, "create")
+						};
+					}
+
+					// UPDATE action
+					if (actionName == "update") {
+						actionDef.graphql = {
+							mutation: generateMutation(res, schema.settings.fields, "update")
+						};
+					}
+
+					// REPLACE action
+					if (actionName == "replace") {
+						actionDef.graphql = {
+							mutation: generateMutation(res, schema.settings.fields, "replace")
+						};
+					}
+
+					// DELETE action
+					if (actionName == "delete") {
+						actionDef.graphql = {
+							mutation: generateMutation(res, schema.settings.fields, "delete")
+						};
+					}
+
+					// FIND action
+					if (actionName == "find") {
+						actionDef.graphql = {
+							query: `${uncapitalize(
+								pluralize(entityName)
+							)}(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [${entityName}]`
+						};
+					}
+
+					// LIST action
+					if (actionName == "list") {
+						const listResName = `${entityName}List`;
+						res.types[listResName] = [
+							"{",
+							"    total: Int!",
+							"    page: Int!",
+							"    pageSize: Int!",
+							"    totalPages: Int!",
+							`    rows: [${entityName}]!`,
+							"}"
+						].join("\n");
+
+						actionDef.graphql = {
+							query: `${uncapitalize(
+								pluralize(entityName)
+							)}List(page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): ${listResName}`
+						};
+					}
+
+					// COUNT action
+					if (actionName == "count") {
+						actionDef.graphql = {
+							query: `${uncapitalize(
+								pluralize(entityName)
+							)}Count(search: String, searchFields: [String], scope: [String], query: JSON): Int!`
+						};
+					}
+
+					// GET action
+					if (actionName == "get") {
+						actionDef.graphql = {
+							query: `${uncapitalize(
+								pluralize(entityName, 1)
+							)}(id: String!, fields: [String], scopes: [String]): Board`
+						};
+					}
+
+					// RESOLVE action
+					if (actionName == "resolve") {
+						actionDef.graphql = {
+							query: `${uncapitalize(
+								pluralize(entityName)
+							)}ByIds(id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
+						};
+					}
+				}
+			});
+
+			const types = Object.entries(res.types);
+			const inputs = Object.entries(res.inputs);
+			if (types.length > 0 || inputs.length > 0) {
+				if (!schema.settings.graphql.type) schema.settings.graphql.type = "";
+
+				types.forEach(([name, str]) => {
+					schema.settings.graphql.type += `\n\ntype ${name} ${str}`;
+				});
+
+				inputs.forEach(([name, str]) => {
+					schema.settings.graphql.type += `\n\ninput ${name} ${str}`;
+				});
+			}
+			const resolvers = Object.entries(res.resolvers);
+			if (resolvers.length > 0) {
+				if (!schema.settings.graphql.resolvers) schema.settings.graphql.resolvers = {};
+
+				resolvers.forEach(([name, resolver]) => {
+					schema.settings.graphql.resolvers[name] = resolver;
+				});
+			}
+		}
 
 		return res;
 	}
 }
 
 module.exports = {
-	convertTypeToGraphQLType,
 	generateCRUDGraphQL
 };

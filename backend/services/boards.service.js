@@ -52,7 +52,8 @@ module.exports = {
 				},
 				onCreate: ({ ctx }) => ctx.meta.userID,
 				validate: "validateOwner",
-				graphqlType: "User"
+				graphqlType: "User",
+				graphqlInputType: "String"
 			},
 			title: { type: "string", required: true, trim: true },
 			slug: {
@@ -98,27 +99,28 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphqlType: "User"
+				graphqlType: "User",
+				graphqlInputType: "String"
 			},
 			options: { type: "object" },
 			createdAt: {
 				type: "number",
 				readonly: true,
 				onCreate: () => Date.now(),
-				graphqlType: "Float"
+				graphqlType: "Long"
 			},
 			updatedAt: {
 				type: "number",
 				readonly: true,
 				onUpdate: () => Date.now(),
-				graphqlType: "Float"
+				graphqlType: "Long"
 			},
-			archivedAt: { type: "number", readonly: true, graphqlType: "Float" },
+			archivedAt: { type: "number", readonly: true, graphqlType: "Long" },
 			deletedAt: {
 				type: "number",
 				readonly: true,
 				onRemove: () => Date.now(),
-				graphqlType: "Float"
+				graphqlType: "Long"
 			}
 		},
 
@@ -146,36 +148,10 @@ module.exports = {
 
 		defaultScopes: ["membership", "notArchived", "notDeleted"],
 
-		graphqlType: "Board",
+		//graphqlType: "Board",
 
 		graphql: {
-			type: `
-				type Label {
-					id: String!,
-					name: String!
-					color: String!
-				}
-
-				type Board {
-					id: String!,
-					owner: User!,
-					title: String!,
-					slug: String!,
-					description: String,
-					position: Int,
-					archived: Boolean,
-					public: Boolean,
-					labels: [Label]!,
-					stars: Int,
-					members: [User]!,
-					# options: Object,
-					createdAt: Float,
-					updatedAt: Float,
-					archivedAt: Float,
-					deletedAt: Float
-				}
-			`,
-			resolvers: {
+			/*resolvers: {
 				Board: {
 					owner: {
 						action: "v1.accounts.get",
@@ -184,7 +160,7 @@ module.exports = {
 						}
 					}
 				}
-			}
+			}*/
 		},
 
 		openapi: {
@@ -276,10 +252,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: [C.ROLE_AUTHENTICATED],
-			graphql: {
-				mutation: "createBoard(title: String!, description: String): Board"
-			}
+			permissions: [C.ROLE_AUTHENTICATED]
 		},
 		list: {
 			openapi: {
@@ -416,10 +389,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: [],
-			graphql: {
-				query: "boards(limit: Int, offset: Int, sort: String): [Board]"
-			}
+			permissions: []
 		},
 		count: {
 			rest: "GET /count",
@@ -441,10 +411,7 @@ module.exports = {
 					}
 				}
 			},
-			permissions: [],
-			graphql: {
-				query: "boardsCount: Int"
-			}
+			permissions: []
 		},
 		get: {
 			openapi: {
@@ -479,10 +446,7 @@ module.exports = {
 				}
 			},
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER],
-			graphql: {
-				query: "board(id: String!): Board"
-			}
+			permissions: [C.ROLE_MEMBER]
 		},
 		update: {
 			openapi: {
@@ -767,12 +731,15 @@ module.exports = {
 	 */
 	created() {},
 
+	merged(schema) {
+		generateCRUDGraphQL("board", schema);
+		console.log(schema.settings.graphql.resolvers.Board);
+	},
+
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-		console.log(generateCRUDGraphQL("board", this));
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler

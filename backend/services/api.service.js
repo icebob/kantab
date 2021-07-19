@@ -16,6 +16,8 @@ const SocketIOMixin = require("moleculer-io");
 
 const { GraphQLError } = require("graphql");
 const Kind = require("graphql/language").Kind;
+const { GraphQLJSONObject } = require("graphql-type-json");
+const GraphQLLong = require("graphql-type-long");
 
 const depthLimit = require("graphql-depth-limit");
 const { createComplexityLimitRule } = require("graphql-validation-complexity");
@@ -47,6 +49,8 @@ module.exports = {
 		ApolloService({
 			typeDefs: `
 				scalar Date
+				scalar JSON
+				scalar Long
 			`,
 
 			resolvers: {
@@ -62,7 +66,9 @@ module.exports = {
 
 						return null;
 					}
-				}
+				},
+				JSON: GraphQLJSONObject,
+				Long: GraphQLLong
 			},
 
 			routeOptions: {

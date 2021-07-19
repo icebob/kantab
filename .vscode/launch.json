@@ -15,6 +15,7 @@
 				"--env",
 				"backend/services/config.service.js",
 				"backend/services/accounts.service.js"
+				"backend/services/boards.service.js"
 			]
 		},
 		{
