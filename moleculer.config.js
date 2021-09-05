@@ -109,7 +109,7 @@ module.exports = {
 		enabled: true,
 		events: true,
 		exporter: [
-			//"Laboratory"
+			"Laboratory",
 			!isProd && !process.env.TEST_E2E
 				? {
 						type: "Console",
