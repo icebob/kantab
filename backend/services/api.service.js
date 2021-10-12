@@ -73,7 +73,9 @@ module.exports = {
 
 			routeOptions: {
 				authentication: true,
-				cors: true
+				cors: {
+					origin: "*"
+				}
 			},
 
 			// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
