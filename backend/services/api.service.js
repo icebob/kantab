@@ -224,6 +224,21 @@ module.exports = {
 			} catch (err) {
 				cb(err);
 			}
+		},
+
+		/**
+		 * Prepare context params for GraphQL requests.
+		 *
+		 * @param {Object} params
+		 * @param {String} actionName
+		 * @returns {Boolean}
+		 */
+		prepareContextParams(params, actionName) {
+			if (params.input) {
+				if ([".create", ".update", ".replace"].some(method => actionName.endsWith(method)))
+					return params.input;
+			}
+			return params;
 		}
 	},
 

@@ -76,7 +76,7 @@
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "8.5.1",
     "moleculer": "^0.14.17",
-    "moleculer-apollo-server": "^0.3.4",
+    "moleculer-apollo-server": "github:moleculerjs/moleculer-apollo-server",
     "moleculer-db": "^0.8.15",
     "moleculer-db-adapter-mongo": "^0.4.13",
     "moleculer-io": "^1.1.3",

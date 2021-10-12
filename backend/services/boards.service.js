@@ -733,7 +733,7 @@ module.exports = {
 
 	merged(schema) {
 		generateCRUDGraphQL("board", schema);
-		console.log(schema.settings.graphql.resolvers.Board);
+		console.log(schema.settings.graphql);
 	},
 
 	/**
