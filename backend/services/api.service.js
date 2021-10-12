@@ -10,9 +10,10 @@ const C = require("../constants");
 
 const PassportMixin = require("../mixins/passport.mixin");
 const I18NextMixin = require("../mixins/i18next.mixin");
-const { ApolloService } = require("moleculer-apollo-server");
 const OpenApiMixin = require("../mixins/openapi.mixin");
 const SocketIOMixin = require("moleculer-io");
+
+/*const { ApolloService } = require("moleculer-apollo-server");
 
 const { GraphQLError } = require("graphql");
 const Kind = require("graphql/language").Kind;
@@ -21,6 +22,9 @@ const GraphQLLong = require("graphql-type-long");
 
 const depthLimit = require("graphql-depth-limit");
 const { createComplexityLimitRule } = require("graphql-validation-complexity");
+*/
+
+const { gatewayMixin } = require("@shawnmcknight/moleculer-graphql");
 
 module.exports = {
 	name: "api",
@@ -46,7 +50,7 @@ module.exports = {
 		I18NextMixin(),
 
 		// GraphQL
-		ApolloService({
+		/*ApolloService({
 			typeDefs: `
 				scalar Date
 				scalar JSON
@@ -94,7 +98,9 @@ module.exports = {
 					})
 				]
 			}
-		}),
+		}),*/
+
+		gatewayMixin(),
 
 		OpenApiMixin(),
 

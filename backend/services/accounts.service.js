@@ -13,6 +13,8 @@ const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 const C = require("../constants");
 
+const { serviceMixin: graphqlMixin } = require("@shawnmcknight/moleculer-graphql");
+
 const HASH_SALT_ROUND = 10;
 const TOKEN_EXPIRATION = 60 * 60 * 1000; // 1 hour
 
@@ -62,7 +64,35 @@ module.exports = {
 
 	mixins: [
 		DbService({ actionVisibility: C.VISIBILITY_PROTECTED }),
-		ConfigLoader(["site.**", "mail.**", "accounts.**"])
+		ConfigLoader(["site.**", "mail.**", "accounts.**"]),
+		graphqlMixin({
+			typeDefs: `
+				type User {
+					id: String!
+					username: String!
+					fullName: String!
+					email: String
+					avatar: String
+					status: Int
+
+					#boards(limit: Int, offset: Int, sort: String): [Board]
+					#boardCount: Int
+				}
+
+				type LoginToken {
+					token: String!
+				}
+
+				type Query {
+					me: User
+				}
+
+				type Mutation {
+					login(email: String!, password: String, token: String): LoginToken
+				}
+			`,
+			resolvers: {}
+		})
 	],
 
 	/**
@@ -170,7 +200,7 @@ module.exports = {
 			},
 			rest: "GET /me",
 			graphql: {
-				query: "me: User"
+				query: "me"
 			},
 			async handler(ctx) {
 				if (!ctx.meta.userID) return null;
@@ -396,7 +426,7 @@ module.exports = {
 			},
 			rest: "POST /login",
 			graphql: {
-				mutation: "login(email: String!, password: String, token: String): LoginToken"
+				mutation: "login"
 			},
 			async handler(ctx) {
 				// Get user by email
