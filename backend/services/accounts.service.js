@@ -14,6 +14,7 @@ const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").E
 const C = require("../constants");
 
 const { serviceMixin: graphqlMixin } = require("@shawnmcknight/moleculer-graphql");
+const graphqlScalars = require("../libs/graphql-scalars");
 
 const HASH_SALT_ROUND = 10;
 const TOKEN_EXPIRATION = 60 * 60 * 1000; // 1 hour
@@ -67,13 +68,18 @@ module.exports = {
 		ConfigLoader(["site.**", "mail.**", "accounts.**"]),
 		graphqlMixin({
 			typeDefs: `
-				type User {
+				${graphqlScalars.typeDefs}
+
+				type User @canonical {
 					id: String!
 					username: String!
 					fullName: String!
 					email: String
 					avatar: String
 					status: Int
+
+					createdAt: Long!
+					updatedAt: Long
 
 					#boards(limit: Int, offset: Int, sort: String): [Board]
 					#boardCount: Int
@@ -85,13 +91,16 @@ module.exports = {
 
 				type Query {
 					me: User
+					userByIds(ids: [String!]!): [User!]! @merge(keyField: "id")
 				}
 
 				type Mutation {
 					login(email: String!, password: String, token: String): LoginToken
 				}
 			`,
-			resolvers: {}
+			resolvers: {
+				...graphqlScalars.resolvers
+			}
 		})
 	],
 
@@ -212,6 +221,18 @@ module.exports = {
 				} catch (err) {
 					return null;
 				}
+			}
+		},
+
+		userByIds: {
+			graphql: {
+				query: "userByIds"
+			},
+			params: {
+				ids: "string[]"
+			},
+			handler(ctx) {
+				return this.resolveEntities(ctx, { id: ctx.params.ids });
 			}
 		},
 

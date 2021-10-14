@@ -8,7 +8,10 @@ const DbService = require("../mixins/db.mixin");
 const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
-const { generateCRUDGraphQL } = require("../libs/graphql-generator");
+//const { generateCRUDGraphQL } = require("../libs/graphql-generator");
+
+const { serviceMixin: graphqlMixin } = require("@shawnmcknight/moleculer-graphql");
+const graphqlScalars = require("../libs/graphql-scalars");
 
 /**
  * Boards service
@@ -19,8 +22,62 @@ module.exports = {
 
 	mixins: [
 		DbService(),
-		ChecksMixin
+		ChecksMixin,
 		//ConfigLoader([])
+		graphqlMixin({
+			typeDefs: `
+				${graphqlScalars.typeDefs}
+
+				type User @key(selectionSet: "{ id }") {
+					id: String!
+					boards: [Board!]!
+				}
+
+				type Board @canonical {
+					id: String!
+					owner: User
+					title: String!
+					slug: String
+					description: String
+					position: Int
+					archived: Boolean
+					public: Boolean
+					#labels: [BoardLabel]
+					members: [User]
+					createdAt: Long!
+					updatedAt: Long
+					archivedAt: Long
+					deletedAt: Long
+				}
+
+				type Query {
+					boards(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [Board]
+					boardByIds(ids: [String!]!): [Board!]! @merge(keyField: "id")
+				}
+
+				#type Mutation {
+				#}
+			`,
+			resolvers: {
+				...graphqlScalars.resolvers,
+
+				Board: {
+					owner: board => {
+						return { id: board.owner };
+					},
+					members: board => {
+						return board.members ? board.members.map(id => ({ id })) : [];
+					}
+				},
+
+				User: {
+					boards: (user, args, ctx) => {
+						return ctx.call("v1.boards.find", { query: { owner: user.id } });
+						//return user.boards ? user.boards.map(id => ({ id })) : [];
+					}
+				}
+			}
+		})
 	],
 
 	/**
@@ -215,6 +272,18 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
+		userByIds: {
+			graphql: {
+				query: "boardByIds"
+			},
+			params: {
+				ids: "string[]"
+			},
+			handler(ctx) {
+				return this.resolveEntities(ctx, { id: ctx.params.ids });
+			}
+		},
+
 		create: {
 			openapi: {
 				$path: "POST /board",
@@ -388,6 +457,9 @@ module.exports = {
 						}
 					}
 				}
+			},
+			graphql: {
+				query: "boards"
 			},
 			permissions: []
 		},
@@ -732,8 +804,8 @@ module.exports = {
 	created() {},
 
 	merged(schema) {
-		generateCRUDGraphQL("board", schema);
-		console.log(schema.settings.graphql);
+		//generateCRUDGraphQL("board", schema);
+		//console.log(schema.settings.graphql);
 	},
 
 	/**

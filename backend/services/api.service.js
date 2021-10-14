@@ -24,7 +24,7 @@ const depthLimit = require("graphql-depth-limit");
 const { createComplexityLimitRule } = require("graphql-validation-complexity");
 */
 
-const { gatewayMixin } = require("@shawnmcknight/moleculer-graphql");
+const { gatewayMixin: GraphqlGateway } = require("@shawnmcknight/moleculer-graphql");
 
 module.exports = {
 	name: "api",
@@ -100,7 +100,14 @@ module.exports = {
 			}
 		}),*/
 
-		gatewayMixin(),
+		GraphqlGateway({
+			routeOptions: {
+				authentication: true,
+				cors: {
+					origin: "*"
+				}
+			}
+		}),
 
 		OpenApiMixin(),
 
