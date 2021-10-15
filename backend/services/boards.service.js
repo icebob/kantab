@@ -31,6 +31,7 @@ module.exports = {
 				type User @key(selectionSet: "{ id }") {
 					id: String!
 					boards: [Board!]!
+					boardCount: Int!
 				}
 
 				type Board @canonical {
@@ -53,10 +54,29 @@ module.exports = {
 				type Query {
 					boards(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [Board]
 					boardByIds(ids: [String!]!): [Board!]! @merge(keyField: "id")
+
+					boardOwnerById(ownerIds: [String!]!): [User!]! @merge(keyField: "id")
 				}
 
-				#type Mutation {
-				#}
+				input CreateBoardInput {
+					owner: String
+					title: String!
+					slug: String
+					description: String
+					position: Int
+					archived: Boolean
+					public: Boolean
+					#labels: [createBoardLabelInput]
+					members: [String]
+					createdAt: Long
+					updatedAt: Long
+					archivedAt: Long
+					deletedAt: Long
+				  }
+
+				type Mutation {
+					createBoard(input: CreateBoardInput!): Board!
+				}
 			`,
 			resolvers: {
 				...graphqlScalars.resolvers,
@@ -74,6 +94,24 @@ module.exports = {
 					boards: (user, args, ctx) => {
 						return ctx.call("v1.boards.find", { query: { owner: user.id } });
 						//return user.boards ? user.boards.map(id => ({ id })) : [];
+					},
+
+					boardCount: (user, args, ctx) => {
+						return ctx.call("v1.boards.count", { query: { owner: user.id } });
+					}
+				},
+
+				Query: {
+					// It's mandatory for me -> boards queries.
+					boardOwnerById: (parent, args, ctx) => {
+						return args.ownerIds.map(id => ({ id }));
+					}
+				},
+
+				Mutation: {
+					createBoard: async (parent, args, ctx) => {
+						const { input } = args;
+						return ctx.call("v1.boards.create", input);
 					}
 				}
 			}

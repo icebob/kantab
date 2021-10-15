@@ -80,9 +80,6 @@ module.exports = {
 
 					createdAt: Long!
 					updatedAt: Long
-
-					#boards(limit: Int, offset: Int, sort: String): [Board]
-					#boardCount: Int
 				}
 
 				type LoginToken {
