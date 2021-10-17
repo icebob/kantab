@@ -15,14 +15,13 @@ const SocketIOMixin = require("moleculer-io");
 
 /*const { ApolloService } = require("moleculer-apollo-server");
 
-const { GraphQLError } = require("graphql");
 const Kind = require("graphql/language").Kind;
 const { GraphQLJSONObject } = require("graphql-type-json");
 const GraphQLLong = require("graphql-type-long");
-
+*/
 const depthLimit = require("graphql-depth-limit");
 const { createComplexityLimitRule } = require("graphql-validation-complexity");
-*/
+const { GraphQLError } = require("graphql");
 
 const { gatewayMixin: GraphqlGateway } = require("@shawnmcknight/moleculer-graphql");
 
@@ -106,7 +105,17 @@ module.exports = {
 				cors: {
 					origin: "*"
 				}
-			}
+			},
+			validationRules: [
+				depthLimit(10),
+				createComplexityLimitRule(1000, {
+					createError(cost, documentNode) {
+						const error = new GraphQLError("custom error", [documentNode]);
+						error.meta = { cost };
+						return error;
+					}
+				})
+			]
 		}),
 
 		OpenApiMixin(),
@@ -158,6 +167,10 @@ module.exports = {
 				autoAliases: true,
 
 				aliases: {},
+
+				cors: {
+					origin: "*"
+				},
 
 				// Disable to call not-mapped actions
 				//mappingPolicy: "restrict",
