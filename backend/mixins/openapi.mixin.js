@@ -85,10 +85,10 @@ module.exports = function (mixinOptions) {
 								name: "boards",
 								description: "Boards operations"
 							}
-						],
+						]
 
 						// https://swagger.io/specification/#externalDocumentationObject
-						externalDocs: []
+						//externalDocs: {}
 					});
 
 					const services = this.broker.registry.getServiceList({ withActions: true });

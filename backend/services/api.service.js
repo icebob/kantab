@@ -4,24 +4,14 @@ const ApiGateway = require("moleculer-web");
 const _ = require("lodash");
 const helmet = require("helmet");
 const history = require("connect-history-api-fallback");
-const fs = require("fs");
 const cookie = require("cookie");
 const C = require("../constants");
 
 const PassportMixin = require("../mixins/passport.mixin");
 const I18NextMixin = require("../mixins/i18next.mixin");
-const { ApolloService } = require("moleculer-apollo-server");
 const OpenApiMixin = require("../mixins/openapi.mixin");
 const SocketIOMixin = require("moleculer-io");
 const ApolloMixin = require("../mixins/apollo.mixin");
-
-const { GraphQLError } = require("graphql");
-const Kind = require("graphql/language").Kind;
-const { GraphQLJSONObject } = require("graphql-type-json");
-const GraphQLLong = require("graphql-type-long");
-
-const depthLimit = require("graphql-depth-limit");
-const { createComplexityLimitRule } = require("graphql-validation-complexity");
 
 module.exports = {
 	name: "api",
@@ -53,7 +43,8 @@ module.exports = {
 		OpenApiMixin({
 			schema: {
 				info: {
-					title: "KanTab REST API Documentation"
+					title: "KanTab REST API Documentation",
+					version: "v1"
 				}
 			}
 		}),
@@ -141,16 +132,14 @@ module.exports = {
 		async authenticate(ctx, route, req) {
 			let token;
 
+			// Get JWT token from Authorization header
+			const auth = req.headers["authorization"];
+			if (auth && auth.startsWith("Bearer ")) token = auth.slice(7);
+
 			// Get JWT token from cookie
-			if (req.headers.cookie) {
+			if (!token && req.headers.cookie) {
 				const cookies = cookie.parse(req.headers.cookie);
 				token = cookies["jwt-token"];
-			}
-
-			// Get JWT token from Authorization header
-			if (!token) {
-				const auth = req.headers["authorization"];
-				if (auth && auth.startsWith("Bearer ")) token = auth.slice(7);
 			}
 
 			ctx.meta.roles = [C.ROLE_EVERYONE];

@@ -55,7 +55,7 @@ module.exports = {
 				graphqlType: "User",
 				graphqlInputType: "String"
 			},
-			title: { type: "string", required: true, trim: true },
+			title: { type: "string", required: true, trim: true, openapi: { example: "My board" } },
 			slug: {
 				type: "string",
 				readonly: true,
@@ -149,21 +149,6 @@ module.exports = {
 
 		defaultScopes: ["membership", "notArchived", "notDeleted"],
 
-		//graphqlType: "Board",
-
-		graphql: {
-			/*resolvers: {
-				Board: {
-					owner: {
-						action: "v1.accounts.get",
-						rootParams: {
-							owner: "id"
-						}
-					}
-				}
-			}*/
-		},
-
 		openapi: {
 			// https://swagger.io/specification/#componentsObject
 			components: {
@@ -172,10 +157,10 @@ module.exports = {
 						required: ["id", "title"],
 						type: "object",
 						properties: {
-							id: { type: "string", example: "5bf18691fe972d2464a7ba14" },
-							title: { type: "string", example: "Test board" },
-							slug: { type: "string", example: "test_board" },
-							description: { type: "string", example: "Test board description" }
+							id: { type: "string" },
+							title: { type: "string" },
+							slug: { type: "string" },
+							description: { type: "string" }
 						}
 					},
 					Boards: {
@@ -187,10 +172,10 @@ module.exports = {
 					BoardList: {
 						type: "object",
 						properties: {
-							total: { type: "integer", example: 50 },
-							page: { type: "integer", example: 1 },
-							pageSize: { type: "integer", example: 10 },
-							totalPages: { type: "integer", example: 5 },
+							total: { type: "integer" },
+							page: { type: "integer" },
+							pageSize: { type: "integer" },
+							totalPages: { type: "integer" },
 							rows: {
 								type: "array",
 								items: {
