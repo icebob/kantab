@@ -66,7 +66,7 @@ module.exports = {
 			},
 			description: { type: "string", required: false, trim: true },
 			position: { type: "number", integer: true, default: 0 },
-			archived: { type: "boolean", default: false },
+			archived: { type: "boolean", readonly: true, default: false },
 			public: { type: "boolean", default: false },
 			//stars: { type: "number", integer: true, min: 0, default: 0 },
 			//starred: { type: "boolean", virtual: true, get: (value, entity, field, ctx) => ctx.call("v1.stars.has", { type: "board", entity: entity.id, user: ctx.meta.userID })},
@@ -91,6 +91,7 @@ module.exports = {
 			members: {
 				type: "array",
 				items: "string|no-empty",
+				readonly: true,
 				onCreate: ({ ctx }) => (ctx.meta.userID ? [ctx.meta.userID] : []),
 				validate: "validateMembers",
 				populate: {
@@ -546,16 +547,23 @@ module.exports = {
 			},
 			needEntity: true,
 			permissions: [C.ROLE_MEMBER],
+			graphql: {
+				mutation: `boardAddMembers(id: String!, members: [String!]!): Board!`
+			},
 			async handler(ctx) {
 				const newMembers = _.uniq(
 					[].concat(ctx.locals.entity.members || [], ctx.params.members)
 				);
 
-				return this.updateEntity(ctx, {
-					...ctx.params,
-					members: newMembers,
-					scope: false
-				});
+				return this.updateEntity(
+					ctx,
+					{
+						...ctx.params,
+						members: newMembers,
+						scope: false
+					},
+					{ permissive: true }
+				);
 			}
 		},
 
@@ -567,16 +575,23 @@ module.exports = {
 			},
 			needEntity: true,
 			permissions: [C.ROLE_MEMBER],
+			graphql: {
+				mutation: `boardRemoveMembers(id: String!, members: [String!]!): Board!`
+			},
 			async handler(ctx) {
 				const newMembers = ctx.locals.entity.members.filter(
 					m => !ctx.params.members.includes(m)
 				);
 
-				return this.updateEntity(ctx, {
-					id: ctx.params.id,
-					members: newMembers,
-					scope: false
-				});
+				return this.updateEntity(
+					ctx,
+					{
+						id: ctx.params.id,
+						members: newMembers,
+						scope: false
+					},
+					{ permissive: true }
+				);
 			}
 		},
 
@@ -588,6 +603,9 @@ module.exports = {
 			},
 			needEntity: true,
 			permissions: [C.ROLE_OWNER],
+			graphql: {
+				mutation: `boardTransferOwnership(id: String!, owner: String!): Board!`
+			},
 			async handler(ctx) {
 				return this.updateEntity(
 					ctx,
@@ -609,6 +627,9 @@ module.exports = {
 			},
 			needEntity: true,
 			permissions: [C.ROLE_OWNER],
+			graphql: {
+				mutation: `boardArchive(id: String!): Board!`
+			},
 			async handler(ctx) {
 				if (ctx.locals.entity.archived)
 					throw new MoleculerClientError(
@@ -638,6 +659,9 @@ module.exports = {
 			needEntity: true,
 			defaultScopes: ["membership", "notDeleted"],
 			permissions: [C.ROLE_OWNER],
+			graphql: {
+				mutation: `boardUnarchive(id: String!): Board!`
+			},
 			async handler(ctx) {
 				if (!ctx.locals.entity.archived)
 					throw new MoleculerClientError(
