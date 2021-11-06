@@ -26,7 +26,7 @@ module.exports = {
 			"v1.boards.find",
 			{
 				sort: "title",
-				populate: ["owner"],
+				populate: ["owner", "members"],
 				scope: !!options.user
 			},
 			{ meta: { userID: options.user, $repl: true } }
@@ -37,6 +37,7 @@ module.exports = {
 				kleur.bold("ID"),
 				kleur.bold("Title"),
 				kleur.bold("Owner"),
+				kleur.bold("Members"),
 				kleur.bold("Public"),
 				kleur.bold("Status")
 			]
@@ -49,6 +50,7 @@ module.exports = {
 				board.id,
 				board.title,
 				board.owner.fullName,
+				board.members.map(member => member.fullName),
 				board.public ? kleur.magenta().bold("YES") : "Private",
 				getStatusString(board)
 			]);

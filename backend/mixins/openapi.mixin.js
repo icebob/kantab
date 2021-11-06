@@ -57,7 +57,7 @@ module.exports = function (mixinOptions) {
 						servers: [
 							{
 								url: `${this.isHTTPS ? "https" : "http"}://localhost:${
-									this.server.address().port
+									this.settings.port
 								}/api/v1`,
 								description: "Development server"
 							}

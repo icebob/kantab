@@ -51,6 +51,13 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 		if (type == "object" && !field.properties) return;
 		if (type == "array" && !field.items) return;
 
+		let description;
+		if (field.description) {
+			description = `"""${field.description}"""`;
+		} else {
+			//description = `"""Field of ${name}"""`;
+		}
+
 		if (field.type == "array") {
 			if (field.items.type == "object") {
 				let gType = getGraphqlType(field.items, !!kind);
@@ -68,6 +75,9 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 		if (field.required && kind != "update" && !field.set && !field.onCreate) type += "!";
 		else if (field.primaryKey) type += "!";
 
+		if (description) {
+			content.push(description);
+		}
 		content.push(`    ${name}: ${type}`);
 
 		if (!kind && _.isPlainObject(field.populate)) {
@@ -89,18 +99,20 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 	res[kind ? "inputs" : "types"][typeName] = content.join("\n");
 }
 
-function generateMutation(res, fields, kind) {
+function generateMutation(res, fields, kind, description) {
 	const mutationName = kind + capitalize(res.entityName);
 	const inputName = `${capitalize(mutationName)}Input`;
+
+	description = description ? `"""${description}"""\n` : "";
 
 	switch (kind) {
 		case "create":
 		case "update":
 		case "replace":
 			generateEntityGraphQLType(res, inputName, fields, kind);
-			return `${mutationName}(input: ${inputName}!): ${res.entityName}!`;
-		case "delete":
-			return `${mutationName}(id: String!): String!`;
+			return `${description}${mutationName}(input: ${inputName}!): ${res.entityName}!`;
+		case "remove":
+			return `${description}${mutationName}(id: String!): String!`;
 	}
 }
 
@@ -128,35 +140,55 @@ function generateCRUDGraphQL(name, schema) {
 					// CREATE action
 					if (actionName == "create") {
 						actionDef.graphql = {
-							mutation: generateMutation(res, schema.settings.fields, "create")
+							mutation: generateMutation(
+								res,
+								schema.settings.fields,
+								"create",
+								`Create a new ${name}`
+							)
 						};
 					}
 
 					// UPDATE action
 					if (actionName == "update") {
 						actionDef.graphql = {
-							mutation: generateMutation(res, schema.settings.fields, "update")
+							mutation: generateMutation(
+								res,
+								schema.settings.fields,
+								"update",
+								`Create an existing ${name}`
+							)
 						};
 					}
 
 					// REPLACE action
 					if (actionName == "replace") {
 						actionDef.graphql = {
-							mutation: generateMutation(res, schema.settings.fields, "replace")
+							mutation: generateMutation(
+								res,
+								schema.settings.fields,
+								"replace",
+								`Replace an existing ${name}`
+							)
 						};
 					}
 
-					// DELETE action
-					if (actionName == "delete") {
+					// REMOVE action
+					if (actionName == "remove") {
 						actionDef.graphql = {
-							mutation: generateMutation(res, schema.settings.fields, "delete")
+							mutation: generateMutation(
+								res,
+								schema.settings.fields,
+								"remove",
+								`Delete an existing ${name}`
+							)
 						};
 					}
 
 					// FIND action
 					if (actionName == "find") {
 						actionDef.graphql = {
-							query: `${uncapitalize(
+							query: `"""Find ${name}s"""\n${uncapitalize(
 								pluralize(entityName)
 							)}(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [${entityName}]`
 						};
@@ -176,7 +208,7 @@ function generateCRUDGraphQL(name, schema) {
 						].join("\n");
 
 						actionDef.graphql = {
-							query: `${uncapitalize(
+							query: `"""List ${name}s (paginated)"""\n${uncapitalize(
 								pluralize(entityName)
 							)}List(page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): ${listResName}`
 						};
@@ -185,7 +217,7 @@ function generateCRUDGraphQL(name, schema) {
 					// COUNT action
 					if (actionName == "count") {
 						actionDef.graphql = {
-							query: `${uncapitalize(
+							query: `"""Number of ${name}s"""\n${uncapitalize(
 								pluralize(entityName)
 							)}Count(search: String, searchFields: [String], scope: [String], query: JSON): Int!`
 						};
@@ -194,7 +226,7 @@ function generateCRUDGraphQL(name, schema) {
 					// GET action
 					if (actionName == "get") {
 						actionDef.graphql = {
-							query: `${uncapitalize(
+							query: `"""Get a ${name} by ID"""\n${uncapitalize(
 								pluralize(entityName, 1)
 							)}(id: String!, fields: [String], scopes: [String]): Board`
 						};
@@ -203,7 +235,7 @@ function generateCRUDGraphQL(name, schema) {
 					// RESOLVE action
 					if (actionName == "resolve") {
 						actionDef.graphql = {
-							query: `${uncapitalize(
+							query: `"""Resolve one or more ${name}s by IDs"""\n${uncapitalize(
 								pluralize(entityName)
 							)}ByIds(id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
 						};

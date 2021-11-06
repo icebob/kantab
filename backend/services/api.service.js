@@ -13,6 +13,7 @@ const I18NextMixin = require("../mixins/i18next.mixin");
 const { ApolloService } = require("moleculer-apollo-server");
 const OpenApiMixin = require("../mixins/openapi.mixin");
 const SocketIOMixin = require("moleculer-io");
+const ApolloMixin = require("../mixins/apollo.mixin");
 
 const { GraphQLError } = require("graphql");
 const Kind = require("graphql/language").Kind;
@@ -46,57 +47,16 @@ module.exports = {
 		I18NextMixin(),
 
 		// GraphQL
-		ApolloService({
-			typeDefs: `
-				scalar Date
-				scalar JSON
-				scalar Long
-			`,
+		ApolloMixin,
 
-			resolvers: {
-				Date: {
-					__parseValue(value) {
-						return new Date(value); // value from the client
-					},
-					__serialize(value) {
-						return value.getTime(); // value sent to the client
-					},
-					__parseLiteral(ast) {
-						if (ast.kind === Kind.INT) return parseInt(ast.value, 10); // ast value is always in string format
-
-						return null;
-					}
-				},
-				JSON: GraphQLJSONObject,
-				Long: GraphQLLong
-			},
-
-			routeOptions: {
-				authentication: true,
-				cors: {
-					origin: "*"
+		// Swagger
+		OpenApiMixin({
+			schema: {
+				info: {
+					title: "KanTab REST API Documentation"
 				}
-			},
-
-			// https://www.apollographql.com/docs/apollo-server/v2/api/apollo-server.html
-			serverOptions: {
-				tracing: true,
-				introspection: true,
-
-				validationRules: [
-					depthLimit(10),
-					createComplexityLimitRule(1000, {
-						createError(cost, documentNode) {
-							const error = new GraphQLError("custom error", [documentNode]);
-							error.meta = { cost };
-							return error;
-						}
-					})
-				]
 			}
 		}),
-
-		OpenApiMixin(),
 
 		// Socket.IO handler
 		SocketIOMixin
@@ -133,7 +93,7 @@ module.exports = {
 			{
 				path: "/api",
 
-				whitelist: ["v1.accounts.**", "v1.boards.**", "v1.accounts.**", "maildev.**"],
+				whitelist: ["v1.accounts.**", "v1.boards.**", "maildev.**"],
 
 				etag: true,
 
@@ -224,28 +184,6 @@ module.exports = {
 			} catch (err) {
 				cb(err);
 			}
-		},
-
-		/**
-		 * Prepare context params for GraphQL requests.
-		 *
-		 * @param {Object} params
-		 * @param {String} actionName
-		 * @returns {Boolean}
-		 */
-		prepareContextParams(params, actionName) {
-			if (params.input) {
-				if ([".create", ".update", ".replace"].some(method => actionName.endsWith(method)))
-					return params.input;
-			}
-			return params;
-		}
-	},
-
-	events: {
-		"graphql.schema.updated"({ schema }) {
-			this.logger.info("Generated GraphQL schema:\n\n" + schema);
-			fs.writeFileSync("./schema.gql", schema, "utf8");
 		}
 	}
 };
