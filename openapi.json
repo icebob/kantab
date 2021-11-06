@@ -1,9 +1,9 @@
 {
-    "openapi": "3.0.1",
     "info": {
-        "title": "kantab API Documentation",
-        "version": "0.2.0"
+        "title": "KanTab REST API Documentation",
+        "version": "0.3.0"
     },
+    "openapi": "3.0.1",
     "servers": [
         {
             "url": "http://localhost:4000/api/v1",
@@ -221,48 +221,6 @@
                 }
             }
         },
-        "/board": {
-            "post": {
-                "description": "Create a new board",
-                "tags": [
-                    "boards"
-                ],
-                "operationId": "v1.boards.create",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "title": {
-                                        "type": "string"
-                                    },
-                                    "description": {
-                                        "type": "string"
-                                    }
-                                }
-                            },
-                            "example": {
-                                "title": "New board",
-                                "description": "My new board"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Created board",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Board"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/boards/{id}": {
             "get": {
                 "description": "Get a board by ID",
@@ -368,6 +326,48 @@
                 "responses": {
                     "200": {
                         "description": "Found board",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Board"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/board": {
+            "post": {
+                "description": "Create a new board",
+                "tags": [
+                    "boards"
+                ],
+                "operationId": "v1.boards.create",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "example": {
+                                "title": "New board",
+                                "description": "My new board"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Created board",
                         "content": {
                             "application/json": {
                                 "schema": {
