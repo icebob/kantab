@@ -81,15 +81,11 @@ module.exports = function (mixinOptions) {
 						_.forIn(service.actions, action => {
 							if (_.isObject(action.openapi)) {
 								let def = _.cloneDeep(action.openapi);
-								let method, routePath;
 								if (def.$path) {
-									const p = def.$path.split(" ");
-									method = p.shift().toLowerCase();
-									routePath = p.join("/");
+									let { method, path } = def.$path;
 									delete def.$path;
+									_.set(res.paths, [path, method.toLowerCase()], def);
 								}
-
-								_.set(res.paths, [routePath, method], def);
 							}
 						});
 					});

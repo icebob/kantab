@@ -205,7 +205,8 @@ module.exports = {
 
 		// call v1.boards.addMembers --#userID xar8OJo4PMS753GeyN62 --id ZjQ1GMmYretJmgKpqZ14 --members[] xar8OJo4PMS753GeyN62
 		addMembers: {
-			rest: "POST /:id/add-members",
+			description: "Add members to the board",
+			rest: "POST /:id/members",
 			params: {
 				id: "string",
 				members: "string[]"
@@ -214,6 +215,20 @@ module.exports = {
 			permissions: [C.ROLE_MEMBER],
 			graphql: {
 				mutation: `boardAddMembers(id: String!, members: [String!]!): Board!`
+			},
+			openapi: {
+				responses: {
+					200: {
+						description: `Updated board`,
+						content: {
+							"application/json": {
+								schema: {
+									$ref: `#/components/schemas/Board`
+								}
+							}
+						}
+					}
+				}
 			},
 			async handler(ctx) {
 				const newMembers = _.uniq(
@@ -233,7 +248,8 @@ module.exports = {
 		},
 
 		removeMembers: {
-			rest: "POST /:id/remove-members",
+			description: "Remove members from the board",
+			rest: "DELETE /:id/members",
 			params: {
 				id: "string",
 				members: "string[]"
@@ -242,6 +258,20 @@ module.exports = {
 			permissions: [C.ROLE_MEMBER],
 			graphql: {
 				mutation: `boardRemoveMembers(id: String!, members: [String!]!): Board!`
+			},
+			openapi: {
+				responses: {
+					200: {
+						description: `Updated board`,
+						content: {
+							"application/json": {
+								schema: {
+									$ref: `#/components/schemas/Board`
+								}
+							}
+						}
+					}
+				}
 			},
 			async handler(ctx) {
 				const newMembers = ctx.locals.entity.members.filter(
@@ -261,6 +291,7 @@ module.exports = {
 		},
 
 		transferOwnership: {
+			description: "Transfer the ownership of the board",
 			rest: "POST /:id/transfer-ownership",
 			params: {
 				id: "string",
@@ -270,6 +301,20 @@ module.exports = {
 			permissions: [C.ROLE_OWNER],
 			graphql: {
 				mutation: `boardTransferOwnership(id: String!, owner: String!): Board!`
+			},
+			openapi: {
+				responses: {
+					200: {
+						description: `Updated board`,
+						content: {
+							"application/json": {
+								schema: {
+									$ref: `#/components/schemas/Board`
+								}
+							}
+						}
+					}
+				}
 			},
 			async handler(ctx) {
 				return this.updateEntity(
@@ -286,6 +331,7 @@ module.exports = {
 		},
 
 		archive: {
+			description: "Archive the board",
 			rest: "POST /:id/archive",
 			params: {
 				id: "string"
@@ -294,6 +340,20 @@ module.exports = {
 			permissions: [C.ROLE_OWNER],
 			graphql: {
 				mutation: `boardArchive(id: String!): Board!`
+			},
+			openapi: {
+				responses: {
+					200: {
+						description: `Updated board`,
+						content: {
+							"application/json": {
+								schema: {
+									$ref: `#/components/schemas/Board`
+								}
+							}
+						}
+					}
+				}
 			},
 			async handler(ctx) {
 				if (ctx.locals.entity.archived)
@@ -317,6 +377,7 @@ module.exports = {
 		},
 
 		unarchive: {
+			description: "Unarchive the board",
 			rest: "POST /:id/unarchive",
 			params: {
 				id: "string"
@@ -326,6 +387,20 @@ module.exports = {
 			permissions: [C.ROLE_OWNER],
 			graphql: {
 				mutation: `boardUnarchive(id: String!): Board!`
+			},
+			openapi: {
+				responses: {
+					200: {
+						description: `Updated board`,
+						content: {
+							"application/json": {
+								schema: {
+									$ref: `#/components/schemas/Board`
+								}
+							}
+						}
+					}
+				}
 			},
 			async handler(ctx) {
 				if (!ctx.locals.entity.archived)
@@ -432,7 +507,7 @@ module.exports = {
 		fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
 		setTimeout(() => {
 			console.log(inspect(this.schema.settings.openapi, { depth: 7, colors: true }));
-			console.log(inspect(this.schema.actions, { depth: 7, colors: true }));
+			console.log(inspect(this.schema.actions, { depth: 10, colors: true }));
 		}, 1000);
 	},
 
