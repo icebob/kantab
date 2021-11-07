@@ -42,9 +42,28 @@ module.exports = {
 		// Swagger
 		OpenApiMixin({
 			schema: {
+				// https://swagger.io/specification/#infoObject
 				info: {
 					title: "KanTab REST API Documentation",
 					version: "v1"
+				},
+
+				// https://swagger.io/specification/#serverObject
+				servers: [
+					{
+						url: "http://localhost:4000/api",
+						description: "Development server"
+					}
+				],
+
+				// https://swagger.io/specification/#componentsObject
+				components: {
+					securitySchemes: {
+						BearerAuth: {
+							type: "http",
+							scheme: "bearer"
+						}
+					}
 				}
 			}
 		}),

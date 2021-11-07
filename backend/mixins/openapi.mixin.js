@@ -3,10 +3,8 @@
 const _ = require("lodash");
 const fs = require("fs");
 
-const ApiGateway = require("moleculer-web");
 const { MoleculerServerError } = require("moleculer").Errors;
 
-//const SwaggerUI = require("swagger-ui-dist");
 const SwaggerUI = require("../libs/swagger-ui");
 const pkg = require("../../package.json");
 
@@ -45,7 +43,7 @@ module.exports = function (mixinOptions) {
 			generateOpenAPISchema() {
 				try {
 					const res = _.defaultsDeep(mixinOptions.schema, {
-						openapi: "3.0.1",
+						openapi: "3.0.3",
 
 						// https://swagger.io/specification/#infoObject
 						info: {
@@ -54,24 +52,10 @@ module.exports = function (mixinOptions) {
 						},
 
 						// https://swagger.io/specification/#serverObject
-						servers: [
-							{
-								url: `${this.isHTTPS ? "https" : "http"}://localhost:${
-									this.settings.port
-								}/api/v1`,
-								description: "Development server"
-							}
-						],
+						servers: [],
 
 						// https://swagger.io/specification/#componentsObject
-						components: {
-							securitySchemes: {
-								BearerAuth: {
-									type: "http",
-									scheme: "bearer"
-								}
-							}
-						},
+						components: {},
 
 						// https://swagger.io/specification/#pathsObject
 						paths: {},
@@ -80,12 +64,7 @@ module.exports = function (mixinOptions) {
 						security: [{ BearerAuth: [] }],
 
 						// https://swagger.io/specification/#tagObject
-						tags: [
-							{
-								name: "boards",
-								description: "Boards operations"
-							}
-						]
+						tags: []
 
 						// https://swagger.io/specification/#externalDocumentationObject
 						//externalDocs: {}
@@ -100,19 +79,17 @@ module.exports = function (mixinOptions) {
 
 						// --- COMPILE ACTION-LEVEL DEFINITIONS ---
 						_.forIn(service.actions, action => {
-							if (action.openapi) {
-								if (_.isObject(action.openapi)) {
-									let def = _.cloneDeep(action.openapi);
-									let method, routePath;
-									if (def.$path) {
-										const p = def.$path.split(" ");
-										method = p[0].toLowerCase();
-										routePath = p[1];
-										delete def.$path;
-									}
-
-									_.set(res.paths, [routePath, method], def);
+							if (_.isObject(action.openapi)) {
+								let def = _.cloneDeep(action.openapi);
+								let method, routePath;
+								if (def.$path) {
+									const p = def.$path.split(" ");
+									method = p.shift().toLowerCase();
+									routePath = p.join("/");
+									delete def.$path;
 								}
+
+								_.set(res.paths, [routePath, method], def);
 							}
 						});
 					});
@@ -192,7 +169,7 @@ module.exports = function (mixinOptions) {
 
 		started() {
 			this.logger.info(
-				`📜 OpenAPI Docs server is available at ${mixinOptions.routeOptions.path}`
+				`📜 OpenAPI(Swagger) REST Documentation is available at ${mixinOptions.routeOptions.path}`
 			);
 		}
 	};

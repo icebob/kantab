@@ -1,14 +1,16 @@
 "use strict";
 
 const _ = require("lodash");
+const fs = require("fs");
 const slugify = require("slugify");
 const C = require("../constants");
+const { inspect } = require("util");
 
 const DbService = require("../mixins/db.mixin");
 const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
-const { generateCRUDGraphQL } = require("../libs/graphql-generator");
+const { generateOpenAPISchema } = require("../libs/openapi-generator");
 
 /**
  * Boards service
@@ -52,8 +54,7 @@ module.exports = {
 				},
 				onCreate: ({ ctx }) => ctx.meta.userID,
 				validate: "validateOwner",
-				graphqlType: "User",
-				graphqlInputType: "String"
+				graphql: { type: "User", inputType: "String" }
 			},
 			title: { type: "string", required: true, trim: true, openapi: { example: "My board" } },
 			slug: {
@@ -64,7 +65,12 @@ module.exports = {
 						? slugify(params.title, { lower: true, remove: /[*+~.()'"!:@]/g })
 						: value
 			},
-			description: { type: "string", required: false, trim: true },
+			description: {
+				type: "string",
+				required: false,
+				trim: true,
+				openapi: { example: "My board description" }
+			},
 			position: { type: "number", integer: true, default: 0 },
 			archived: { type: "boolean", readonly: true, default: false },
 			public: { type: "boolean", default: false },
@@ -90,7 +96,7 @@ module.exports = {
 			},
 			members: {
 				type: "array",
-				items: "string|no-empty",
+				items: { type: "string", empty: false },
 				readonly: true,
 				onCreate: ({ ctx }) => (ctx.meta.userID ? [ctx.meta.userID] : []),
 				validate: "validateMembers",
@@ -100,28 +106,28 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphqlType: "User",
-				graphqlInputType: "String"
+				graphql: { type: "User", inputType: "String" }
 			},
 			options: { type: "object" },
 			createdAt: {
 				type: "number",
 				readonly: true,
 				onCreate: () => Date.now(),
-				graphqlType: "Long"
+				graphql: { type: "Long" }
 			},
 			updatedAt: {
 				type: "number",
 				readonly: true,
 				onUpdate: () => Date.now(),
-				graphqlType: "Long"
+				graphql: { type: "Long" }
 			},
-			archivedAt: { type: "number", readonly: true, graphqlType: "Long" },
+			archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } },
 			deletedAt: {
 				type: "number",
 				readonly: true,
+				hidden: "byDefault",
 				onRemove: () => Date.now(),
-				graphqlType: "Long"
+				graphql: { type: "Long" }
 			}
 		},
 
@@ -147,54 +153,7 @@ module.exports = {
 			public: { public: true }
 		},
 
-		defaultScopes: ["membership", "notArchived", "notDeleted"],
-
-		openapi: {
-			// https://swagger.io/specification/#componentsObject
-			components: {
-				schemas: {
-					Board: {
-						required: ["id", "title"],
-						type: "object",
-						properties: {
-							id: { type: "string" },
-							title: { type: "string" },
-							slug: { type: "string" },
-							description: { type: "string" }
-						}
-					},
-					Boards: {
-						type: "array",
-						items: {
-							$ref: "#/components/schemas/Board"
-						}
-					},
-					BoardList: {
-						type: "object",
-						properties: {
-							total: { type: "integer" },
-							page: { type: "integer" },
-							pageSize: { type: "integer" },
-							totalPages: { type: "integer" },
-							rows: {
-								type: "array",
-								items: {
-									$ref: "#/components/schemas/Board"
-								}
-							}
-						}
-					}
-				}
-			},
-
-			// https://swagger.io/specification/#tagObject
-			tags: [
-				{
-					name: "boards",
-					description: "Boards operations"
-				}
-			]
-		}
+		defaultScopes: ["membership", "notArchived", "notDeleted"]
 	},
 
 	/**
@@ -202,142 +161,9 @@ module.exports = {
 	 */
 	actions: {
 		create: {
-			openapi: {
-				$path: "POST /board",
-				// https://swagger.io/specification/#operationObject
-				description: "Create a new board",
-				tags: ["boards"],
-				operationId: "v1.boards.create",
-				requestBody: {
-					content: {
-						"application/json": {
-							schema: {
-								type: "object",
-								properties: {
-									title: { type: "string" },
-									description: { type: "string" }
-								}
-							},
-							example: {
-								title: "New board",
-								description: "My new board"
-							}
-						}
-					}
-				},
-				responses: {
-					200: {
-						description: "Created board",
-						content: {
-							"application/json": {
-								schema: {
-									$ref: "#/components/schemas/Board"
-								}
-							}
-						}
-					}
-				}
-			},
 			permissions: [C.ROLE_AUTHENTICATED]
 		},
 		list: {
-			openapi: {
-				$path: "GET /boards",
-				description: "List boards with pages",
-				tags: ["boards"],
-				operationId: "v1.boards.list",
-				parameters: [
-					{
-						in: "query",
-						name: "page",
-						schema: {
-							type: "integer"
-						},
-						example: 1,
-						required: false,
-						description: "Page number"
-					},
-					{
-						in: "query",
-						name: "pageSize",
-						schema: {
-							type: "integer"
-						},
-						example: 10,
-						required: false,
-						description: "Page size"
-					},
-					{
-						in: "query",
-						name: "sort",
-						schema: {
-							type: "string"
-						},
-						example: "title,-createdAt",
-						required: false,
-						description: "Sorting"
-					},
-					{
-						in: "query",
-						name: "fields",
-						schema: {
-							type: "string"
-						},
-						example: "title,description, owner",
-						required: false,
-						description: "Filtered fields"
-					},
-					{
-						in: "query",
-						name: "populate",
-						schema: {
-							type: "string"
-						},
-						example: "owner",
-						required: false,
-						description: "Populated fields"
-					},
-					{
-						in: "query",
-						name: "search",
-						schema: {
-							type: "string"
-						},
-						required: false,
-						description: "Search text"
-					},
-					{
-						in: "query",
-						name: "searchFields",
-						schema: {
-							type: "string"
-						},
-						required: false,
-						description: "Fields for searching"
-					},
-					{
-						in: "query",
-						name: "query",
-						schema: {
-							type: "object"
-						},
-						required: false,
-						description: "Custom query"
-					}
-				],
-				responses: {
-					200: {
-						description: "Boards",
-						content: {
-							"application/json": {
-								schema: {
-									$ref: "#/components/schemas/BoardList"
-								}
-							}
-						}
-					}
-				}
-			},
 			permissions: [],
 			cache: {
 				keys: [
@@ -357,168 +183,22 @@ module.exports = {
 		},
 		find: {
 			rest: "GET /find",
-			openapi: {
-				$path: "GET /boards/find",
-				description: "Find boards",
-				tags: ["boards"],
-				operationId: "v1.boards.find",
-				responses: {
-					200: {
-						description: "Boards",
-						content: {
-							"application/json": {
-								schema: {
-									$ref: "#/components/schemas/Boards"
-								}
-							}
-						}
-					}
-				}
-			},
 			permissions: []
 		},
 		count: {
 			rest: "GET /count",
-			openapi: {
-				$path: "GET /boards/count",
-				description: "Number of boards",
-				tags: ["boards"],
-				operationId: "v1.boards.count",
-				responses: {
-					200: {
-						description: "Number of boards",
-						content: {
-							"application/json": {
-								schema: {
-									type: "number"
-								}
-							}
-						}
-					}
-				}
-			},
 			permissions: []
 		},
 		get: {
-			openapi: {
-				$path: "GET /boards/{id}",
-				// https://swagger.io/specification/#operationObject
-				description: "Get a board by ID",
-				tags: ["boards"],
-				operationId: "v1.boards.get",
-				parameters: [
-					{
-						in: "path",
-						name: "id",
-						schema: {
-							type: "string"
-						},
-						example: "5bf18691fe972d2464a7ba14",
-						required: true,
-						description: "Board ID"
-					}
-				],
-				responses: {
-					200: {
-						description: "Found board",
-						content: {
-							"application/json": {
-								schema: {
-									$ref: "#/components/schemas/Board"
-								}
-							}
-						}
-					}
-				}
-			},
 			needEntity: true,
 			permissions: [C.ROLE_MEMBER]
 		},
 		update: {
-			openapi: {
-				$path: "PUT /boards/{id}",
-				// https://swagger.io/specification/#operationObject
-				description: "Update a board by ID",
-				tags: ["boards"],
-				operationId: "v1.boards.update",
-				parameters: [
-					{
-						in: "path",
-						name: "id",
-						schema: {
-							type: "string"
-						},
-						example: "5bf18691fe972d2464a7ba14",
-						required: true,
-						description: "Board ID"
-					}
-				],
-				requestBody: {
-					content: {
-						"application/json": {
-							schema: {
-								type: "object",
-								properties: {
-									title: { type: "string" },
-									description: { type: "string" }
-								}
-							},
-							example: {
-								title: "New board",
-								description: "My new board"
-							}
-						}
-					}
-				},
-				responses: {
-					200: {
-						description: "Found board",
-						content: {
-							"application/json": {
-								schema: {
-									$ref: "#/components/schemas/Board"
-								}
-							}
-						}
-					}
-				}
-			},
 			needEntity: true,
 			permissions: [C.ROLE_MEMBER]
 		},
 		replace: false,
 		remove: {
-			openapi: {
-				$path: "DELETE /boards/{id}",
-				// https://swagger.io/specification/#operationObject
-				description: "Delete a board by ID",
-				tags: ["boards"],
-				operationId: "v1.boards.remove",
-				parameters: [
-					{
-						in: "path",
-						name: "id",
-						schema: {
-							type: "string"
-						},
-						example: "5bf18691fe972d2464a7ba14",
-						required: true,
-						description: "Board ID"
-					}
-				],
-				responses: {
-					200: {
-						description: "Found board",
-						content: {
-							"application/json": {
-								schema: {
-									$ref: "#/components/schemas/Board"
-								}
-							}
-						}
-					}
-				}
-			},
 			needEntity: true,
 			permissions: [C.ROLE_OWNER]
 		},
@@ -740,15 +420,21 @@ module.exports = {
 	 */
 	created() {},
 
+	// Temporary for development
 	merged(schema) {
-		generateCRUDGraphQL("board", schema);
-		console.log(schema.settings.graphql);
+		generateOpenAPISchema("board", schema);
 	},
 
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {},
+	started() {
+		fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
+		setTimeout(() => {
+			console.log(inspect(this.schema.settings.openapi, { depth: 7, colors: true }));
+			console.log(inspect(this.schema.actions, { depth: 7, colors: true }));
+		}, 1000);
+	},
 
 	/**
 	 * Service stopped lifecycle event handler

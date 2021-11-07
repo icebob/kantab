@@ -2,20 +2,13 @@
 
 const pluralize = require("pluralize");
 const _ = require("lodash");
+const { capitalize, uncapitalize } = require("../libs/utils");
 
 // Similar:
 //   https://github.com/mcollina/mercurius-auto-schema
 //   https://strapi.io/documentation/developer-docs/latest/development/plugins/graphql.html#shadow-crud
 //   https://github.com/strapi/strapi/blob/master/packages/strapi-plugin-graphql/services/type-builder.js
 //	 https://keystonejs.com/docs/apis/graphql
-
-function capitalize(str) {
-	return str[0].toUpperCase() + str.slice(1);
-}
-
-function uncapitalize(str) {
-	return str[0].toLowerCase() + str.slice(1);
-}
 
 function convertTypeToGraphQLType(type) {
 	if (["string", "boolean"].includes(type)) return capitalize(type);
@@ -24,7 +17,8 @@ function convertTypeToGraphQLType(type) {
 }
 
 function getGraphqlType(field, isInput) {
-	return isInput ? field.graphqlInputType || field.graphqlType : field.graphqlType;
+	if (!field.graphql) return;
+	return isInput ? field.graphql.inputType || field.graphql.type : field.graphql.type;
 }
 
 function generateEntityGraphQLType(res, typeName, fields, kind) {
@@ -37,32 +31,33 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 		// Skip virtual fields in create/update/replace
 		if (field.virtual && kind) return null;
 
+		// Skip hidden fields
+		if (field.hidden) return null;
+
 		// Skip readonly fields in create/update/replace
 		if (kind && field.readonly) return null;
 
 		// Skip in create if it has a hook
 		if (kind == "create" && field.onCreate) return null;
 
+		// Skip not-well defined fields
+		if (field.type == "object" && !field.properties) return;
+		if (field.type == "array" && !field.items) return;
+
 		let gType = getGraphqlType(field, !!kind);
 		let type = gType || field.type || "string";
 		type = convertTypeToGraphQLType(type);
 
-		// Skip not-well defined fields
-		if (type == "object" && !field.properties) return;
-		if (type == "array" && !field.items) return;
-
 		let description;
 		if (field.description) {
 			description = `"""${field.description}"""`;
-		} else {
-			//description = `"""Field of ${name}"""`;
 		}
 
 		if (field.type == "array") {
 			if (field.items.type == "object") {
 				let gType = getGraphqlType(field.items, !!kind);
 				let subTypeName = gType || `${res.entityName}${capitalize(pluralize(name, 1))}`;
-				if (kind) subTypeName = `${kind}${capitalize(subTypeName)}Input`;
+				if (kind) subTypeName = `${capitalize(kind)}${capitalize(subTypeName)}Input`;
 				generateEntityGraphQLType(res, subTypeName, field.items.properties, kind);
 				type = `[${subTypeName}]`;
 			} else {
@@ -112,12 +107,13 @@ function generateMutation(res, fields, kind, description) {
 			generateEntityGraphQLType(res, inputName, fields, kind);
 			return `${description}${mutationName}(input: ${inputName}!): ${res.entityName}!`;
 		case "remove":
-			return `${description}${mutationName}(id: String!): String!`;
+			return `${description}${mutationName}(id: String!): String!`; // TODO: get type of primary key
 	}
 }
 
 function generateCRUDGraphQL(name, schema) {
 	const entityName = capitalize(pluralize(name, 1));
+	const pluralizedName = pluralize(entityName);
 	if (schema.settings.fields) {
 		const res = {
 			entityName,
@@ -136,7 +132,8 @@ function generateCRUDGraphQL(name, schema) {
 
 			Object.keys(schema.actions).forEach(actionName => {
 				const actionDef = schema.actions[actionName];
-				if (actionDef.graphql == null) {
+				const visibility = actionDef.visibility || "published";
+				if (actionDef.rest && actionDef.graphql == null && visibility == "published") {
 					// CREATE action
 					if (actionName == "create") {
 						actionDef.graphql = {
@@ -156,7 +153,7 @@ function generateCRUDGraphQL(name, schema) {
 								res,
 								schema.settings.fields,
 								"update",
-								`Create an existing ${name}`
+								`Update an existing ${name}`
 							)
 						};
 					}
@@ -189,7 +186,7 @@ function generateCRUDGraphQL(name, schema) {
 					if (actionName == "find") {
 						actionDef.graphql = {
 							query: `"""Find ${name}s"""\n${uncapitalize(
-								pluralize(entityName)
+								pluralizedName
 							)}(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [${entityName}]`
 						};
 					}
@@ -208,8 +205,8 @@ function generateCRUDGraphQL(name, schema) {
 						].join("\n");
 
 						actionDef.graphql = {
-							query: `"""List ${name}s (paginated)"""\n${uncapitalize(
-								pluralize(entityName)
+							query: `"""List ${pluralizedName} (with pagination)"""\n${uncapitalize(
+								pluralizedName
 							)}List(page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): ${listResName}`
 						};
 					}
@@ -217,8 +214,8 @@ function generateCRUDGraphQL(name, schema) {
 					// COUNT action
 					if (actionName == "count") {
 						actionDef.graphql = {
-							query: `"""Number of ${name}s"""\n${uncapitalize(
-								pluralize(entityName)
+							query: `"""Number of ${pluralizedName}"""\n${uncapitalize(
+								pluralizedName
 							)}Count(search: String, searchFields: [String], scope: [String], query: JSON): Int!`
 						};
 					}
@@ -235,8 +232,8 @@ function generateCRUDGraphQL(name, schema) {
 					// RESOLVE action
 					if (actionName == "resolve") {
 						actionDef.graphql = {
-							query: `"""Resolve one or more ${name}s by IDs"""\n${uncapitalize(
-								pluralize(entityName)
+							query: `"""Resolve one or more ${pluralizedName} by IDs"""\n${uncapitalize(
+								pluralizedName
 							)}ByIds(id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
 						};
 					}
@@ -271,5 +268,12 @@ function generateCRUDGraphQL(name, schema) {
 }
 
 module.exports = {
-	generateCRUDGraphQL
+	name: "GraphQL-Generator",
+
+	serviceCreating(svc, schema) {
+		const name = schema.name;
+		if (name != "boards") return;
+		const entityName = pluralize(name, 1);
+		generateCRUDGraphQL(entityName, schema);
+	}
 };

@@ -62,3 +62,4 @@ data/
 public/
 schema.gql
 openapi.json
+service-schema.json
