@@ -1,6 +1,8 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import authenticator from "../authenticator";
+import { apolloClient } from "../apollo";
+import gql from "graphql-tag";
 
 Vue.use(Vuex);
 
@@ -37,7 +39,7 @@ export default new Vuex.Store({
 	getters: {},
 
 	actions: {
-		async init({ state, commit, dispatch }) {
+		async init({ dispatch }) {
 			try {
 				await dispatch("getMe");
 				await dispatch("getSupportedSocialAuthProviders");
@@ -62,6 +64,24 @@ export default new Vuex.Store({
 			}*/
 
 			return user;
+		},
+
+		async getMeApollo({ commit }) {
+			const user = await apolloClient.query({
+				query: gql`
+					query {
+						me {
+							id
+							username
+							fullName
+							email
+						}
+					}
+				`
+			});
+			console.log("user", user.data.me);
+			//commit("SET_LOGGED_IN_USER", user.data.me);
+			return user.data.me;
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {

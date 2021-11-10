@@ -28,6 +28,15 @@ const routes = [
 		}
 	},
 	{
+		path: "/loginApollo",
+		name: "loginApollo",
+		component: () =>
+			import(/* webpackChunkName: "account" */ "../components/account/LoginApollo.vue")
+		/* 		meta: {
+			redirectAuth: "home"
+		} */
+	},
+	{
 		path: "/signup",
 		name: "signup",
 		component: () =>

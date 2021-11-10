@@ -34,6 +34,15 @@ Vue.use(VueIziToast, {
 	transitionIn: "fadeInDown"
 });
 
+// --- VUE APOLLO CLIENT ---
+import VueApollo from "vue-apollo";
+import { apolloClient } from "./apollo";
+Vue.prototype.$apollo = apolloClient;
+const apolloProvider = new VueApollo({
+	defaultClient: apolloClient
+});
+Vue.use(VueApollo);
+
 // Authenticator
 import authenticator from "./authenticator";
 Vue.prototype.$authenticator = authenticator;
@@ -48,6 +57,7 @@ Vue.use(VueI18Next, () => {
 	new Vue({
 		router,
 		store,
+		apolloProvider,
 		render: h => h(App)
 	}).$mount("#app");
 });
