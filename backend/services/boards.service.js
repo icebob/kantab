@@ -10,7 +10,7 @@ const DbService = require("../mixins/db.mixin");
 const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
-const { generateOpenAPISchema } = require("../libs/openapi-generator");
+//const { generateOpenAPISchema } = require("../libs/openapi-generator");
 
 /**
  * Boards service
@@ -44,6 +44,7 @@ module.exports = {
 				columnName: "_id"
 			},
 			owner: {
+				type: "string",
 				readonly: true,
 				required: true,
 				populate: {
@@ -495,20 +496,22 @@ module.exports = {
 	 */
 	created() {},
 
-	// Temporary for development
+	/* Temporary for development
 	merged(schema) {
 		generateOpenAPISchema("board", schema);
-	},
+	},*/
 
 	/**
 	 * Service started lifecycle event handler
 	 */
 	started() {
+		/*
 		fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
 		setTimeout(() => {
 			console.log(inspect(this.schema.settings.openapi, { depth: 7, colors: true }));
 			console.log(inspect(this.schema.actions, { depth: 10, colors: true }));
 		}, 1000);
+		*/
 	},
 
 	/**

@@ -114,157 +114,158 @@ function generateMutation(res, fields, kind, description) {
 function generateCRUDGraphQL(name, schema) {
 	const entityName = capitalize(pluralize(name, 1));
 	const pluralizedName = pluralize(entityName);
-	if (schema.settings.fields) {
-		const res = {
-			entityName,
-			inputs: {},
-			types: {},
-			actions: {},
-			resolvers: {}
-			//queries: [],
-			//mutations: []
-		};
 
-		if (schema.actions) {
-			if (!schema.settings.graphql) schema.settings.graphql = {};
+	if (!schema.settings) return;
+	if (!schema.settings.fields) return;
+	if (!schema.actions) return;
 
-			generateEntityGraphQLType(res, entityName, schema.settings.fields);
+	const res = {
+		entityName,
+		inputs: {},
+		types: {},
+		actions: {},
+		resolvers: {}
+		//queries: [],
+		//mutations: []
+	};
 
-			Object.keys(schema.actions).forEach(actionName => {
-				const actionDef = schema.actions[actionName];
-				const visibility = actionDef.visibility || "published";
-				if (actionDef.rest && actionDef.graphql == null && visibility == "published") {
-					// CREATE action
-					if (actionName == "create") {
-						actionDef.graphql = {
-							mutation: generateMutation(
-								res,
-								schema.settings.fields,
-								"create",
-								`Create a new ${name}`
-							)
-						};
-					}
+	if (!schema.settings.graphql) schema.settings.graphql = {};
 
-					// UPDATE action
-					if (actionName == "update") {
-						actionDef.graphql = {
-							mutation: generateMutation(
-								res,
-								schema.settings.fields,
-								"update",
-								`Update an existing ${name}`
-							)
-						};
-					}
+	generateEntityGraphQLType(res, entityName, schema.settings.fields);
 
-					// REPLACE action
-					if (actionName == "replace") {
-						actionDef.graphql = {
-							mutation: generateMutation(
-								res,
-								schema.settings.fields,
-								"replace",
-								`Replace an existing ${name}`
-							)
-						};
-					}
-
-					// REMOVE action
-					if (actionName == "remove") {
-						actionDef.graphql = {
-							mutation: generateMutation(
-								res,
-								schema.settings.fields,
-								"remove",
-								`Delete an existing ${name}`
-							)
-						};
-					}
-
-					// FIND action
-					if (actionName == "find") {
-						actionDef.graphql = {
-							query: `"""Find ${name}s"""\n${uncapitalize(
-								pluralizedName
-							)}(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [${entityName}]`
-						};
-					}
-
-					// LIST action
-					if (actionName == "list") {
-						const listResName = `${entityName}List`;
-						res.types[listResName] = [
-							"{",
-							"    total: Int!",
-							"    page: Int!",
-							"    pageSize: Int!",
-							"    totalPages: Int!",
-							`    rows: [${entityName}]!`,
-							"}"
-						].join("\n");
-
-						actionDef.graphql = {
-							query: `"""List ${pluralizedName} (with pagination)"""\n${uncapitalize(
-								pluralizedName
-							)}List(page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): ${listResName}`
-						};
-					}
-
-					// COUNT action
-					if (actionName == "count") {
-						actionDef.graphql = {
-							query: `"""Number of ${pluralizedName}"""\n${uncapitalize(
-								pluralizedName
-							)}Count(search: String, searchFields: [String], scope: [String], query: JSON): Int!`
-						};
-					}
-
-					// GET action
-					if (actionName == "get") {
-						actionDef.graphql = {
-							query: `"""Get a ${name} by ID"""\n${uncapitalize(
-								pluralize(entityName, 1)
-							)}(id: String!, fields: [String], scopes: [String]): Board`
-						};
-					}
-
-					// RESOLVE action
-					if (actionName == "resolve") {
-						actionDef.graphql = {
-							query: `"""Resolve one or more ${pluralizedName} by IDs"""\n${uncapitalize(
-								pluralizedName
-							)}ByIds(id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
-						};
-					}
-				}
-			});
-
-			const types = Object.entries(res.types);
-			const inputs = Object.entries(res.inputs);
-			if (types.length > 0 || inputs.length > 0) {
-				if (!schema.settings.graphql.type) schema.settings.graphql.type = "";
-
-				types.forEach(([name, str]) => {
-					schema.settings.graphql.type += `\n\ntype ${name} ${str}`;
-				});
-
-				inputs.forEach(([name, str]) => {
-					schema.settings.graphql.type += `\n\ninput ${name} ${str}`;
-				});
+	Object.keys(schema.actions).forEach(actionName => {
+		const actionDef = schema.actions[actionName];
+		const visibility = actionDef.visibility || "published";
+		if (actionDef.rest && actionDef.graphql == null && visibility == "published") {
+			// CREATE action
+			if (actionName == "create") {
+				actionDef.graphql = {
+					mutation: generateMutation(
+						res,
+						schema.settings.fields,
+						"create",
+						`Create a new ${name}`
+					)
+				};
 			}
-			const resolvers = Object.entries(res.resolvers);
-			if (resolvers.length > 0) {
-				if (!schema.settings.graphql.resolvers) schema.settings.graphql.resolvers = {};
 
-				resolvers.forEach(([name, resolver]) => {
-					schema.settings.graphql.resolvers[name] = resolver;
-				});
+			// UPDATE action
+			if (actionName == "update") {
+				actionDef.graphql = {
+					mutation: generateMutation(
+						res,
+						schema.settings.fields,
+						"update",
+						`Update an existing ${name}`
+					)
+				};
+			}
+
+			// REPLACE action
+			if (actionName == "replace") {
+				actionDef.graphql = {
+					mutation: generateMutation(
+						res,
+						schema.settings.fields,
+						"replace",
+						`Replace an existing ${name}`
+					)
+				};
+			}
+
+			// REMOVE action
+			if (actionName == "remove") {
+				actionDef.graphql = {
+					mutation: generateMutation(
+						res,
+						schema.settings.fields,
+						"remove",
+						`Delete an existing ${name}`
+					)
+				};
+			}
+
+			// FIND action
+			if (actionName == "find") {
+				actionDef.graphql = {
+					query: `"""Find ${name}s"""\n${uncapitalize(
+						pluralizedName
+					)}(limit: Int, offset: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): [${entityName}]`
+				};
+			}
+
+			// LIST action
+			if (actionName == "list") {
+				const listResName = `${entityName}List`;
+				res.types[listResName] = [
+					"{",
+					"    total: Int!",
+					"    page: Int!",
+					"    pageSize: Int!",
+					"    totalPages: Int!",
+					`    rows: [${entityName}]!`,
+					"}"
+				].join("\n");
+
+				actionDef.graphql = {
+					query: `"""List ${pluralizedName} (with pagination)"""\n${uncapitalize(
+						pluralizedName
+					)}List(page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSON): ${listResName}`
+				};
+			}
+
+			// COUNT action
+			if (actionName == "count") {
+				actionDef.graphql = {
+					query: `"""Number of ${pluralizedName}"""\n${uncapitalize(
+						pluralizedName
+					)}Count(search: String, searchFields: [String], scope: [String], query: JSON): Int!`
+				};
+			}
+
+			// GET action
+			if (actionName == "get") {
+				actionDef.graphql = {
+					query: `"""Get a ${name} by ID"""\n${uncapitalize(
+						pluralize(entityName, 1)
+					)}(id: String!, fields: [String], scopes: [String]): Board`
+				};
+			}
+
+			// RESOLVE action
+			if (actionName == "resolve") {
+				actionDef.graphql = {
+					query: `"""Resolve one or more ${pluralizedName} by IDs"""\n${uncapitalize(
+						pluralizedName
+					)}ByIds(id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
+				};
 			}
 		}
+	});
 
-		return res;
+	const types = Object.entries(res.types);
+	const inputs = Object.entries(res.inputs);
+	if (types.length > 0 || inputs.length > 0) {
+		if (!schema.settings.graphql.type) schema.settings.graphql.type = "";
+
+		types.forEach(([name, str]) => {
+			schema.settings.graphql.type += `\n\ntype ${name} ${str}`;
+		});
+
+		inputs.forEach(([name, str]) => {
+			schema.settings.graphql.type += `\n\ninput ${name} ${str}`;
+		});
 	}
+	const resolvers = Object.entries(res.resolvers);
+	if (resolvers.length > 0) {
+		if (!schema.settings.graphql.resolvers) schema.settings.graphql.resolvers = {};
+
+		resolvers.forEach(([name, resolver]) => {
+			schema.settings.graphql.resolvers[name] = resolver;
+		});
+	}
+
+	return res;
 }
 
 module.exports = {
@@ -272,7 +273,7 @@ module.exports = {
 
 	serviceCreating(svc, schema) {
 		const name = schema.name;
-		if (name != "boards") return;
+		if (!["boards", "lists"].includes(name)) return;
 		const entityName = pluralize(name, 1);
 		generateCRUDGraphQL(entityName, schema);
 	}
