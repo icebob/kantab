@@ -6,7 +6,7 @@ const C = require("../constants");
 const DbService = require("../mixins/db.mixin");
 const CacheCleaner = require("../mixins/cache-cleaner.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
-//const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
+const { MoleculerClientError } = require("moleculer").Errors;
 
 /**
  * List of boards service
@@ -86,16 +86,28 @@ module.exports = {
 		scopes: {
 			// Return lists of a given board where the logged in user is a member.
 			async board(query, ctx) {
-				if (ctx && ctx.params.board) {
-					const res = await this.validateBoard({ ctx, value: ctx.params.board });
-					if (res === true) {
+				// Adapter init
+				if (!ctx) return query;
+
+				if (ctx.params.board) {
+					const res = await ctx.call("v1.boards.resolve", {
+						id: ctx.params.board,
+						throwIfNotExist: false
+					});
+					if (res) {
 						query.board = ctx.params.board;
 						return query;
 					}
+					throw new MoleculerClientError(
+						`You have no right for the board '${ctx.params.board}'`,
+						403,
+						"ERR_NO_PERMISSION",
+						{ board: ctx.params.board }
+					);
 				}
-
-				query.board = "<empty>";
-				return query;
+				throw new MoleculerClientError(`Board is required`, 422, "VALIDATION_ERROR", [
+					{ type: "required", field: "board" }
+				]);
 			},
 
 			// List the not deleted boards
@@ -108,7 +120,27 @@ module.exports = {
 	/**
 	 * Actions
 	 */
-	actions: {},
+	actions: {
+		list: {
+			permissions: [],
+			cache: {
+				keys: [
+					"board",
+					"page",
+					"pageSize",
+					"fields",
+					"sort",
+					"search",
+					"searchFields",
+					"collation",
+					"scope",
+					"populate",
+					"query",
+					"#userID"
+				]
+			}
+		}
+	},
 
 	/**
 	 * Events
@@ -125,9 +157,6 @@ module.exports = {
 		validateBoard({ ctx, value }) {
 			return ctx
 				.call("v1.boards.resolve", { id: value, throwIfNotExist: true })
-				.then(board => {
-					return board.members.includes(ctx.meta.userID);
-				})
 				.catch(err => err.message);
 		}
 	},
