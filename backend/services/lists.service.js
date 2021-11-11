@@ -4,6 +4,7 @@ const _ = require("lodash");
 
 const C = require("../constants");
 const DbService = require("../mixins/db.mixin");
+const CacheCleaner = require("../mixins/cache-cleaner.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 //const { MoleculerRetryableError, MoleculerClientError } = require("moleculer").Errors;
 
@@ -15,8 +16,8 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService()
-		//CacheCleaner(["cache.clean.lists", "cache.clean.boards", "cache.clean.accounts"]),
+		DbService(),
+		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"])
 		//ConfigLoader([])
 	],
 
@@ -84,12 +85,16 @@ module.exports = {
 
 		scopes: {
 			// Return lists of a given board where the logged in user is a member.
-			board(query, ctx) {
-				if (ctx && ctx.meta.userID) {
-					query.board = ctx.params.board;
-				} else {
-					query.board = "<empty>";
+			async board(query, ctx) {
+				if (ctx && ctx.params.board) {
+					const res = await this.validateBoard({ ctx, value: ctx.params.board });
+					if (res === true) {
+						query.board = ctx.params.board;
+						return query;
+					}
 				}
+
+				query.board = "<empty>";
 				return query;
 			},
 
@@ -117,14 +122,12 @@ module.exports = {
 		/**
 		 * Validate the `board` property of list.
 		 */
-		validateOwner({ ctx, value }) {
+		validateBoard({ ctx, value }) {
 			return ctx
 				.call("v1.boards.resolve", { id: value, throwIfNotExist: true })
-				.then(res =>
-					res && res.status == C.STATUS_ACTIVE
-						? true
-						: `The board '${value}' is not exist.`
-				)
+				.then(board => {
+					return board.members.includes(ctx.meta.userID);
+				})
 				.catch(err => err.message);
 		}
 	},
