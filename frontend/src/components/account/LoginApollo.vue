@@ -19,7 +19,7 @@
 				/>
 			</div>
 			<div>
-				<button type="submit">Login</button>
+				<button>Login</button>
 			</div>
 		</form>
 		<button @click="getMeh">get me</button>

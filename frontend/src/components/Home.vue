@@ -2,17 +2,68 @@
 	<dir>
 		<Logo />
 		<h4>Home</h4>
-		<div>
-			<button @click="getBoards">Get boards</button>
+		<div style="margin: 15px">
+			<button class="button primary" @click="getBoards">Get boards</button>
 			<pre v-if="boards"><code>{{ boards }}</code></pre>
 		</div>
-		<div>
-			<button @click="getBoardsApollo">Get boards apollo</button>
-			<pre v-if="boardsApollo"><code>{{ boardsApollo.data.boards }}</code></pre>
-			<div>
-				<input v-model="boardTitle" placeholder="Board title" />
-				<button @click="createBoard">Create board</button>
+		<div style="margin: 15px" class="form-group">
+			<button class="button primary" @click="getBoardWApollo">Get boards apollo</button>
+			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
+			<fieldset>
+				<div
+					class="content flex align-start justify-space-around panels"
+					v-for="board in boardsApollo"
+					:key="board.id"
+				>
+					<div class="card">
+						<div class="block">
+							<div>
+								<span class="title">{{ board.title }}</span>
+								<button
+									style="margin: 5px"
+									class="button small primary"
+									@click="removeBoard(board.id)"
+								>
+									X
+								</button>
+							</div>
+							<div class="body">
+								<span>{{ board.id }}</span>
+
+								<div>
+									<input
+										class="form-control"
+										v-model="newTitle"
+										placeholder="New title"
+									/>
+									<button
+										style="margin: 10px"
+										class="button primary"
+										@click="updateBoard(board.id)"
+									>
+										Update title
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+			<div class="new-board-panel">
+				<input
+					style="padding: 15px"
+					class="form-control"
+					v-model="boardTitle"
+					placeholder="Board title"
+				/>
+				<button style="margin: 15px" class="button primary" @click="createBoard">
+					Create board
+				</button>
 			</div>
+			<!-- 			<div>
+				<input v-model="newTitle" placeholder="New title" />
+				<button @click="updateBoard">Update board</button>
+			</div> -->
 		</div>
 	</dir>
 </template>
@@ -21,6 +72,8 @@
 import Logo from "./account/partials/Logo";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
+
+import { getBoardsApollo } from "../graphql/queries";
 export default {
 	components: {
 		Logo
@@ -30,7 +83,9 @@ export default {
 		return {
 			boards: null,
 			boardsApollo: null,
-			boardTitle: null
+			boardTitle: null,
+			newTitle: "",
+			updateId: "axGe9EDWrQT5vXradJQr"
 		};
 	},
 
@@ -42,9 +97,12 @@ export default {
 				this.boards = res;
 			});
 		},
-		async getBoardsApollo() {
+		async getBoardWApollo() {
+			this.boardsApollo = await getBoardsApollo();
+		},
+		/* 		async getBoardsApollo() {
 			// Call to the graphql mutation
-			this.boardsApollo = await apolloClient.query({
+			const res = await apolloClient.query({
 				query: gql`
 					query {
 						boards {
@@ -62,14 +120,15 @@ export default {
 					}
 				`
 			});
-		},
+			this.boardsApollo = res.data.boards;
+		}, */
 		async createBoard() {
 			// Call to the graphql mutation
 			apolloClient
 				.mutate({
 					// Query
 					mutation: gql`
-						mutation createBoard($title: CreateBoardInput!) {
+						mutation createBoard($input: CreateBoardInput!) {
 							createBoard(input: $input) {
 								id
 							}
@@ -81,18 +140,59 @@ export default {
 				})
 				.then(async data => {
 					// Result
-					console.log("Token", data.data.login.token);
-					const user = await this.applyToken(data.data.login.token);
-					console.log("user", user);
-
-					//const { redirect } = store.state.route.query;
-					//router.push(redirect ? redirect : { name: "home" });
-					//return user;
+					console.log("Board created", data);
 				})
 				.catch(error => {
 					// Error
 					console.error(error);
-					// We restore the initial user input
+				});
+		},
+		async removeBoard(id) {
+			// Call to the graphql mutation
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation removeBoard($id: String!) {
+							removeBoard(id: $id)
+						}
+					`,
+
+					// Parameters
+					variables: { id }
+				})
+				.then(async data => {
+					// Result
+					console.log("Deleted", data);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
+				});
+		},
+		updateBoard(id) {
+			// Call to the graphql mutation
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation updateBoard($input: UpdateBoardInput!) {
+							updateBoard(input: $input) {
+								id
+							}
+						}
+					`,
+
+					// Parameters
+					variables: { input: { id, title: this.newTitle } }
+				})
+				.then(async data => {
+					// Result
+					console.log("Board created", data);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
 				});
 		}
 	}
