@@ -98,6 +98,7 @@ export default {
 			});
 		},
 		async getBoardWApollo() {
+			console.log("");
 			this.boardsApollo = await getBoardsApollo();
 		},
 		/* 		async getBoardsApollo() {
