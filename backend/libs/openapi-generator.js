@@ -320,6 +320,7 @@ function generateOpenAPISchema(name, schema) {
 	const entityName = capitalize(pluralize(name, 1));
 	const pluralizedEntityName = pluralize(entityName);
 
+	if (!schema.settings) return;
 	if (!schema.settings.rest) return;
 	if (!schema.settings.fields) return;
 	if (!schema.actions) return;
