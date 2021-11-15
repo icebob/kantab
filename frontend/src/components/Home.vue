@@ -9,13 +9,9 @@
 		<div style="margin: 15px" class="form-group">
 			<button class="button primary" @click="getBoardWApollo">Get boards apollo</button>
 			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
-			<fieldset>
-				<div
-					class="content flex align-start justify-space-around panels"
-					v-for="board in boardsApollo"
-					:key="board.id"
-				>
-					<div class="card">
+			<fieldset class="content flex align-start justify-space-around panels">
+				<div v-for="board in boardsApollo" :key="board.id">
+					<div class="card" style="margin: 15px">
 						<div class="block">
 							<div>
 								<span class="title">{{ board.title }}</span>
@@ -49,21 +45,21 @@
 					</div>
 				</div>
 			</fieldset>
-			<div class="new-board-panel">
-				<input
-					style="padding: 15px"
-					class="form-control"
-					v-model="boardTitle"
-					placeholder="Board title"
-				/>
-				<button style="margin: 15px" class="button primary" @click="createBoard">
-					Create board
-				</button>
-			</div>
 			<!-- 			<div>
 				<input v-model="newTitle" placeholder="New title" />
 				<button @click="updateBoard">Update board</button>
 			</div> -->
+		</div>
+		<div class="form-group new-board-panel">
+			<input
+				style="padding: 15px; width: 20%"
+				class="form-control"
+				v-model="boardTitle"
+				placeholder="Board title"
+			/>
+			<button style="margin: 15px" class="button primary" @click="createBoard">
+				Create board
+			</button>
 		</div>
 	</dir>
 </template>
@@ -72,8 +68,8 @@
 import Logo from "./account/partials/Logo";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
+import { mapState, mapActions } from "vuex";
 
-import { getBoardsApollo } from "../graphql/queries";
 export default {
 	components: {
 		Logo
@@ -90,6 +86,7 @@ export default {
 	},
 
 	methods: {
+		...mapActions(["getBoardsApollo"]),
 		getBoards() {
 			this.$socket.emit("call", "v1.boards.list", { page: 1, pageSize: 5 }, (err, res) => {
 				if (err) return alert(err.message);
@@ -98,8 +95,7 @@ export default {
 			});
 		},
 		async getBoardWApollo() {
-			console.log("");
-			this.boardsApollo = await getBoardsApollo();
+			this.boardsApollo = await this.getBoardsApollo();
 		},
 		/* 		async getBoardsApollo() {
 			// Call to the graphql mutation

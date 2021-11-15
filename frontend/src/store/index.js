@@ -33,7 +33,9 @@ export default new Vuex.Store({
 	state: {
 		// Logged in user entity
 		user: null,
-		providers: []
+		providers: [],
+
+		boards: null
 	},
 
 	getters: {},
@@ -84,6 +86,29 @@ export default new Vuex.Store({
 			return user.data.me;
 		},
 
+		async getBoardsApollo({ commit }) {
+			const res = await apolloClient.query({
+				query: gql`
+					query {
+						boards {
+							id
+							title
+							description
+							owner {
+								username
+								fullName
+								boards {
+									title
+								}
+							}
+						}
+					}
+				`
+			});
+			commit("SET_BOARDS", res.data.boards);
+			return res.data.boards;
+		},
+
 		async getSupportedSocialAuthProviders({ commit }) {
 			const providers = await axios.get("/auth/supported-social-auth-providers");
 			commit("SET_AUTH_PROVIDERS", providers);
@@ -110,6 +135,9 @@ export default new Vuex.Store({
 
 		SET_AUTH_PROVIDERS(state, providers) {
 			state.providers = providers;
+		},
+		SET_BOARDS(state, boards) {
+			state.board = boards;
 		},
 
 		LOGOUT(state) {
