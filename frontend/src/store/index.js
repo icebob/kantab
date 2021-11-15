@@ -35,7 +35,7 @@ export default new Vuex.Store({
 		user: null,
 		providers: [],
 
-		boards: null
+		boards: []
 	},
 
 	getters: {},
@@ -86,7 +86,7 @@ export default new Vuex.Store({
 			return user.data.me;
 		},
 
-		async getBoardsApollo({ commit }) {
+		async getBoards({ commit }) {
 			const res = await apolloClient.query({
 				query: gql`
 					query {
@@ -107,6 +107,90 @@ export default new Vuex.Store({
 			});
 			commit("SET_BOARDS", res.data.boards);
 			return res.data.boards;
+		},
+
+		async createBoard({ commit }, input) {
+			// Call to the graphql mutation
+			console.log("input", input);
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation createBoard($input: CreateBoardInput!) {
+							createBoard(input: $input) {
+								id
+								title
+								description
+							}
+						}
+					`,
+
+					// Parameters
+					variables: input
+				})
+				.then(async data => {
+					// Result
+					console.log("Board created", data.data.createBoard);
+					commit("ADD_BOARD", data.data.createBoard);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
+				});
+		},
+
+		async removeBoard({ commit }, id) {
+			// Call to the graphql mutation
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation removeBoard($id: String!) {
+							removeBoard(id: $id)
+						}
+					`,
+
+					// Parameters
+					variables: { id }
+				})
+				.then(async data => {
+					// Result
+					commit("REMOVE_BOARD", data.data.removeBoard);
+					console.log("Deleted", data.data.removeBoard);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
+				});
+		},
+		async updateBoard({ commit }, input) {
+			// Call to the graphql mutation
+			console.log("update input ", input);
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation updateBoard($input: UpdateBoardInput!) {
+							updateBoard(input: $input) {
+								id
+								title
+								description
+							}
+						}
+					`,
+
+					// Parameters
+					variables: input
+				})
+				.then(async data => {
+					// Result
+					console.log("Board updated", data.data.updateBoard);
+					commit("UPDATE_BOARD", data.data.updateBoard);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
+				});
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {
@@ -137,7 +221,19 @@ export default new Vuex.Store({
 			state.providers = providers;
 		},
 		SET_BOARDS(state, boards) {
-			state.board = boards;
+			state.boards = boards;
+		},
+		ADD_BOARD(state, board) {
+			state.boards.push(board);
+			//Vue.set(state.boards[state.boards.length], state.boards.length, board);
+		},
+		UPDATE_BOARD(state, board) {
+			const ix = state.boards.findIndex(b => b.id === board.id);
+			state.boards[ix] = board;
+		},
+		REMOVE_BOARD(state, id) {
+			const ix = state.boards.findIndex(b => b.id === id);
+			if (ix >= 0) state.boards.splice(ix, 1);
 		},
 
 		LOGOUT(state) {

@@ -4,13 +4,13 @@
 		<h4>Home</h4>
 		<div style="margin: 15px">
 			<button class="button primary" @click="getBoards">Get boards</button>
-			<pre v-if="boards"><code>{{ boards }}</code></pre>
+			<!-- 			<pre v-if="boards"><code>{{ boards }}</code></pre> -->
 		</div>
 		<div style="margin: 15px" class="form-group">
-			<button class="button primary" @click="getBoardWApollo">Get boards apollo</button>
+			<button class="button primary" @click="getBoardApollo">Get boards apollo</button>
 			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
-			<fieldset class="content flex align-start justify-space-around panels">
-				<div v-for="board in boardsApollo" :key="board.id">
+			<fieldset v-if="boards" class="content flex align-start justify-space-around panels">
+				<div v-for="board in boards" :key="board.id">
 					<div class="card" style="margin: 15px">
 						<div class="block">
 							<div>
@@ -24,20 +24,21 @@
 								</button>
 							</div>
 							<div class="body">
-								<span>{{ board.id }}</span>
+								<div style="margin-bottom: 10px">{{ board.description }}</div>
+								<div style="margin-bottom: 10px">{{ board.id }}</div>
 
 								<div>
-									<input
-										class="form-control"
-										v-model="newTitle"
-										placeholder="New title"
-									/>
 									<button
-										style="margin: 10px"
 										class="button primary"
-										@click="updateBoard(board.id)"
+										@click="
+											showEditBoardDialog({
+												id: board.id,
+												title: board.title,
+												description: board.description || ''
+											})
+										"
 									>
-										Update title
+										Edit board
 									</button>
 								</div>
 							</div>
@@ -45,10 +46,6 @@
 					</div>
 				</div>
 			</fieldset>
-			<!-- 			<div>
-				<input v-model="newTitle" placeholder="New title" />
-				<button @click="updateBoard">Update board</button>
-			</div> -->
 		</div>
 		<div class="form-group new-board-panel">
 			<input
@@ -57,140 +54,60 @@
 				v-model="boardTitle"
 				placeholder="Board title"
 			/>
-			<button style="margin: 15px" class="button primary" @click="createBoard">
+			<button style="margin: 15px" class="button primary" @click="createBoardApollo">
 				Create board
 			</button>
 		</div>
+		<edit-board-dialog ref="editDialog" />
 	</dir>
 </template>
 
 <script>
 import Logo from "./account/partials/Logo";
-import { apolloClient } from "../apollo";
-import gql from "graphql-tag";
+/* import { apolloClient } from "../apollo";
+import gql from "graphql-tag"; */
 import { mapState, mapActions } from "vuex";
+import EditBoardDialog from "../components/EditBoardDialog";
 
 export default {
 	components: {
-		Logo
+		Logo,
+		EditBoardDialog
 	},
 
 	data() {
 		return {
-			boards: null,
-			boardsApollo: null,
+			//boards: null,
+			//boardsApollo: null,
 			boardTitle: null,
 			newTitle: "",
 			updateId: "axGe9EDWrQT5vXradJQr"
 		};
 	},
+	computed: {
+		...mapState(["boards"])
+	},
 
 	methods: {
-		...mapActions(["getBoardsApollo"]),
-		getBoards() {
+		...mapActions(["getBoards", "createBoard", "removeBoard", "updateBoard"]),
+		/* 		getBoards() {
 			this.$socket.emit("call", "v1.boards.list", { page: 1, pageSize: 5 }, (err, res) => {
 				if (err) return alert(err.message);
 
 				this.boards = res;
 			});
-		},
-		async getBoardWApollo() {
-			this.boardsApollo = await this.getBoardsApollo();
-		},
-		/* 		async getBoardsApollo() {
-			// Call to the graphql mutation
-			const res = await apolloClient.query({
-				query: gql`
-					query {
-						boards {
-							id
-							title
-							description
-							owner {
-								username
-								fullName
-								boards {
-									title
-								}
-							}
-						}
-					}
-				`
-			});
-			this.boardsApollo = res.data.boards;
 		}, */
-		async createBoard() {
-			// Call to the graphql mutation
-			apolloClient
-				.mutate({
-					// Query
-					mutation: gql`
-						mutation createBoard($input: CreateBoardInput!) {
-							createBoard(input: $input) {
-								id
-							}
-						}
-					`,
-
-					// Parameters
-					variables: { input: { title: this.boardTitle } }
-				})
-				.then(async data => {
-					// Result
-					console.log("Board created", data);
-				})
-				.catch(error => {
-					// Error
-					console.error(error);
-				});
+		async getBoardApollo() {
+			await this.getBoards();
 		},
-		async removeBoard(id) {
-			// Call to the graphql mutation
-			apolloClient
-				.mutate({
-					// Query
-					mutation: gql`
-						mutation removeBoard($id: String!) {
-							removeBoard(id: $id)
-						}
-					`,
-
-					// Parameters
-					variables: { id }
-				})
-				.then(async data => {
-					// Result
-					console.log("Deleted", data);
-				})
-				.catch(error => {
-					// Error
-					console.error(error);
-				});
+		async createBoardApollo() {
+			await this.createBoard({ input: { title: this.boardTitle } });
 		},
-		updateBoard(id) {
-			// Call to the graphql mutation
-			apolloClient
-				.mutate({
-					// Query
-					mutation: gql`
-						mutation updateBoard($input: UpdateBoardInput!) {
-							updateBoard(input: $input) {
-								id
-							}
-						}
-					`,
-
-					// Parameters
-					variables: { input: { id, title: this.newTitle } }
-				})
-				.then(async data => {
-					// Result
-					console.log("Board created", data);
-				})
-				.catch(error => {
-					// Error
-					console.error(error);
-				});
+		async updateBoardApollo(id) {
+			await this.updateBoard({ input: { id, title: this.newTitle } });
+		},
+		showEditBoardDialog(details) {
+			this.$refs.editDialog.show(details);
 		}
 	}
 };

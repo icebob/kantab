@@ -22,7 +22,7 @@
 				<button>Login</button>
 			</div>
 		</form>
-		<button @click="getMeh">get me</button>
+		<button @click="getMe">get me</button>
 		<div></div>
 	</div>
 </template>
@@ -37,7 +37,7 @@ export default {
 	},
 	methods: {
 		...mapActions(["getMeApollo"]),
-		getMeh() {
+		getMe() {
 			console.log("meh");
 			this.getMeApollo();
 		}
