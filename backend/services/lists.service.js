@@ -16,7 +16,11 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService(),
+		DbService({
+			cache: {
+				additionalKeys: ["#userID"]
+			}
+		}),
 		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"])
 		//ConfigLoader([])
 	],
@@ -122,23 +126,7 @@ module.exports = {
 	 */
 	actions: {
 		list: {
-			permissions: [],
-			cache: {
-				keys: [
-					"board",
-					"page",
-					"pageSize",
-					"fields",
-					"sort",
-					"search",
-					"searchFields",
-					"collation",
-					"scope",
-					"populate",
-					"query",
-					"#userID"
-				]
-			}
+			permissions: []
 		}
 	},
 

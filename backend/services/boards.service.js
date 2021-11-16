@@ -13,6 +13,17 @@ const ChecksMixin = require("../mixins/checks.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
 //const { generateOpenAPISchema } = require("../libs/openapi-generator");
 
+const OPENAPI_RESPONSE_200 = {
+	description: `Updated board`,
+	content: {
+		"application/json": {
+			schema: {
+				$ref: `#/components/schemas/Board`
+			}
+		}
+	}
+};
+
 /**
  * Boards service
  */
@@ -21,7 +32,11 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService(),
+		DbService({
+			cache: {
+				additionalKeys: ["#userID"]
+			}
+		}),
 		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"]),
 		ChecksMixin
 		//ConfigLoader([])
@@ -167,22 +182,7 @@ module.exports = {
 			permissions: [C.ROLE_AUTHENTICATED]
 		},
 		list: {
-			permissions: [],
-			cache: {
-				keys: [
-					"page",
-					"pageSize",
-					"fields",
-					"sort",
-					"search",
-					"searchFields",
-					"collation",
-					"scope",
-					"populate",
-					"query",
-					"#userID"
-				]
-			}
+			permissions: []
 		},
 		find: {
 			rest: "GET /find",
@@ -221,16 +221,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -264,16 +255,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -307,16 +289,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -346,16 +319,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -393,16 +357,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
