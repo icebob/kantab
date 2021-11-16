@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require("lodash");
+const fs = require("fs");
 
 const C = require("../constants");
 const DbService = require("../mixins/db.mixin");
@@ -18,7 +19,7 @@ module.exports = {
 	mixins: [
 		DbService({
 			cache: {
-				additionalKeys: ["#userID"]
+				additionalKeys: ["board", "#userID"]
 			}
 		}),
 		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"])
@@ -126,7 +127,34 @@ module.exports = {
 	 */
 	actions: {
 		list: {
-			permissions: []
+			permissions: [],
+			params: {
+				board: { type: "string" }
+			}
+			/*graphql: {
+				query: '"""List board lists (with pagination)"""\nlists(board: String!, page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSONObject): ListListResponse'
+			}*/
+		},
+
+		find: {
+			permissions: [],
+			params: {
+				board: { type: "string" }
+			}
+		},
+
+		count: {
+			permissions: [],
+			params: {
+				board: { type: "string" }
+			}
+		},
+
+		get: {
+			permissions: [],
+			params: {
+				board: { type: "string" }
+			}
 		}
 	},
 
@@ -149,6 +177,11 @@ module.exports = {
 		}
 	},
 
+	// Temporary for development
+	merged(schema) {
+		require("../libs/graphql-generator").generateCRUDGraphQL("list", schema);
+	},
+
 	/**
 	 * Service created lifecycle event handler
 	 */
@@ -157,7 +190,9 @@ module.exports = {
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {},
+	started() {
+		fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
+	},
 
 	/**
 	 * Service stopped lifecycle event handler
