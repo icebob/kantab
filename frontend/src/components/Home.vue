@@ -40,6 +40,13 @@
 									>
 										Edit board
 									</button>
+									<router-link
+										:to="{ name: 'Board', params: { id: board.id } }"
+										class="button primary"
+										style="margin-left: 10px"
+									>
+										Open
+									</router-link>
 								</div>
 							</div>
 						</div>

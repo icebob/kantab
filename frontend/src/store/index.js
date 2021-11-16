@@ -34,7 +34,7 @@ export default new Vuex.Store({
 		// Logged in user entity
 		user: null,
 		providers: [],
-
+		board: null,
 		boards: []
 	},
 
@@ -84,6 +84,27 @@ export default new Vuex.Store({
 			console.log("user", user.data.me);
 			//commit("SET_LOGGED_IN_USER", user.data.me);
 			return user.data.me;
+		},
+		async getBoard({ commit }, id) {
+			const res = await apolloClient.query({
+				query: gql`
+					query board($id: String!) {
+						board(id: $id) {
+							id
+							title
+							slug
+							description
+							position
+							archived
+							public
+						}
+					}
+				`,
+				variables: { id }
+			});
+			commit("SET_BOARD", res.data.board);
+			console.log("getBoard", res.data.board);
+			return res.data.board;
 		},
 
 		async getBoards({ commit }) {
@@ -220,6 +241,9 @@ export default new Vuex.Store({
 		SET_AUTH_PROVIDERS(state, providers) {
 			state.providers = providers;
 		},
+		SET_BOARD(state, board) {
+			state.board = board;
+		},
 		SET_BOARDS(state, boards) {
 			state.boards = boards;
 		},
@@ -229,7 +253,7 @@ export default new Vuex.Store({
 		},
 		UPDATE_BOARD(state, board) {
 			const ix = state.boards.findIndex(b => b.id === board.id);
-			state.boards[ix] = board;
+			Object.assign(state.boards[ix], board);
 		},
 		REMOVE_BOARD(state, id) {
 			const ix = state.boards.findIndex(b => b.id === id);
