@@ -11,7 +11,17 @@ const CacheCleaner = require("../mixins/cache-cleaner.mixin");
 const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
-//const { generateOpenAPISchema } = require("../libs/openapi-generator");
+
+const OPENAPI_RESPONSE_200 = {
+	description: `Updated board`,
+	content: {
+		"application/json": {
+			schema: {
+				$ref: `#/components/schemas/Board`
+			}
+		}
+	}
+};
 
 /**
  * Boards service
@@ -21,7 +31,11 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService(),
+		DbService({
+			cache: {
+				additionalKeys: ["#userID"]
+			}
+		}),
 		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"]),
 		ChecksMixin
 		//ConfigLoader([])
@@ -167,22 +181,7 @@ module.exports = {
 			permissions: [C.ROLE_AUTHENTICATED]
 		},
 		list: {
-			permissions: [],
-			cache: {
-				keys: [
-					"page",
-					"pageSize",
-					"fields",
-					"sort",
-					"search",
-					"searchFields",
-					"collation",
-					"scope",
-					"populate",
-					"query",
-					"#userID"
-				]
-			}
+			permissions: []
 		},
 		find: {
 			rest: "GET /find",
@@ -221,16 +220,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -264,16 +254,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -307,16 +288,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -346,16 +318,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -393,16 +356,7 @@ module.exports = {
 			},
 			openapi: {
 				responses: {
-					200: {
-						description: `Updated board`,
-						content: {
-							"application/json": {
-								schema: {
-									$ref: `#/components/schemas/Board`
-								}
-							}
-						}
-					}
+					200: OPENAPI_RESPONSE_200
 				}
 			},
 			async handler(ctx) {
@@ -498,18 +452,17 @@ module.exports = {
 	 */
 	created() {},
 
-	/* Temporary for development
+	// Temporary for development
 	merged(schema) {
-		generateOpenAPISchema("board", schema);
-	},*/
+		require("../libs/graphql-generator").generateCRUDGraphQL("board", schema);
+	},
 
 	/**
 	 * Service started lifecycle event handler
 	 */
 	started() {
-		/*
-		fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
-		setTimeout(() => {
+		//fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
+		/*setTimeout(() => {
 			console.log(inspect(this.schema.settings.openapi, { depth: 7, colors: true }));
 			console.log(inspect(this.schema.actions, { depth: 10, colors: true }));
 		}, 1000);
