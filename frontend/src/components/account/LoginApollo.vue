@@ -37,9 +37,8 @@ export default {
 	},
 	methods: {
 		...mapActions(["getMeApollo"]),
-		getMe() {
-			console.log("meh");
-			this.getMeApollo();
+		async getMe() {
+			await this.getMeApollo();
 		}
 		/* 		login() {
 			// Call to the graphql mutation

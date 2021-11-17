@@ -11,14 +11,14 @@
 								type="text"
 								placeholder="My epic board"
 								class="form-control"
-								v-model="title"
+								v-model="board.title"
 							/>
 							<label>Description</label>
 							<input
 								type="text"
 								placeholder="My epic description"
 								class="form-control"
-								v-model="description"
+								v-model="board.description"
 							/>
 						</div>
 					</fieldset>
@@ -28,29 +28,32 @@
 				<button class="button success" @click="update">Save</button>
 			</div>
 			<div class="block">
-				<small class="text-muted">Last modified XXX</small>
+				<small :title="dateToLong(board.updatedAt)" class="text-muted"
+					>Last modified {{ dateToAgo(board.updatedAt) }}</small
+				>
 			</div>
 		</div>
 	</div>
 </template>
 <script>
 import { mapActions } from "vuex";
+import dateFormatter from "../mixins/dateFormatter";
+
 export default {
+	mixins: [dateFormatter],
 	data() {
 		return {
 			visible: false,
-			title: "",
-			description: "",
-			id: null
+
+			board: null
 		};
 	},
+
 	methods: {
 		...mapActions(["updateBoard"]),
-		show(details) {
+		show(board) {
+			this.board = board;
 			this.visible = true;
-			this.title = details.title;
-			this.description = details.description;
-			this.id = details.id;
 		},
 
 		close() {
@@ -58,7 +61,11 @@ export default {
 		},
 		async update() {
 			await this.updateBoard({
-				input: { id: this.id, title: this.title, description: this.description }
+				input: {
+					id: this.board.id,
+					title: this.board.title,
+					description: this.board.description
+				}
 			});
 			this.close();
 		}

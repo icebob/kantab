@@ -30,13 +30,7 @@
 								<div>
 									<button
 										class="button primary"
-										@click="
-											showEditBoardDialog({
-												id: board.id,
-												title: board.title,
-												description: board.description || ''
-											})
-										"
+										@click="showEditBoardDialog(board)"
 									>
 										Edit board
 									</button>
@@ -86,9 +80,7 @@ export default {
 		return {
 			//boards: null,
 			//boardsApollo: null,
-			boardTitle: null,
-			newTitle: "",
-			updateId: "axGe9EDWrQT5vXradJQr"
+			boardTitle: null
 		};
 	},
 	computed: {
@@ -110,11 +102,8 @@ export default {
 		async createBoardApollo() {
 			await this.createBoard({ input: { title: this.boardTitle } });
 		},
-		async updateBoardApollo(id) {
-			await this.updateBoard({ input: { id, title: this.newTitle } });
-		},
-		showEditBoardDialog(details) {
-			this.$refs.editDialog.show(details);
+		showEditBoardDialog(board) {
+			this.$refs.editDialog.show(board);
 		}
 	}
 };

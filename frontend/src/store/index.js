@@ -81,7 +81,6 @@ export default new Vuex.Store({
 					}
 				`
 			});
-			console.log("user", user.data.me);
 			//commit("SET_LOGGED_IN_USER", user.data.me);
 			return user.data.me;
 		},
@@ -103,7 +102,6 @@ export default new Vuex.Store({
 				variables: { id }
 			});
 			commit("SET_BOARD", res.data.board);
-			console.log("getBoard", res.data.board);
 			return res.data.board;
 		},
 
@@ -115,6 +113,8 @@ export default new Vuex.Store({
 							id
 							title
 							description
+							createdAt
+							updatedAt
 							owner {
 								username
 								fullName
@@ -132,7 +132,6 @@ export default new Vuex.Store({
 
 		async createBoard({ commit }, input) {
 			// Call to the graphql mutation
-			console.log("input", input);
 			apolloClient
 				.mutate({
 					// Query
@@ -151,7 +150,6 @@ export default new Vuex.Store({
 				})
 				.then(async data => {
 					// Result
-					console.log("Board created", data.data.createBoard);
 					commit("ADD_BOARD", data.data.createBoard);
 				})
 				.catch(error => {
@@ -177,7 +175,6 @@ export default new Vuex.Store({
 				.then(async data => {
 					// Result
 					commit("REMOVE_BOARD", data.data.removeBoard);
-					console.log("Deleted", data.data.removeBoard);
 				})
 				.catch(error => {
 					// Error
@@ -186,9 +183,9 @@ export default new Vuex.Store({
 		},
 		async updateBoard({ commit }, input) {
 			// Call to the graphql mutation
-			console.log("update input ", input);
-			apolloClient
-				.mutate({
+
+			try {
+				const res = await apolloClient.mutate({
 					// Query
 					mutation: gql`
 						mutation updateBoard($input: UpdateBoardInput!) {
@@ -202,16 +199,13 @@ export default new Vuex.Store({
 
 					// Parameters
 					variables: input
-				})
-				.then(async data => {
-					// Result
-					console.log("Board updated", data.data.updateBoard);
-					commit("UPDATE_BOARD", data.data.updateBoard);
-				})
-				.catch(error => {
-					// Error
-					console.error(error);
 				});
+				console.log("vue.proto", Vue.prototype);
+				//Vue.prototype.$toast.prototype.show("Welcome!", "Hey");
+				commit("UPDATE_BOARD", res.data.updateBoard);
+			} catch (error) {
+				console.error(error);
+			}
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {
@@ -249,11 +243,14 @@ export default new Vuex.Store({
 		},
 		ADD_BOARD(state, board) {
 			state.boards.push(board);
-			//Vue.set(state.boards[state.boards.length], state.boards.length, board);
 		},
 		UPDATE_BOARD(state, board) {
-			const ix = state.boards.findIndex(b => b.id === board.id);
-			Object.assign(state.boards[ix], board);
+			const found = state.boards.find(b => b.id == board.id);
+			if (found) {
+				Object.assign(found, board);
+			} else {
+				state.boards.push(board);
+			}
 		},
 		REMOVE_BOARD(state, id) {
 			const ix = state.boards.findIndex(b => b.id === id);

@@ -27,12 +27,14 @@ Vue.prototype.$swal = swal;
 // --- NOTIFICATIONS (IZITOAST) ---
 import VueIziToast from "vue-izitoast";
 import "izitoast/dist/css/iziToast.css";
+
 Vue.use(VueIziToast, {
 	theme: "light",
 	position: "topRight",
 	animateInside: false,
 	transitionIn: "fadeInDown"
 });
+Vue.prototype.$toast = VueIziToast;
 
 // --- VUE APOLLO CLIENT ---
 import VueApollo from "vue-apollo";

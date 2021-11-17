@@ -17,7 +17,9 @@
 					<button class="button success">Save</button>
 				</div>
 				<div class="block">
-					<small class="text-muted">Last modified XXX</small>
+					<small :title="dateToLong(board.updatedAt)" class="text-muted"
+						>Last modified {{ dateToAgo(board.updatedAt) }}</small
+					>
 				</div>
 			</div>
 		</div>
@@ -25,6 +27,7 @@
 </template>
 <script>
 import { mapState, mapActions } from "vuex";
+import dateFormatter from "../../mixins/dateFormatter";
 
 export default {
 	props: {
@@ -33,10 +36,9 @@ export default {
 			type: String
 		}
 	},
+	mixins: [dateFormatter],
 	data() {
-		return {
-			boardCopy: { ...this.board }
-		};
+		return {};
 	},
 	computed: {
 		...mapState(["board"])
