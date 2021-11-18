@@ -1,0 +1,68 @@
+#########################################################
+# activities service
+#########################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activities-deployment
+  namespace: default
+  labels:
+    name: activities-deployment
+    app: kantab
+spec:
+  selector:
+    matchLabels:
+      app: activities
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: activities
+    spec:
+      containers:
+        - name: activities
+          image: kantab
+          envFrom:
+            - configMapRef:
+                name: kantab-configmap
+            - secretRef:
+                name: kantab-secrets
+          env:
+            - name: SERVICES
+              value: activities
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "300Mi"
+              cpu: "150m"
+---
+#########################################################
+# Horizontal Pod AutoScaler for activities service (K8s >= v1.17)
+#########################################################
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-activities
+  namespace: default
+  labels:
+    name: hpa-activities
+    app: kantab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: activities-deployment
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+
+

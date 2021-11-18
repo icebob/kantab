@@ -1,0 +1,68 @@
+#########################################################
+# config service
+#########################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-deployment
+  namespace: default
+  labels:
+    name: config-deployment
+    app: kantab
+spec:
+  selector:
+    matchLabels:
+      app: config
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: config
+    spec:
+      containers:
+        - name: config
+          image: kantab
+          envFrom:
+            - configMapRef:
+                name: kantab-configmap
+            - secretRef:
+                name: kantab-secrets
+          env:
+            - name: SERVICES
+              value: config
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "300Mi"
+              cpu: "150m"
+---
+#########################################################
+# Horizontal Pod AutoScaler for config service (K8s >= v1.17)
+#########################################################
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-config
+  namespace: default
+  labels:
+    name: hpa-config
+    app: kantab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: config-deployment
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+
+

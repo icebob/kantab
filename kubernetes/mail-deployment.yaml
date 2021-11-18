@@ -1,0 +1,68 @@
+#########################################################
+# mail service
+#########################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mail-deployment
+  namespace: default
+  labels:
+    name: mail-deployment
+    app: kantab
+spec:
+  selector:
+    matchLabels:
+      app: mail
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: mail
+    spec:
+      containers:
+        - name: mail
+          image: kantab
+          envFrom:
+            - configMapRef:
+                name: kantab-configmap
+            - secretRef:
+                name: kantab-secrets
+          env:
+            - name: SERVICES
+              value: mail
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "300Mi"
+              cpu: "150m"
+---
+#########################################################
+# Horizontal Pod AutoScaler for mail service (K8s >= v1.17)
+#########################################################
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-mail
+  namespace: default
+  labels:
+    name: hpa-mail
+    app: kantab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mail-deployment
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+
+
