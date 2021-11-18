@@ -3,11 +3,12 @@
 		<Logo />
 		<h4>Home</h4>
 		<div style="margin: 15px">
-			<button class="button primary" @click="getBoards">Get boards</button>
 			<!-- 			<pre v-if="boards"><code>{{ boards }}</code></pre> -->
+			<button style="margin: 15px" class="button primary" @click="createBoardApollo">
+				Create board
+			</button>
 		</div>
 		<div style="margin: 15px" class="form-group">
-			<button class="button primary" @click="getBoardApollo">Get boards apollo</button>
 			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
 			<fieldset v-if="boards" class="content flex align-start justify-space-around panels">
 				<div v-for="board in boards" :key="board.id">
@@ -48,17 +49,7 @@
 				</div>
 			</fieldset>
 		</div>
-		<div class="form-group new-board-panel">
-			<input
-				style="padding: 15px; width: 20%"
-				class="form-control"
-				v-model="boardTitle"
-				placeholder="Board title"
-			/>
-			<button style="margin: 15px" class="button primary" @click="createBoardApollo">
-				Create board
-			</button>
-		</div>
+
 		<edit-board-dialog ref="editDialog" />
 	</dir>
 </template>
@@ -100,7 +91,9 @@ export default {
 			await this.getBoards();
 		},
 		async createBoardApollo() {
-			await this.createBoard({ input: { title: this.boardTitle } });
+			console.log("he");
+			this.$refs.editDialog.show();
+			//await this.createBoard({ input: { title: this.boardTitle } });
 		},
 		showEditBoardDialog(board) {
 			this.$refs.editDialog.show(board);

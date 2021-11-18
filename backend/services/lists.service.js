@@ -155,6 +155,12 @@ module.exports = {
 			params: {
 				board: { type: "string" }
 			}
+		},
+
+		remove: {
+			params: {
+				board: { type: "string" }
+			}
 		}
 	},
 
@@ -173,6 +179,7 @@ module.exports = {
 		validateBoard({ ctx, value }) {
 			return ctx
 				.call("v1.boards.resolve", { id: value, throwIfNotExist: true })
+				.then(() => true)
 				.catch(err => err.message);
 		}
 	},

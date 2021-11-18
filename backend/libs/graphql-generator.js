@@ -101,7 +101,7 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 	res[kind ? "inputs" : "types"][typeName] = content.join("\n");
 }
 
-function generateMutation(res, fields, kind, description) {
+function generateMutation(res, fields, kind, description, additionalParams) {
 	const mutationName = uncapitalize(res.entityName) + capitalize(kind);
 	const inputName = `${capitalize(mutationName)}Input`;
 
@@ -114,7 +114,9 @@ function generateMutation(res, fields, kind, description) {
 			generateEntityGraphQLType(res, inputName, fields, kind);
 			return `${description}${mutationName}(input: ${inputName}!): ${res.entityName}!`;
 		case "remove":
-			return `${description}${mutationName}(id: String!): String!`; // TODO: get type of primary key
+			return `${description}${mutationName}(id: String!${
+				additionalParams ? ", " + additionalParams : ""
+			}): String!`; // TODO: get type of primary key
 	}
 }
 
@@ -194,12 +196,15 @@ function generateCRUDGraphQL(name, schema) {
 
 			// REMOVE action
 			if (actionName == "remove") {
+				const additionalParams = generateAdditionalParams(res, actionDef.params, ["id"]);
+
 				actionDef.graphql = {
 					mutation: generateMutation(
 						res,
 						schema.settings.fields,
 						"remove",
-						`Delete an existing ${name}`
+						`Delete an existing ${name}`,
+						additionalParams
 					)
 				};
 			}

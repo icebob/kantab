@@ -25,7 +25,7 @@
 				</div>
 			</div>
 			<div class="block">
-				<button class="button success" @click="update">Save</button>
+				<button class="button success" @click="update">Ok</button>
 			</div>
 			<div class="block">
 				<small :title="dateToLong(board.updatedAt)" class="text-muted"
@@ -52,7 +52,14 @@ export default {
 	methods: {
 		...mapActions(["updateBoard"]),
 		show(board) {
-			this.board = board;
+			if (board) {
+				this.board = board;
+			} else {
+				this.board = {
+					title: "",
+					description: ""
+				};
+			}
 			this.visible = true;
 		},
 
