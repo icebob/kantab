@@ -16,7 +16,8 @@
 				"backend/services/config.service.js",
 				"backend/services/accounts.service.js",
 				"backend/services/boards.service.js"
-			]
+			],
+			"env":{"PORT": 4000}
 		},
 		{
 			"name": "Attach",

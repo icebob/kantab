@@ -27,12 +27,23 @@ Vue.prototype.$swal = swal;
 // --- NOTIFICATIONS (IZITOAST) ---
 import VueIziToast from "vue-izitoast";
 import "izitoast/dist/css/iziToast.css";
+
 Vue.use(VueIziToast, {
 	theme: "light",
 	position: "topRight",
 	animateInside: false,
 	transitionIn: "fadeInDown"
 });
+Vue.prototype.$toast = VueIziToast;
+
+// --- VUE APOLLO CLIENT ---
+import VueApollo from "vue-apollo";
+import { apolloClient } from "./apollo";
+Vue.prototype.$apollo = apolloClient;
+const apolloProvider = new VueApollo({
+	defaultClient: apolloClient
+});
+Vue.use(VueApollo);
 
 // Authenticator
 import authenticator from "./authenticator";
@@ -48,6 +59,7 @@ Vue.use(VueI18Next, () => {
 	new Vue({
 		router,
 		store,
+		apolloProvider,
 		render: h => h(App)
 	}).$mount("#app");
 });

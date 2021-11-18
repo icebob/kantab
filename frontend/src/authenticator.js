@@ -1,10 +1,13 @@
 "use strict";
 
+import Vue from "vue";
 import bus from "./bus";
 import router from "./router";
 import store from "./store";
 import axios from "axios";
 import * as Cookie from "js-cookie";
+import gql from "graphql-tag";
+import { apolloClient } from "./apollo";
 
 import { isFunction } from "lodash";
 
@@ -109,9 +112,35 @@ export default new (class Authenticator {
 
 		return res;
 	}
+	async loginApollo(email, password) {
+		try {
+			const res = await apolloClient.mutate({
+				// Query
+				mutation: gql`
+					mutation login($email: String!, $password: String!) {
+						login(email: $email, password: $password) {
+							token
+						}
+					}
+				`,
+
+				// Parameters
+				variables: { email: email, password: password }
+			});
+			console.log("Token", res.data.login.token);
+			const user = await this.applyToken(res.data.login.token);
+			console.log("user", user);
+		} catch (error) {
+			console.log("loginApollo", error);
+		}
+	}
 
 	async getMe() {
 		return store.dispatch("getMe");
+	}
+
+	async getMeApollo() {
+		return store.dispatch("getMeApollo");
 	}
 
 	async logout() {

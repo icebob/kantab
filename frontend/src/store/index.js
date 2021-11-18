@@ -1,6 +1,8 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import authenticator from "../authenticator";
+import { apolloClient } from "../apollo";
+import gql from "graphql-tag";
 
 Vue.use(Vuex);
 
@@ -31,13 +33,15 @@ export default new Vuex.Store({
 	state: {
 		// Logged in user entity
 		user: null,
-		providers: []
+		providers: [],
+		board: null,
+		boards: []
 	},
 
 	getters: {},
 
 	actions: {
-		async init({ state, commit, dispatch }) {
+		async init({ dispatch }) {
 			try {
 				await dispatch("getMe");
 				await dispatch("getSupportedSocialAuthProviders");
@@ -62,6 +66,146 @@ export default new Vuex.Store({
 			}*/
 
 			return user;
+		},
+
+		async getMeApollo({ commit }) {
+			const user = await apolloClient.query({
+				query: gql`
+					query {
+						me {
+							id
+							username
+							fullName
+							email
+						}
+					}
+				`
+			});
+			//commit("SET_LOGGED_IN_USER", user.data.me);
+			return user.data.me;
+		},
+		async getBoard({ commit }, id) {
+			const res = await apolloClient.query({
+				query: gql`
+					query board($id: String!) {
+						board(id: $id) {
+							id
+							title
+							slug
+							description
+							position
+							archived
+							public
+						}
+					}
+				`,
+				variables: { id }
+			});
+			commit("SET_BOARD", res.data.board);
+			return res.data.board;
+		},
+
+		async getBoards({ commit }) {
+			const res = await apolloClient.query({
+				query: gql`
+					query {
+						boards {
+							id
+							title
+							description
+							createdAt
+							updatedAt
+							owner {
+								username
+								fullName
+								boards {
+									title
+								}
+							}
+						}
+					}
+				`
+			});
+			commit("SET_BOARDS", res.data.boards);
+			return res.data.boards;
+		},
+
+		async createBoard({ commit }, input) {
+			// Call to the graphql mutation
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation createBoard($input: CreateBoardInput!) {
+							createBoard(input: $input) {
+								id
+								title
+								description
+							}
+						}
+					`,
+
+					// Parameters
+					variables: input
+				})
+				.then(async data => {
+					// Result
+					commit("ADD_BOARD", data.data.createBoard);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
+				});
+		},
+
+		async removeBoard({ commit }, id) {
+			// Call to the graphql mutation
+			apolloClient
+				.mutate({
+					// Query
+					mutation: gql`
+						mutation removeBoard($id: String!) {
+							removeBoard(id: $id)
+						}
+					`,
+
+					// Parameters
+					variables: { id }
+				})
+				.then(async data => {
+					// Result
+					commit("REMOVE_BOARD", data.data.removeBoard);
+				})
+				.catch(error => {
+					// Error
+					console.error(error);
+				});
+		},
+		async updateBoard({ commit }, input) {
+			// Call to the graphql mutation
+
+			try {
+				const res = await apolloClient.mutate({
+					// Query
+					mutation: gql`
+						mutation updateBoard($input: UpdateBoardInput!) {
+							updateBoard(input: $input) {
+								id
+								title
+								description
+							}
+						}
+					`,
+
+					// Parameters
+					variables: input
+				});
+				console.log("vue.proto", Vue.prototype);
+				//Vue.prototype.$toast.prototype.show("Welcome!", "Hey");
+				commit("UPDATE_BOARD", res.data.updateBoard);
+			} catch (error) {
+				console.error(error);
+			}
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {
@@ -90,6 +234,27 @@ export default new Vuex.Store({
 
 		SET_AUTH_PROVIDERS(state, providers) {
 			state.providers = providers;
+		},
+		SET_BOARD(state, board) {
+			state.board = board;
+		},
+		SET_BOARDS(state, boards) {
+			state.boards = boards;
+		},
+		ADD_BOARD(state, board) {
+			state.boards.push(board);
+		},
+		UPDATE_BOARD(state, board) {
+			const found = state.boards.find(b => b.id == board.id);
+			if (found) {
+				Object.assign(found, board);
+			} else {
+				state.boards.push(board);
+			}
+		},
+		REMOVE_BOARD(state, id) {
+			const ix = state.boards.findIndex(b => b.id === id);
+			if (ix >= 0) state.boards.splice(ix, 1);
 		},
 
 		LOGOUT(state) {

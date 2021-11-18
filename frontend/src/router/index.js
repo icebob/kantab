@@ -4,6 +4,7 @@ import VueRouter from "vue-router";
 import Home from "../components/Home.vue";
 import StyleGuide from "../components/style-guide/Page.vue";
 import Protected from "../components/Protected.vue";
+import Board from "../components/boards/Board.vue";
 
 Vue.use(VueRouter);
 
@@ -26,6 +27,15 @@ const routes = [
 		meta: {
 			redirectAuth: "home"
 		}
+	},
+	{
+		path: "/loginApollo",
+		name: "loginApollo",
+		component: () =>
+			import(/* webpackChunkName: "account" */ "../components/account/LoginApollo.vue")
+		/* 		meta: {
+			redirectAuth: "home"
+		} */
 	},
 	{
 		path: "/signup",
@@ -90,6 +100,12 @@ const routes = [
 		name: "404",
 		component: () =>
 			import(/* webpackChunkName: "account" */ "../components/account/NotFound.vue")
+	},
+	{
+		path: "/board/:id",
+		name: "Board",
+		component: Board,
+		props: true
 	}
 ];
 
