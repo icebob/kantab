@@ -1,0 +1,68 @@
+#########################################################
+# tokens service
+#########################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokens-deployment
+  namespace: default
+  labels:
+    name: tokens-deployment
+    app: kantab
+spec:
+  selector:
+    matchLabels:
+      app: tokens
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: tokens
+    spec:
+      containers:
+        - name: tokens
+          image: kantab
+          envFrom:
+            - configMapRef:
+                name: kantab-configmap
+            - secretRef:
+                name: kantab-secrets
+          env:
+            - name: SERVICES
+              value: tokens
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "300Mi"
+              cpu: "150m"
+---
+#########################################################
+# Horizontal Pod AutoScaler for tokens service (K8s >= v1.17)
+#########################################################
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-tokens
+  namespace: default
+  labels:
+    name: hpa-tokens
+    app: kantab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tokens-deployment
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+
+
