@@ -51,7 +51,7 @@
     "prettier": "^2.4.1"
   },
   "dependencies": {
-    "@moleculer/database": "github:moleculerjs/database",
+    "@moleculer/database": "github:moleculerjs/database#6e5a55cf62f5e35772df280ace8a698c381e3276",
     "@moleculer/lab": "^0.6.2",
     "accept": "3.1.3",
     "bcrypt": "^5.0.1",
@@ -75,7 +75,7 @@
     "ioredis": "^4.28.0",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "8.5.1",
-    "moleculer": "^0.14.18",
+    "moleculer": "github:moleculerjs/moleculer#306a5fdf75f6f51c542d85d85585d48f8522f5c2",
     "moleculer-apollo-server": "github:moleculerjs/moleculer-apollo-server",
     "moleculer-io": "^1.1.3",
     "moleculer-mail": "^1.2.5",

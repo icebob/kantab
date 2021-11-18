@@ -155,6 +155,14 @@ module.exports = {
 			params: {
 				board: { type: "string" }
 			}
+		},
+
+		replace: false,
+
+		remove: {
+			params: {
+				board: { type: "string" }
+			}
 		}
 	},
 
@@ -172,14 +180,10 @@ module.exports = {
 		 */
 		validateBoard({ ctx, value }) {
 			return ctx
-				.call("v1.boards.resolve", { id: value, throwIfNotExist: true })
+				.call("v1.boards.resolve", { id: value, throwIfNotExist: true, fields: ["id"] })
+				.then(() => true)
 				.catch(err => err.message);
 		}
-	},
-
-	// Temporary for development
-	merged(schema) {
-		require("../libs/graphql-generator").generateCRUDGraphQL("list", schema);
 	},
 
 	/**

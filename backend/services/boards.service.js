@@ -409,12 +409,12 @@ module.exports = {
 		validateMembers({ ctx, value, params, id, entity }) {
 			const members = value;
 			return ctx
-				.call("v1.accounts.resolve", { id: members, throwIfNotExist: true })
+				.call("v1.accounts.resolve", { id: members, throwIfNotExist: true, fields: ["id"] })
 				.then(res => {
 					if (res.length == members.length) return res;
 					throw new Error("One member is not a valid user.");
 				})
-				.then(async res => {
+				.then(async () => {
 					if (id) {
 						const owner = params.owner || entity.owner;
 						if (!members.includes(owner)) {
@@ -426,7 +426,6 @@ module.exports = {
 							);
 						}
 					}
-					return res;
 				})
 				.then(() => true)
 				.catch(err => err.message);
@@ -437,7 +436,11 @@ module.exports = {
 		 */
 		validateOwner({ ctx, value }) {
 			return ctx
-				.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
+				.call("v1.accounts.resolve", {
+					id: value,
+					throwIfNotExist: true,
+					fields: ["status"]
+				})
 				.then(res =>
 					res && res.status == C.STATUS_ACTIVE
 						? true
@@ -452,22 +455,10 @@ module.exports = {
 	 */
 	created() {},
 
-	// Temporary for development
-	merged(schema) {
-		require("../libs/graphql-generator").generateCRUDGraphQL("board", schema);
-	},
-
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-		//fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
-		/*setTimeout(() => {
-			console.log(inspect(this.schema.settings.openapi, { depth: 7, colors: true }));
-			console.log(inspect(this.schema.actions, { depth: 10, colors: true }));
-		}, 1000);
-		*/
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler
