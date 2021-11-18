@@ -125,6 +125,19 @@ module.exports = {
 				},
 				graphql: { type: "User", inputType: "String" }
 			},
+			lists: {
+				type: "array",
+				items: { type: "string", empty: false }, // TODO:
+				readonly: true,
+				graphql: { type: "[List]" },
+				populate: {
+					action: "v1.lists.find",
+					params: {
+						board: "@id", // TODO:
+						fields: ["id", "title", "description", "position"]
+					}
+				}
+			},
 			options: { type: "object" },
 			createdAt: {
 				type: "number",
