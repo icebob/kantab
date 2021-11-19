@@ -1,0 +1,86 @@
+#########################################################
+# Service for Moleculer API Gateway service
+#########################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: default
+  labels:
+    name: api
+    app: kantab
+spec:
+  selector:
+    app: api
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: NodePort
+---
+#########################################################
+# API Gateway Deployment
+#########################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: default
+  labels:
+    name: api
+    app: kantab
+spec:
+  selector:
+    matchLabels:
+      app: api
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: kantab
+          envFrom:
+            - configMapRef:
+                name: kantab-secrets
+            - secretRef:
+                name: kantab-configmap
+          env:
+            - name: SERVICES
+              value: api
+          resources:
+            limits:
+              cpu: 100m
+              memory: 400Mi
+            requests:
+              cpu: 50m
+              memory: 200Mi
+---
+#########################################################
+# Horizontal Pod AutoScaler for API service (K8s >= v1.17)
+#########################################################
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-api
+  namespace: default
+  labels:
+    name: hpa-api
+    app: kantab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 3
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+
