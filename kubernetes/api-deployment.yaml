@@ -8,7 +8,7 @@ metadata:
   namespace: default
   labels:
     name: api
-    app: kantav
+    app: kantab
 spec:
   selector:
     app: api
