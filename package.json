@@ -51,7 +51,7 @@
     "prettier": "^2.4.1"
   },
   "dependencies": {
-    "@moleculer/database": "github:moleculerjs/database#6e5a55cf62f5e35772df280ace8a698c381e3276",
+    "@moleculer/database": "github:moleculerjs/database#49f5408778b58dbdf2ce04fc31c33157d9bc7da9",
     "@moleculer/lab": "^0.6.2",
     "accept": "3.1.3",
     "bcrypt": "^5.0.1",

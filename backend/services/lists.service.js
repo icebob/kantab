@@ -6,6 +6,7 @@ const fs = require("fs");
 const C = require("../constants");
 const DbService = require("../mixins/db.mixin");
 const CacheCleaner = require("../mixins/cache-cleaner.mixin");
+const ChecksMixin = require("../mixins/checks.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
 
@@ -22,7 +23,8 @@ module.exports = {
 				additionalKeys: ["board", "#userID"]
 			}
 		}),
-		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"])
+		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"]),
+		ChecksMixin
 		//ConfigLoader([])
 	],
 

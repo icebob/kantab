@@ -40,9 +40,16 @@ function getGraphqlTypeFromField(res, fieldName, field, kind) {
 	let type = gType || field.type || "string";
 	type = convertTypeToGraphQLType(type);
 
+	if (field.graphql && field.graphql.query) {
+		return {
+			query: field.graphql.query,
+			description: field.description
+		};
+	}
+
 	// Skip not-well defined fields
 	if (field.type == "object" && !field.properties) return;
-	if (field.type == "array" && !field.items) return;
+	if (field.type == "array" && !field.items && !gType) return;
 
 	if (field.type == "array" && !gType) {
 		if (field.items.type == "object") {
@@ -80,7 +87,11 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 			content.push(`"""${gType.description}"""`);
 		}
 
-		content.push(`    ${fieldName}: ${gType.type}`);
+		if (gType.query) {
+			content.push(`    ${gType.query}`);
+		} else {
+			content.push(`    ${fieldName}: ${gType.type}`);
+		}
 
 		if (!kind && _.isPlainObject(field.populate)) {
 			if (field.populate.action) {

@@ -214,7 +214,11 @@ module.exports = {
 	/**
 	 * Service created lifecycle event handler
 	 */
-	created() {},
+	created() {
+		if (!process.env.TOKEN_SALT) {
+			this.broker.fatal("Environment variable 'TOKEN_SALT' must be configured!");
+		}
+	},
 
 	/**
 	 * Service started lifecycle event handler

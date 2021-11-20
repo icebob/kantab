@@ -123,19 +123,28 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphql: { type: "User", inputType: "String" }
+				graphql: { type: "[User]", inputType: "String" }
 			},
 			lists: {
 				type: "array",
 				items: { type: "string", empty: false }, // TODO:
 				readonly: true,
-				graphql: { type: "[List]" },
+				graphql: {
+					query: "lists(page: Int, pageSize: Int, sort: String): ListListResponse"
+				},
 				populate: {
-					action: "v1.lists.find",
-					params: {
-						board: "@id", // TODO:
-						fields: ["id", "title", "description", "position"]
-					}
+					action: "v1.lists.list",
+					handler(ctx, values, boards) {
+						return this.Promise.all(
+							boards.map(async board => {
+								const res = await ctx.call("v1.lists.list", {
+									board: this.encodeID(board._id)
+								});
+								return res.rows;
+							})
+						);
+					},
+					graphqlRootParams: { id: "board" }
 				}
 			},
 			options: { type: "object" },

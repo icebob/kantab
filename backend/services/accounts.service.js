@@ -1153,7 +1153,11 @@ module.exports = {
 	/**
 	 * Service created lifecycle event handler
 	 */
-	created() {},
+	created() {
+		if (!process.env.JWT_SECRET) {
+			this.broker.fatal("Environment variable 'JWT_SECRET' must be configured!");
+		}
+	},
 
 	/**
 	 * Service started lifecycle event handler

@@ -55,6 +55,12 @@ module.exports = function (opts = {}) {
 			  }
 			: undefined,
 
+		created() {
+			if (!process.env.HASHID_SALT) {
+				this.broker.fatal("Environment variable 'HASHID_SALT' must be configured!");
+			}
+		},
+
 		async started() {
 			/* istanbul ignore next */
 			if (!TESTING) {
