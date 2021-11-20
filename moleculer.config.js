@@ -2,7 +2,14 @@
 
 const _ = require("lodash");
 const { inspect } = require("util");
+const crypto = require("crypto");
 require("@moleculer/lab");
+
+if (process.env.GITHUB_ACTIONS_CI) {
+	process.env.JWT_SECRET = crypto.randomBytes(32).toString("hex");
+	process.env.HASHID_SALT = crypto.randomBytes(32).toString("hex");
+	process.env.TOKEN_SALT = crypto.randomBytes(32).toString("hex");
+}
 
 const isProd = process.env.NODE_ENV == "production";
 

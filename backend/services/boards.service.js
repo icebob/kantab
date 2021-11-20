@@ -127,7 +127,7 @@ module.exports = {
 			},
 			lists: {
 				type: "array",
-				items: { type: "string", empty: false }, // TODO:
+				items: { type: "string", empty: false },
 				readonly: true,
 				graphql: {
 					query: "lists(page: Int, pageSize: Int, sort: String): ListListResponse"
