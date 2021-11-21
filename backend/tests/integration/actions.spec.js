@@ -1,7 +1,5 @@
 "use strict";
 
-"use strict";
-
 const path = require("path");
 const Runner = require("moleculer").Runner;
 const kleur = require("kleur");
@@ -77,6 +75,16 @@ describe("Integration test", () => {
 	afterAll(async () => {
 		if (broker) await broker.stop();
 	}, 10000);
+
+	function listResponse(rows) {
+		return {
+			page: 1,
+			pageSize: 10,
+			rows,
+			total: rows.length,
+			totalPages: 1
+		};
+	}
 
 	async function checkResponse(promise, expected) {
 		const res = await promise;
@@ -236,28 +244,7 @@ describe("Integration test", () => {
 			});
 		});
 
-		function checkBoardPermission() {}
-
-		describe("Test with private board", () => {
-			it("create 'b1' board by 'U1'", async () => {
-				const res = await helper.boardCreate("u1", {
-					title: "U1 B1",
-					description: "U1 B1 description"
-				});
-				expect(res).toEqual(
-					expect.objectContaining({
-						id: expect.any(String),
-						title: "U1 B1",
-						slug: "u1-b1",
-						description: "U1 B1 description",
-						owner: state.users.u1.id,
-						members: [state.users.u1.id]
-					})
-				);
-
-				state.boards.u1_b1 = res;
-			});
-
+		function checkBoardPermission({ isPublic }) {
 			describe("Check B1 board permissions", () => {
 				it("check visibility with 'list'", async () => {
 					await checkBoardVisibility(helper.boards, null, {
@@ -271,25 +258,77 @@ describe("Integration test", () => {
 							}
 						},
 						u2: { data: EMPTY_LIST_RESPONSE },
-						guest: { data: EMPTY_LIST_RESPONSE }
+						guest: {
+							data: isPublic
+								? {
+										page: 1,
+										pageSize: 10,
+										rows: [state.boards.u1_b1],
+										total: 1,
+										totalPages: 1
+								  }
+								: EMPTY_LIST_RESPONSE
+						}
 					});
 				});
+
+				if (isPublic) {
+					it("check visibility with 'list' with public scope", async () => {
+						await checkBoardVisibility(
+							helper.boards,
+							{ scope: "public" },
+							{
+								u1: { data: listResponse([state.boards.u1_b1]) },
+								u2: { data: listResponse([state.boards.u1_b1]) },
+								guest: { data: listResponse([state.boards.u1_b1]) }
+							}
+						);
+					});
+				}
 
 				it("check visibility with 'find'", async () => {
 					await checkBoardVisibility(helper.boardsAll, null, {
 						u1: { data: [state.boards.u1_b1] },
 						u2: { data: [] },
-						guest: { data: [] }
+						guest: { data: isPublic ? [state.boards.u1_b1] : [] }
 					});
 				});
+
+				if (isPublic) {
+					it("check visibility with 'find' with public scope", async () => {
+						await checkBoardVisibility(
+							helper.boardsAll,
+							{ scope: ["public"] },
+							{
+								u1: { data: [state.boards.u1_b1] },
+								u2: { data: [state.boards.u1_b1] },
+								guest: { data: [state.boards.u1_b1] }
+							}
+						);
+					});
+				}
 
 				it("check visibility with 'count'", async () => {
 					await checkBoardVisibility(helper.boardsCount, null, {
 						u1: { data: 1 },
 						u2: { data: 0 },
-						guest: { data: 0 }
+						guest: { data: isPublic ? 1 : 0 }
 					});
 				});
+
+				if (isPublic) {
+					it("check visibility with 'count'", async () => {
+						await checkBoardVisibility(
+							helper.boardsCount,
+							{ scope: ["public"] },
+							{
+								u1: { data: 1 },
+								u2: { data: 1 },
+								guest: { data: 1 }
+							}
+						);
+					});
+				}
 
 				it("check visibility with 'get'", async () => {
 					expect.assertions(3);
@@ -300,10 +339,28 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { error: "EntityNotFoundError" },
-							guest: { error: "EntityNotFoundError" }
+							guest: isPublic
+								? { data: state.boards.u1_b1 }
+								: { error: "EntityNotFoundError" }
 						}
 					);
 				});
+
+				if (isPublic) {
+					it("check visibility with 'get'", async () => {
+						expect.assertions(3);
+
+						await checkBoardVisibility(
+							helper.boardByID,
+							{ id: state.boards.u1_b1.id, scope: "public" },
+							{
+								u1: { data: state.boards.u1_b1 },
+								u2: { data: state.boards.u1_b1 },
+								guest: { data: state.boards.u1_b1 }
+							}
+						);
+					});
+				}
 
 				it("check visibility with 'resolve'", async () => {
 					await checkBoardVisibility(
@@ -312,13 +369,27 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: null },
-							guest: { data: null }
+							guest: { data: isPublic ? state.boards.u1_b1 : null }
 						}
 					);
 				});
 
+				if (isPublic) {
+					it("check visibility with 'resolve'", async () => {
+						await checkBoardVisibility(
+							helper.boardResolve,
+							{ id: state.boards.u1_b1.id, scope: "public" },
+							{
+								u1: { data: state.boards.u1_b1 },
+								u2: { data: state.boards.u1_b1 },
+								guest: { data: state.boards.u1_b1 }
+							}
+						);
+					});
+				}
+
 				it("check update permissions", async () => {
-					expect.assertions(4);
+					expect.assertions(7);
 
 					state.boards.u1_b1 = await checkResponse(
 						helper.boardUpdate("u1", {
@@ -329,6 +400,7 @@ describe("Integration test", () => {
 							...state.boards.u1_b1,
 							title: "U1 B1 updated",
 							slug: "u1-b1-updated",
+							public: isPublic,
 							updatedAt: expect.any(Number)
 						}
 					);
@@ -340,12 +412,32 @@ describe("Integration test", () => {
 						}),
 						"EntityNotFoundError"
 					);
+
 					await checkError(
 						helper.boardUpdate("guest", {
 							id: state.boards.u1_b1.id,
 							title: "U1 B1 updated by guest"
 						}),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
+					);
+
+					await checkError(
+						helper.boardUpdate("guest", {
+							id: state.boards.u1_b1.id,
+							title: "U1 B1 updated by guest",
+							scope: "public"
+						}),
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 
 					await checkResponse(
@@ -357,7 +449,7 @@ describe("Integration test", () => {
 
 			describe("Check B1 board permissions if U2 is member", () => {
 				it("add U2 to B1 board as member", async () => {
-					expect.assertions(6);
+					expect.assertions(7);
 
 					await checkError(
 						helper.boardAddMembers("u2", {
@@ -378,7 +470,12 @@ describe("Integration test", () => {
 							id: state.boards.u1_b1.id,
 							members: [state.users.u2.id]
 						}),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 
 					state.boards.u1_b1 = await checkResponse(
@@ -423,7 +520,17 @@ describe("Integration test", () => {
 								totalPages: 1
 							}
 						},
-						guest: { data: EMPTY_LIST_RESPONSE }
+						guest: {
+							data: isPublic
+								? {
+										page: 1,
+										pageSize: 10,
+										rows: [state.boards.u1_b1],
+										total: 1,
+										totalPages: 1
+								  }
+								: EMPTY_LIST_RESPONSE
+						}
 					});
 				});
 
@@ -431,7 +538,7 @@ describe("Integration test", () => {
 					await checkBoardVisibility(helper.boardsAll, null, {
 						u1: { data: [state.boards.u1_b1] },
 						u2: { data: [state.boards.u1_b1] },
-						guest: { data: [] }
+						guest: { data: isPublic ? [state.boards.u1_b1] : [] }
 					});
 				});
 
@@ -439,7 +546,7 @@ describe("Integration test", () => {
 					await checkBoardVisibility(helper.boardsCount, null, {
 						u1: { data: 1 },
 						u2: { data: 1 },
-						guest: { data: 0 }
+						guest: { data: isPublic ? 1 : 0 }
 					});
 				});
 
@@ -452,7 +559,9 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { error: "EntityNotFoundError" }
+							guest: isPublic
+								? { data: state.boards.u1_b1 }
+								: { error: "EntityNotFoundError" }
 						}
 					);
 				});
@@ -464,13 +573,13 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { data: null }
+							guest: { data: isPublic ? state.boards.u1_b1 : null }
 						}
 					);
 				});
 
 				it("check update permissions", async () => {
-					expect.assertions(4);
+					expect.assertions(5);
 
 					state.boards.u1_b1 = await checkResponse(
 						helper.boardUpdate("u2", {
@@ -490,7 +599,12 @@ describe("Integration test", () => {
 							id: state.boards.u1_b1.id,
 							title: "U1 B1 updated by guest"
 						}),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 
 					await checkResponse(
@@ -504,7 +618,7 @@ describe("Integration test", () => {
 				});
 
 				it("check addMembers permissions", async () => {
-					expect.assertions(3);
+					expect.assertions(4);
 
 					await checkError(
 						helper.boardAddMembers("u2", {
@@ -521,12 +635,17 @@ describe("Integration test", () => {
 							id: state.boards.u1_b1.id,
 							members: [state.users.u3.id]
 						}),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 				});
 
 				it("check removeMembers permissions", async () => {
-					expect.assertions(4);
+					expect.assertions(5);
 
 					await checkError(
 						helper.boardRemoveMembers("u1", {
@@ -551,14 +670,19 @@ describe("Integration test", () => {
 							id: state.boards.u1_b1.id,
 							members: [state.users.u2.id]
 						}),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 				});
 			});
 
 			describe("Check B1 board permissions if board is archived", () => {
 				it("set board to archive", async () => {
-					expect.assertions(4);
+					expect.assertions(5);
 
 					await checkError(helper.boardArchive("u2", state.boards.u1_b1.id), {
 						name: "MoleculerClientError",
@@ -566,7 +690,12 @@ describe("Integration test", () => {
 					});
 					await checkError(
 						helper.boardArchive("guest", state.boards.u1_b1.id),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 
 					state.boards.u1_b1 = await checkResponse(
@@ -598,24 +727,16 @@ describe("Integration test", () => {
 						{ scope: ["membership", "notDeleted"] }, // TODO: it should work with `scope: false` as well
 						{
 							u1: {
-								data: {
-									page: 1,
-									pageSize: 10,
-									rows: [state.boards.u1_b1],
-									total: 1,
-									totalPages: 1
-								}
+								data: listResponse([state.boards.u1_b1])
 							},
 							u2: {
-								data: {
-									page: 1,
-									pageSize: 10,
-									rows: [state.boards.u1_b1],
-									total: 1,
-									totalPages: 1
-								}
+								data: listResponse([state.boards.u1_b1])
 							},
-							guest: { data: EMPTY_LIST_RESPONSE }
+							guest: {
+								data: isPublic
+									? listResponse([state.boards.u1_b1])
+									: EMPTY_LIST_RESPONSE
+							}
 						}
 					);
 				});
@@ -635,7 +756,7 @@ describe("Integration test", () => {
 						{
 							u1: { data: [state.boards.u1_b1] },
 							u2: { data: [state.boards.u1_b1] },
-							guest: { data: [] }
+							guest: { data: isPublic ? [state.boards.u1_b1] : [] }
 						}
 					);
 				});
@@ -655,7 +776,7 @@ describe("Integration test", () => {
 						{
 							u1: { data: 1 },
 							u2: { data: 1 },
-							guest: { data: 0 }
+							guest: { data: isPublic ? 1 : 0 }
 						}
 					);
 				});
@@ -683,7 +804,9 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { error: "EntityNotFoundError" }
+							guest: isPublic
+								? { data: state.boards.u1_b1 }
+								: { error: "EntityNotFoundError" }
 						}
 					);
 				});
@@ -707,7 +830,7 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { data: null }
+							guest: { data: isPublic ? state.boards.u1_b1 : null }
 						}
 					);
 				});
@@ -757,7 +880,7 @@ describe("Integration test", () => {
 
 			describe("Check B1 board permissions if board is unarchived", () => {
 				it("set board to unarchive", async () => {
-					expect.assertions(4);
+					expect.assertions(5);
 
 					await checkError(helper.boardUnarchive("u2", state.boards.u1_b1.id), {
 						name: "MoleculerClientError",
@@ -765,7 +888,12 @@ describe("Integration test", () => {
 					});
 					await checkError(
 						helper.boardUnarchive("guest", state.boards.u1_b1.id),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 
 					state.boards.u1_b1 = await checkResponse(
@@ -799,7 +927,17 @@ describe("Integration test", () => {
 								totalPages: 1
 							}
 						},
-						guest: { data: EMPTY_LIST_RESPONSE }
+						guest: {
+							data: isPublic
+								? {
+										page: 1,
+										pageSize: 10,
+										rows: [state.boards.u1_b1],
+										total: 1,
+										totalPages: 1
+								  }
+								: EMPTY_LIST_RESPONSE
+						}
 					});
 				});
 
@@ -807,7 +945,7 @@ describe("Integration test", () => {
 					await checkBoardVisibility(helper.boardsAll, null, {
 						u1: { data: [state.boards.u1_b1] },
 						u2: { data: [state.boards.u1_b1] },
-						guest: { data: [] }
+						guest: { data: isPublic ? [state.boards.u1_b1] : [] }
 					});
 				});
 
@@ -815,7 +953,7 @@ describe("Integration test", () => {
 					await checkBoardVisibility(helper.boardsCount, null, {
 						u1: { data: 1 },
 						u2: { data: 1 },
-						guest: { data: 0 }
+						guest: { data: isPublic ? 1 : 0 }
 					});
 				});
 
@@ -828,7 +966,9 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { error: "EntityNotFoundError" }
+							guest: isPublic
+								? { data: state.boards.u1_b1 }
+								: { error: "EntityNotFoundError" }
 						}
 					);
 				});
@@ -840,7 +980,7 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { data: null }
+							guest: { data: isPublic ? state.boards.u1_b1 : null }
 						}
 					);
 				});
@@ -848,7 +988,7 @@ describe("Integration test", () => {
 
 			describe("Check B1 board permissions if ownership is transferred to U2", () => {
 				it("transfer ownership", async () => {
-					expect.assertions(4);
+					expect.assertions(5);
 
 					await checkError(
 						helper.boardTransferOwnership("u2", {
@@ -865,7 +1005,12 @@ describe("Integration test", () => {
 							id: state.boards.u1_b1.id,
 							owner: state.users.u2.id
 						}),
-						"EntityNotFoundError"
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
 					);
 
 					state.boards.u1_b1 = await checkResponse(
@@ -902,7 +1047,17 @@ describe("Integration test", () => {
 								totalPages: 1
 							}
 						},
-						guest: { data: EMPTY_LIST_RESPONSE }
+						guest: {
+							data: isPublic
+								? {
+										page: 1,
+										pageSize: 10,
+										rows: [state.boards.u1_b1],
+										total: 1,
+										totalPages: 1
+								  }
+								: EMPTY_LIST_RESPONSE
+						}
 					});
 				});
 
@@ -910,7 +1065,7 @@ describe("Integration test", () => {
 					await checkBoardVisibility(helper.boardsAll, null, {
 						u1: { data: [state.boards.u1_b1] },
 						u2: { data: [state.boards.u1_b1] },
-						guest: { data: [] }
+						guest: { data: isPublic ? [state.boards.u1_b1] : [] }
 					});
 				});
 
@@ -918,7 +1073,7 @@ describe("Integration test", () => {
 					await checkBoardVisibility(helper.boardsCount, null, {
 						u1: { data: 1 },
 						u2: { data: 1 },
-						guest: { data: 0 }
+						guest: { data: isPublic ? 1 : 0 }
 					});
 				});
 
@@ -931,7 +1086,9 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { error: "EntityNotFoundError" }
+							guest: isPublic
+								? { data: state.boards.u1_b1 }
+								: { error: "EntityNotFoundError" }
 						}
 					);
 				});
@@ -943,11 +1100,145 @@ describe("Integration test", () => {
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
-							guest: { data: null }
+							guest: { data: isPublic ? state.boards.u1_b1 : null }
 						}
 					);
 				});
 			});
+
+			describe("Check B1 board remove permissions", () => {
+				it("remove board", async () => {
+					expect.assertions(5);
+
+					await checkError(
+						helper.boardRemove("u1", {
+							id: state.boards.u1_b1.id
+						}),
+						{
+							name: "MoleculerClientError",
+							message: "You have no right for this operation!"
+						}
+					);
+					await checkError(
+						helper.boardRemove("guest", {
+							id: state.boards.u1_b1.id,
+							owner: state.users.u2.id
+						}),
+						isPublic
+							? {
+									name: "MoleculerClientError",
+									message: "You have no right for this operation!"
+							  }
+							: { name: "EntityNotFoundError", message: "Entity not found" }
+					);
+
+					await checkResponse(
+						helper.boardRemove("u2", {
+							id: state.boards.u1_b1.id
+						}),
+						state.boards.u1_b1.id
+					);
+				});
+
+				it("check visibility with 'list'", async () => {
+					await checkBoardVisibility(helper.boards, null, {
+						u1: EMPTY_LIST_RESPONSE,
+						u2: EMPTY_LIST_RESPONSE,
+						guest: EMPTY_LIST_RESPONSE
+					});
+				});
+
+				it("check visibility with 'find'", async () => {
+					await checkBoardVisibility(helper.boardsAll, null, {
+						u1: { data: [] },
+						u2: { data: [] },
+						guest: { data: [] }
+					});
+				});
+
+				it("check visibility with 'count'", async () => {
+					await checkBoardVisibility(helper.boardsCount, null, {
+						u1: { data: 0 },
+						u2: { data: 0 },
+						guest: { data: 0 }
+					});
+				});
+
+				it("check visibility with 'get'", async () => {
+					expect.assertions(3);
+
+					await checkBoardVisibility(
+						helper.boardByID,
+						{ id: state.boards.u1_b1.id },
+						{
+							u1: { error: "EntityNotFoundError" },
+							u2: { error: "EntityNotFoundError" },
+							guest: { error: "EntityNotFoundError" }
+						}
+					);
+				});
+
+				it("check visibility with 'resolve'", async () => {
+					await checkBoardVisibility(
+						helper.boardResolve,
+						{ id: state.boards.u1_b1.id },
+						{
+							u1: { error: null },
+							u2: { error: null },
+							guest: { error: null }
+						}
+					);
+				});
+			});
+		}
+
+		describe("Test with private board", () => {
+			it("create 'b1' board by 'U1'", async () => {
+				const res = await helper.boardCreate("u1", {
+					title: "U1 B1",
+					description: "U1 B1 description"
+				});
+				expect(res).toEqual(
+					expect.objectContaining({
+						id: expect.any(String),
+						title: "U1 B1",
+						slug: "u1-b1",
+						description: "U1 B1 description",
+						owner: state.users.u1.id,
+						members: [state.users.u1.id],
+						public: false
+					})
+				);
+
+				state.boards.u1_b1 = res;
+			});
+
+			checkBoardPermission({ isPublic: false });
+		});
+
+		describe("Test with public board", () => {
+			it("create 'b1' board by 'U1'", async () => {
+				const res = await helper.boardCreate("u1", {
+					title: "U1 B1 public",
+					description: "U1 B1 description public",
+					public: true
+				});
+				expect(res).toEqual(
+					expect.objectContaining({
+						id: expect.any(String),
+						title: "U1 B1 public",
+						slug: "u1-b1-public",
+						description: "U1 B1 description public",
+						owner: state.users.u1.id,
+						members: [state.users.u1.id],
+						public: true
+					})
+				);
+
+				state.boards.u1_b1 = res;
+			});
+
+			checkBoardPermission({ isPublic: true });
 		});
 	});
 });

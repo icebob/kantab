@@ -197,7 +197,7 @@ module.exports = {
 		},
 		get: {
 			needEntity: true,
-			permissions: [C.ROLE_BOARD_MEMBER]
+			permissions: []
 		},
 		update: {
 			needEntity: true,
