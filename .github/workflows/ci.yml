@@ -34,7 +34,7 @@ jobs:
         mongodb-version: 5.0
 
     - name: Run integration tests
-      run: npm test:integration
+      run: npm run test:integration
 
     - name: Run E2E tests
       run: npm run test:e2e
