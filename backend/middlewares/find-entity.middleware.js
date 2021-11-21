@@ -1,5 +1,7 @@
 "use strict";
 
+const _ = require("lodash");
+
 module.exports = {
 	name: "FindEntity",
 
@@ -9,10 +11,14 @@ module.exports = {
 		if (action.needEntity) {
 			return async function FindEntityMiddleware(ctx) {
 				const svc = ctx.service;
-				if (action.defaultScopes && ctx.params.scope == null) {
-					ctx.params.scope = action.defaultScopes;
+				const params = { id: ctx.params.id };
+				if (action.defaultScopes) {
+					params.scope = action.defaultScopes;
 				}
-				ctx.locals.entity = await svc.resolveEntities(ctx, ctx.params, {
+				if (action.defaultPopulate) {
+					params.populate = action.defaultPopulate;
+				}
+				ctx.locals.entity = await svc.resolveEntities(ctx, params, {
 					throwIfNotExist: true
 				});
 

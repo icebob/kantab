@@ -148,26 +148,8 @@ module.exports = {
 				}
 			},
 			options: { type: "object" },
-			createdAt: {
-				type: "number",
-				readonly: true,
-				onCreate: () => Date.now(),
-				graphql: { type: "Long" }
-			},
-			updatedAt: {
-				type: "number",
-				readonly: true,
-				onUpdate: () => Date.now(),
-				graphql: { type: "Long" }
-			},
 			archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } },
-			deletedAt: {
-				type: "number",
-				readonly: true,
-				hidden: "byDefault",
-				onRemove: () => Date.now(),
-				graphql: { type: "Long" }
-			}
+			...C.TIMESTAMP_FIELDS
 		},
 
 		scopes: {
@@ -215,16 +197,16 @@ module.exports = {
 		},
 		get: {
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER]
+			permissions: [C.ROLE_BOARD_MEMBER]
 		},
 		update: {
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER]
+			permissions: [C.ROLE_BOARD_MEMBER]
 		},
 		replace: false,
 		remove: {
 			needEntity: true,
-			permissions: [C.ROLE_OWNER]
+			permissions: [C.ROLE_BOARD_OWNER]
 		},
 
 		// call v1.boards.addMembers --#userID xar8OJo4PMS753GeyN62 --id ZjQ1GMmYretJmgKpqZ14 --members[] xar8OJo4PMS753GeyN62
@@ -236,7 +218,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER],
+			permissions: [C.ROLE_BOARD_MEMBER],
 			graphql: {
 				mutation: `boardAddMembers(id: String!, members: [String!]!): Board!`
 			},
@@ -270,7 +252,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER],
+			permissions: [C.ROLE_BOARD_MEMBER],
 			graphql: {
 				mutation: `boardRemoveMembers(id: String!, members: [String!]!): Board!`
 			},
@@ -304,7 +286,7 @@ module.exports = {
 				owner: "string"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_OWNER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardTransferOwnership(id: String!, owner: String!): Board!`
 			},
@@ -334,7 +316,7 @@ module.exports = {
 				id: "string"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_OWNER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardArchive(id: String!): Board!`
 			},
@@ -372,7 +354,7 @@ module.exports = {
 			},
 			needEntity: true,
 			defaultScopes: ["membership", "notDeleted"],
-			permissions: [C.ROLE_OWNER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardUnarchive(id: String!): Board!`
 			},

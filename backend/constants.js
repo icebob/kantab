@@ -8,8 +8,8 @@ const C = {
 	ROLE_SYSTEM: "$system",
 	ROLE_EVERYONE: "$everyone",
 	ROLE_AUTHENTICATED: "$authenticated",
-	ROLE_MEMBER: "$member",
-	ROLE_OWNER: "$owner",
+	ROLE_BOARD_MEMBER: "$board-member",
+	ROLE_BOARD_OWNER: "$board-owner",
 	ROLE_ADMINISTRATOR: "administrator",
 
 	VISIBILITY_PRIVATE: "private",
@@ -37,5 +37,28 @@ module.exports = {
 		{ id: 1, name: "Low priority", color: "#fad900" },
 		{ id: 2, name: "Medium priority", color: "#ff9f19" },
 		{ id: 3, name: "High priority", color: "#eb4646" }
-	]
+	],
+
+	TIMESTAMP_FIELDS: {
+		createdAt: {
+			type: "number",
+			readonly: true,
+			onCreate: () => Date.now(),
+			graphql: { type: "Long" }
+		},
+		updatedAt: {
+			type: "number",
+			readonly: true,
+			onUpdate: () => Date.now(),
+			graphql: { type: "Long" }
+		},
+		archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } },
+		deletedAt: {
+			type: "number",
+			readonly: true,
+			hidden: "byDefault",
+			onRemove: () => Date.now(),
+			graphql: { type: "Long" }
+		}
+	}
 };

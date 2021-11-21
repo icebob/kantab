@@ -69,52 +69,36 @@ module.exports = {
 			color: { type: "string", required: false, trim: true },
 			position: { type: "number", integer: true, default: 0 },
 			options: { type: "object" },
-			createdAt: {
-				type: "number",
-				readonly: true,
-				onCreate: () => Date.now(),
-				graphql: { type: "Long" }
-			},
-			updatedAt: {
-				type: "number",
-				readonly: true,
-				onUpdate: () => Date.now(),
-				graphql: { type: "Long" }
-			},
-			deletedAt: {
-				type: "number",
-				readonly: true,
-				hidden: "byDefault",
-				onRemove: () => Date.now(),
-				graphql: { type: "Long" }
-			}
+			...C.TIMESTAMP_FIELDS
 		},
 
 		scopes: {
 			// Return lists of a given board where the logged in user is a member.
-			async board(query, ctx) {
+			async board(query, ctx, params) {
 				// Adapter init
 				if (!ctx) return query;
 
-				if (ctx.params.board) {
+				if (params.board) {
 					const res = await ctx.call("v1.boards.resolve", {
-						id: ctx.params.board,
+						id: params.board,
 						throwIfNotExist: false
 					});
 					if (res) {
-						query.board = ctx.params.board;
+						query.board = params.board;
 						return query;
 					}
 					throw new MoleculerClientError(
-						`You have no right for the board '${ctx.params.board}'`,
+						`You have no right for the board '${params.board}'`,
 						403,
 						"ERR_NO_PERMISSION",
-						{ board: ctx.params.board }
+						{ board: params.board }
 					);
 				}
-				throw new MoleculerClientError(`Board is required`, 422, "VALIDATION_ERROR", [
-					{ type: "required", field: "board" }
-				]);
+				if (ctx.action.params.board) {
+					throw new MoleculerClientError(`Board is required`, 422, "VALIDATION_ERROR", [
+						{ type: "required", field: "board" }
+					]);
+				}
 			},
 
 			// List the not deleted boards
@@ -128,17 +112,18 @@ module.exports = {
 	 * Actions
 	 */
 	actions: {
+		create: {
+			permissions: [C.ROLE_AUTHENTICATED]
+		},
 		list: {
 			permissions: [],
 			params: {
 				board: { type: "string" }
 			}
-			/*graphql: {
-				query: '"""List board lists (with pagination)"""\nlists(board: String!, page: Int, pageSize: Int, fields: [String], sort: [String], search: String, searchFields: [String], scopes: [String], query: JSONObject): ListListResponse'
-			}*/
 		},
 
 		find: {
+			rest: "GET /find",
 			permissions: [],
 			params: {
 				board: { type: "string" }
@@ -146,6 +131,7 @@ module.exports = {
 		},
 
 		count: {
+			rest: "GET /count",
 			permissions: [],
 			params: {
 				board: { type: "string" }
@@ -153,25 +139,49 @@ module.exports = {
 		},
 
 		get: {
-			permissions: [],
-			params: {
-				board: { type: "string" }
-			}
+			needEntity: true,
+			permissions: [C.ROLE_BOARD_MEMBER]
+		},
+
+		update: {
+			needEntity: true,
+			permissions: [C.ROLE_BOARD_MEMBER]
 		},
 
 		replace: false,
 
 		remove: {
-			params: {
-				board: { type: "string" }
-			}
+			needEntity: true,
+			permissions: [C.ROLE_BOARD_OWNER]
 		}
 	},
 
 	/**
 	 * Events
 	 */
-	events: {},
+	events: {
+		async "boards.removed"(ctx) {
+			const board = ctx.params.data;
+			try {
+				const lists = await this.findEntities(ctx, {
+					query: { board: board.id },
+					fields: ["id"],
+					scope: false
+				});
+				await this.Promise.all(lists.map(list => this.removeEntity(ctx, list)));
+			} catch (err) {
+				this.logger.error(`Unable to delete lists of board '${board.id}'`, err);
+			}
+		},
+
+		async "boards.cleared"(ctx) {
+			try {
+				await this.clearEntities(ctx);
+			} catch (err) {
+				this.logger.error("Unable to clear lists", err);
+			}
+		}
+	},
 
 	/**
 	 * Methods
