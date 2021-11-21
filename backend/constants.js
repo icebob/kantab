@@ -11,6 +11,7 @@ const C = {
 	ROLE_BOARD_MEMBER: "$board-member",
 	ROLE_BOARD_OWNER: "$board-owner",
 	ROLE_ADMINISTRATOR: "administrator",
+	ROLE_USER: "user",
 
 	VISIBILITY_PRIVATE: "private",
 	VISIBILITY_PROTECTED: "protected",

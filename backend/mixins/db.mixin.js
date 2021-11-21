@@ -15,7 +15,7 @@ module.exports = function (opts = {}) {
 		process.env.HASHID_SALT = crypto.randomBytes(32).toString("hex");
 	}
 
-	const hashids = new HashIds(process.env.HASHID_SALT || "K4nTa3");
+	const hashids = new HashIds(process.env.HASHID_SALT);
 
 	if ((TESTING && !process.env.TEST_INT) || process.env.ONLY_GENERATE) {
 		opts = _.defaultsDeep(opts, {
@@ -47,18 +47,16 @@ module.exports = function (opts = {}) {
 	const schema = {
 		mixins: [DbService(opts)],
 
-		methods: !TESTING
-			? {
-					encodeID(id) {
-						if (ObjectID.isValid(id)) id = id.toString();
-						return hashids.encodeHex(id);
-					},
+		methods: {
+			encodeID(id) {
+				if (ObjectID.isValid(id)) id = id.toString();
+				return hashids.encodeHex(id);
+			},
 
-					decodeID(id) {
-						return hashids.decodeHex(id);
-					}
-			  }
-			: undefined,
+			decodeID(id) {
+				return hashids.decodeHex(id);
+			}
+		},
 
 		created() {
 			if (!process.env.HASHID_SALT) {

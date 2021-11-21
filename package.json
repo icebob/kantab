@@ -10,6 +10,7 @@
     "lint:fix": "eslint backend --fix",
     "deps": "npm-check -u",
     "ci:unit": "jest --testMatch **/unit/**/*.spec.js --watch",
+    "ci:integration": "cross-env TEST_INT=run MONGO_URI=mongodb://localhost/kantab-int jest --testMatch **/integration/**/*.spec.js --runInBand --watch",
     "ci:e2e": "cross-env TEST_E2E=open MONGO_URI=mongodb://localhost/kantab-e2e moleculer-runner --env backend/services",
     "test:unit": "jest --testMatch **/unit/**/*.spec.js --coverage --no-cache",
     "test:integration": "cross-env TEST_INT=run MONGO_URI=mongodb://localhost/kantab-int jest --testMatch **/integration/**/*.spec.js --runInBand --no-cache",
@@ -99,11 +100,12 @@
     "node": ">= 12.x.x"
   },
   "jest": {
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage",
     "testEnvironment": "node",
-    "rootDir": "./backend",
+    "rootDir": "./",
     "roots": [
-      "./tests"
-    ]
+      "./backend/tests"
+    ],
+    "transform": {}
   }
 }

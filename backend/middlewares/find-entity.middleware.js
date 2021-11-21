@@ -14,6 +14,8 @@ module.exports = {
 				const params = { id: ctx.params.id };
 				if (action.defaultScopes) {
 					params.scope = action.defaultScopes;
+				} else {
+					params.scope = ctx.params.scope;
 				}
 				if (action.defaultPopulate) {
 					params.populate = action.defaultPopulate;

@@ -218,7 +218,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_BOARD_MEMBER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardAddMembers(id: String!, members: [String!]!): Board!`
 			},
@@ -252,7 +252,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_BOARD_MEMBER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardRemoveMembers(id: String!, members: [String!]!): Board!`
 			},
@@ -416,7 +416,12 @@ module.exports = {
 				.call("v1.accounts.resolve", { id: members, throwIfNotExist: true, fields: ["id"] })
 				.then(res => {
 					if (res.length == members.length) return res;
-					throw new Error("One member is not a valid user.");
+					throw new MoleculerClientError(
+						"One member is not a valid user.",
+						400,
+						"MEMBER_NOT_VALID",
+						{ board: id, members }
+					);
 				})
 				.then(async () => {
 					if (id) {

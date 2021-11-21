@@ -3,6 +3,7 @@
 const _ = require("lodash");
 const DbService = require("../mixins/db.mixin");
 const { match } = require("moleculer").Utils;
+const C = require("../constants");
 
 /**
  * config service
@@ -35,7 +36,7 @@ module.exports = {
 			"accounts.username.enabled": true,
 			"accounts.passwordless.enabled": true,
 			"accounts.verification.enabled": true,
-			"accounts.defaultRoles": ["user"],
+			"accounts.defaultRoles": [C.ROLE_USER],
 			"accounts.defaultPlan": "free",
 			"accounts.jwt.expiresIn": "30d",
 			"accounts.two-factor.enabled": true,

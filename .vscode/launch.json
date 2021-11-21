@@ -65,7 +65,8 @@
 			"args": [
 				"--testMatch",
 				"**/integration/**/*.spec.js",
-				"--runInBand"
+				"--runInBand",
+				"--no-cache"
 			],
 			"cwd": "${workspaceRoot}",
 			"runtimeArgs": [
