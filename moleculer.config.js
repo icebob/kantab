@@ -6,6 +6,7 @@ const crypto = require("crypto");
 require("@moleculer/lab");
 
 if (process.env.GITHUB_ACTIONS_CI) {
+	console.log("Github Actions: Generating random hash and secrets...");
 	process.env.JWT_SECRET = crypto.randomBytes(32).toString("hex");
 	process.env.HASHID_SALT = crypto.randomBytes(32).toString("hex");
 	process.env.TOKEN_SALT = crypto.randomBytes(32).toString("hex");
