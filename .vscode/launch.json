@@ -13,11 +13,9 @@
 			"args": [
 				"--hot",
 				"--env",
-				"backend/services/config.service.js",
-				"backend/services/accounts.service.js",
-				"backend/services/boards.service.js"
+				"backend/services/**/*.js"
 			],
-			"env":{"PORT": 4000}
+			"env":{"PORT": "4000"}
 		},
 		{
 			"name": "Attach",

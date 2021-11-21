@@ -101,9 +101,9 @@
   "jest": {
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-    "rootDir": "./",
+    "rootDir": "./backend",
     "roots": [
-      "./test"
+      "./tests"
     ]
   }
 }

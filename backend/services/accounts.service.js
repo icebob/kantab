@@ -16,6 +16,8 @@ const C = require("../constants");
 const HASH_SALT_ROUND = 10;
 const TOKEN_EXPIRATION = 60 * 60 * 1000; // 1 hour
 
+const TESTING = process.env.NODE_ENV === "test";
+
 const FIELDS = {
 	id: { type: "string", primaryKey: true, secure: true, columnName: "_id" },
 	username: { type: "string", max: 50, empty: false, required: false, trim: true },
@@ -1155,7 +1157,11 @@ module.exports = {
 	 */
 	created() {
 		if (!process.env.JWT_SECRET) {
-			this.broker.fatal("Environment variable 'JWT_SECRET' must be configured!");
+			if (TESTING) {
+				process.env.JWT_SECRET = crypto.randomBytes(32).toString("hex");
+			} else {
+				this.broker.fatal("Environment variable 'JWT_SECRET' must be configured!");
+			}
 		}
 	},
 

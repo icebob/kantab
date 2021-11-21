@@ -27,8 +27,6 @@ jobs:
 
     - name: Run unit tests
       run: npm test
-      env:
-        GITHUB_ACTIONS_CI: true
 
     - name: Start MongoDB
       uses: supercharge/mongodb-github-action@1.3.0
@@ -37,8 +35,6 @@ jobs:
 
     - name: Run E2E tests
       run: npm run test:e2e
-      env:
-        GITHUB_ACTIONS_CI: true
 
     - name: Upload E2E videos
       uses: actions/upload-artifact@v2

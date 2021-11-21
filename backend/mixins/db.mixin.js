@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require("lodash");
+const crypto = require("crypto");
 const path = require("path");
 const mkdir = require("mkdirp").sync;
 const DbService = require("@moleculer/database").Service;
@@ -10,6 +11,10 @@ const ObjectID = require("mongodb").ObjectID;
 const TESTING = process.env.NODE_ENV === "test";
 
 module.exports = function (opts = {}) {
+	if (TESTING) {
+		process.env.HASHID_SALT = crypto.randomBytes(32).toString("hex");
+	}
+
 	const hashids = new HashIds(process.env.HASHID_SALT || "K4nTa3");
 
 	if (TESTING || process.env.ONLY_GENERATE) {
