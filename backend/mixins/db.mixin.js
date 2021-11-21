@@ -11,7 +11,7 @@ const ObjectID = require("mongodb").ObjectID;
 const TESTING = process.env.NODE_ENV === "test";
 
 module.exports = function (opts = {}) {
-	if (TESTING) {
+	if (!process.env.TOKEN_SALT && (TESTING || process.env.TEST_E2E)) {
 		process.env.HASHID_SALT = crypto.randomBytes(32).toString("hex");
 	}
 

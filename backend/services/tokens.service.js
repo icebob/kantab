@@ -218,7 +218,7 @@ module.exports = {
 	 */
 	created() {
 		if (!process.env.TOKEN_SALT) {
-			if (TESTING) {
+			if (TESTING || process.env.TEST_E2E) {
 				process.env.TOKEN_SALT = crypto.randomBytes(32).toString("hex");
 			} else {
 				this.broker.fatal("Environment variable 'TOKEN_SALT' must be configured!");

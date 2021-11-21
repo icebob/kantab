@@ -1157,7 +1157,7 @@ module.exports = {
 	 */
 	created() {
 		if (!process.env.JWT_SECRET) {
-			if (TESTING) {
+			if (TESTING || process.env.TEST_E2E) {
 				process.env.JWT_SECRET = crypto.randomBytes(32).toString("hex");
 			} else {
 				this.broker.fatal("Environment variable 'JWT_SECRET' must be configured!");
