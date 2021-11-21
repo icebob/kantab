@@ -45,7 +45,22 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Jest",
+			"name": "Jest unit",
+			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
+			"args": [
+				"--testMatch",
+				"**/unit/**/*.spec.js",
+				"--runInBand"
+			],
+			"cwd": "${workspaceRoot}",
+			"runtimeArgs": [
+                "--nolazy"
+            ]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Jest integration",
 			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
 			"args": [
 				"--testMatch",
@@ -55,7 +70,11 @@
 			"cwd": "${workspaceRoot}",
 			"runtimeArgs": [
                 "--nolazy"
-            ]
+            ],
+			"env": {
+				"TEST_INT": "run",
+				"MONGO_URI": "mongodb://localhost/kantab-int"
+			}
 		}
 	]
 }

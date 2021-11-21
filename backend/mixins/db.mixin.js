@@ -17,7 +17,7 @@ module.exports = function (opts = {}) {
 
 	const hashids = new HashIds(process.env.HASHID_SALT || "K4nTa3");
 
-	if (TESTING || process.env.ONLY_GENERATE) {
+	if ((TESTING && !process.env.TEST_INT) || process.env.ONLY_GENERATE) {
 		opts = _.defaultsDeep(opts, {
 			adapter: "NeDB"
 		});
@@ -77,7 +77,7 @@ module.exports = function (opts = {}) {
 				}
 			}
 
-			if (process.env.TEST_E2E) {
+			if (process.env.TEST_E2E || process.env.TEST_INT) {
 				// Clean collection
 				this.logger.info(`Clear '${opts.collection}' collection before tests...`);
 				await this.clearEntities();

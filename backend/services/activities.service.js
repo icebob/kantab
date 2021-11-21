@@ -14,7 +14,7 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("activities")
+		DbService({})
 		//CacheCleaner(["cache.clean.cards", "cache.clean.activities", "cache.clean.accounts"]),
 		//ConfigLoader([])
 	],

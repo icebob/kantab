@@ -26,12 +26,15 @@ jobs:
       working-directory: frontend
 
     - name: Run unit tests
-      run: npm test
+      run: npm test:unit
 
     - name: Start MongoDB
       uses: supercharge/mongodb-github-action@1.3.0
       with:
-        mongodb-version: 4.4
+        mongodb-version: 5.0
+
+    - name: Run integration tests
+      run: npm test:integration
 
     - name: Run E2E tests
       run: npm run test:e2e

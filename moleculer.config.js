@@ -33,7 +33,7 @@ module.exports = {
 					"Laboratory"
 			  ],
 
-	logLevel: "info",
+	logLevel: process.env.TEST_INT ? "error" : "info",
 
 	serializer: "JSON",
 
@@ -110,7 +110,7 @@ module.exports = {
 		events: true,
 		exporter: [
 			"Laboratory",
-			!isProd && !process.env.TEST_E2E
+			!isProd && !process.env.TEST_E2E && !process.env.TEST_INT
 				? {
 						type: "Console",
 						options: {
@@ -128,10 +128,14 @@ module.exports = {
 		require("./backend/middlewares/async-context.middleware"),
 		require("./backend/middlewares/check-permissions.middleware"),
 		require("./backend/middlewares/find-entity.middleware"),
-		require("./backend/middlewares/docker-compose-generator.middleware"),
-		require("./backend/middlewares/prometheus-file-generator.middleware"),
 		require("./backend/middlewares/graphql-generator.middleware"),
-		require("./backend/middlewares/openapi-generator.middleware")
+		require("./backend/middlewares/openapi-generator.middleware"),
+		...(process.env.TEST_E2E || process.env.TEST_INT
+			? []
+			: [
+					require("./backend/middlewares/docker-compose-generator.middleware"),
+					require("./backend/middlewares/prometheus-file-generator.middleware")
+			  ])
 	],
 
 	// Called after broker created.
@@ -139,8 +143,10 @@ module.exports = {
 
 	// Called after broker starte.
 	started(broker) {
-		if (process.env.TEST_E2E) {
+		if (process.env.TEST_E2E || process.env.TEST_INT) {
 			broker.loadService("./tests/e2e/maildev.service.js");
+		}
+		if (process.env.TEST_E2E) {
 			require("./tests/e2e/bootstrap")(broker);
 		}
 	},
