@@ -123,29 +123,33 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphql: { type: "User", inputType: "String" }
+				graphql: { type: "[User]", inputType: "String" }
+			},
+			lists: {
+				type: "array",
+				items: { type: "string", empty: false },
+				readonly: true,
+				graphql: {
+					query: "lists(page: Int, pageSize: Int, sort: String): ListListResponse"
+				},
+				populate: {
+					action: "v1.lists.list",
+					handler(ctx, values, boards) {
+						return this.Promise.all(
+							boards.map(async board => {
+								const res = await ctx.call("v1.lists.list", {
+									board: this.encodeID(board._id)
+								});
+								return res.rows;
+							})
+						);
+					},
+					graphqlRootParams: { id: "board" }
+				}
 			},
 			options: { type: "object" },
-			createdAt: {
-				type: "number",
-				readonly: true,
-				onCreate: () => Date.now(),
-				graphql: { type: "Long" }
-			},
-			updatedAt: {
-				type: "number",
-				readonly: true,
-				onUpdate: () => Date.now(),
-				graphql: { type: "Long" }
-			},
 			archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } },
-			deletedAt: {
-				type: "number",
-				readonly: true,
-				hidden: "byDefault",
-				onRemove: () => Date.now(),
-				graphql: { type: "Long" }
-			}
+			...C.TIMESTAMP_FIELDS
 		},
 
 		scopes: {
@@ -193,16 +197,16 @@ module.exports = {
 		},
 		get: {
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER]
+			permissions: []
 		},
 		update: {
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER]
+			permissions: [C.ROLE_BOARD_MEMBER]
 		},
 		replace: false,
 		remove: {
 			needEntity: true,
-			permissions: [C.ROLE_OWNER]
+			permissions: [C.ROLE_BOARD_OWNER]
 		},
 
 		// call v1.boards.addMembers --#userID xar8OJo4PMS753GeyN62 --id ZjQ1GMmYretJmgKpqZ14 --members[] xar8OJo4PMS753GeyN62
@@ -214,7 +218,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardAddMembers(id: String!, members: [String!]!): Board!`
 			},
@@ -248,7 +252,7 @@ module.exports = {
 				members: "string[]"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_MEMBER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardRemoveMembers(id: String!, members: [String!]!): Board!`
 			},
@@ -282,7 +286,7 @@ module.exports = {
 				owner: "string"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_OWNER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardTransferOwnership(id: String!, owner: String!): Board!`
 			},
@@ -312,7 +316,7 @@ module.exports = {
 				id: "string"
 			},
 			needEntity: true,
-			permissions: [C.ROLE_OWNER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardArchive(id: String!): Board!`
 			},
@@ -350,7 +354,7 @@ module.exports = {
 			},
 			needEntity: true,
 			defaultScopes: ["membership", "notDeleted"],
-			permissions: [C.ROLE_OWNER],
+			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardUnarchive(id: String!): Board!`
 			},
@@ -409,12 +413,17 @@ module.exports = {
 		validateMembers({ ctx, value, params, id, entity }) {
 			const members = value;
 			return ctx
-				.call("v1.accounts.resolve", { id: members, throwIfNotExist: true })
+				.call("v1.accounts.resolve", { id: members, throwIfNotExist: true, fields: ["id"] })
 				.then(res => {
 					if (res.length == members.length) return res;
-					throw new Error("One member is not a valid user.");
+					throw new MoleculerClientError(
+						"One member is not a valid user.",
+						400,
+						"MEMBER_NOT_VALID",
+						{ board: id, members }
+					);
 				})
-				.then(async res => {
+				.then(async () => {
 					if (id) {
 						const owner = params.owner || entity.owner;
 						if (!members.includes(owner)) {
@@ -426,7 +435,6 @@ module.exports = {
 							);
 						}
 					}
-					return res;
 				})
 				.then(() => true)
 				.catch(err => err.message);
@@ -437,7 +445,11 @@ module.exports = {
 		 */
 		validateOwner({ ctx, value }) {
 			return ctx
-				.call("v1.accounts.resolve", { id: value, throwIfNotExist: true })
+				.call("v1.accounts.resolve", {
+					id: value,
+					throwIfNotExist: true,
+					fields: ["status"]
+				})
 				.then(res =>
 					res && res.status == C.STATUS_ACTIVE
 						? true
@@ -452,22 +464,10 @@ module.exports = {
 	 */
 	created() {},
 
-	// Temporary for development
-	merged(schema) {
-		require("../libs/graphql-generator").generateCRUDGraphQL("board", schema);
-	},
-
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-		//fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
-		/*setTimeout(() => {
-			console.log(inspect(this.schema.settings.openapi, { depth: 7, colors: true }));
-			console.log(inspect(this.schema.actions, { depth: 10, colors: true }));
-		}, 1000);
-		*/
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler

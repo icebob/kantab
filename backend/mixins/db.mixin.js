@@ -1,6 +1,7 @@
 "use strict";
 
 const _ = require("lodash");
+const crypto = require("crypto");
 const path = require("path");
 const mkdir = require("mkdirp").sync;
 const DbService = require("@moleculer/database").Service;
@@ -10,9 +11,13 @@ const ObjectID = require("mongodb").ObjectID;
 const TESTING = process.env.NODE_ENV === "test";
 
 module.exports = function (opts = {}) {
-	const hashids = new HashIds(process.env.HASHID_SALT || "K4nTa3");
+	if (!process.env.TOKEN_SALT && (TESTING || process.env.TEST_E2E)) {
+		process.env.HASHID_SALT = crypto.randomBytes(32).toString("hex");
+	}
 
-	if (TESTING || process.env.ONLY_GENERATE) {
+	const hashids = new HashIds(process.env.HASHID_SALT);
+
+	if ((TESTING && !process.env.TEST_INT) || process.env.ONLY_GENERATE) {
 		opts = _.defaultsDeep(opts, {
 			adapter: "NeDB"
 		});
@@ -42,18 +47,22 @@ module.exports = function (opts = {}) {
 	const schema = {
 		mixins: [DbService(opts)],
 
-		methods: !TESTING
-			? {
-					encodeID(id) {
-						if (ObjectID.isValid(id)) id = id.toString();
-						return hashids.encodeHex(id);
-					},
+		methods: {
+			encodeID(id) {
+				if (ObjectID.isValid(id)) id = id.toString();
+				return hashids.encodeHex(id);
+			},
 
-					decodeID(id) {
-						return hashids.decodeHex(id);
-					}
-			  }
-			: undefined,
+			decodeID(id) {
+				return hashids.decodeHex(id);
+			}
+		},
+
+		created() {
+			if (!process.env.HASHID_SALT) {
+				this.broker.fatal("Environment variable 'HASHID_SALT' must be configured!");
+			}
+		},
 
 		async started() {
 			/* istanbul ignore next */
@@ -66,7 +75,7 @@ module.exports = function (opts = {}) {
 				}
 			}
 
-			if (process.env.TEST_E2E) {
+			if (process.env.TEST_E2E || process.env.TEST_INT) {
 				// Clean collection
 				this.logger.info(`Clear '${opts.collection}' collection before tests...`);
 				await this.clearEntities();

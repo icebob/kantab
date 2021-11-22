@@ -26,19 +26,18 @@ jobs:
       working-directory: frontend
 
     - name: Run unit tests
-      run: npm test
+      run: npm run test:unit
 
     - name: Start MongoDB
       uses: supercharge/mongodb-github-action@1.3.0
       with:
-        mongodb-version: 4.4
+        mongodb-version: 5.0
+
+    - name: Run integration tests
+      run: npm run test:integration
 
     - name: Run E2E tests
       run: npm run test:e2e
-      env:
-        JWT_SECRET: 1NFgVrWC3n1Nl05c7RzXhlikjARjvxVu3CWUlM5dyAnKftHURE
-        HASHID_SALT: RzuPMmvUSV1JcRS8VdTb08ADJ2voAmvcnQXFnd4J1YU6cnfL3s
-
 
     - name: Upload E2E videos
       uses: actions/upload-artifact@v2

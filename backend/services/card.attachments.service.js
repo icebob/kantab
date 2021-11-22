@@ -14,7 +14,11 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService("card-attachments")
+		DbService({
+			cache: {
+				additionalKeys: ["#userID"]
+			}
+		})
 		//CacheCleaner(["cache.clean.cards", "cache.clean.card.attachments", "cache.clean.accounts"]),
 		//ConfigLoader([])
 	],

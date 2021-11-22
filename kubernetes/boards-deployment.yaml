@@ -1,0 +1,68 @@
+#########################################################
+# boards service
+#########################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boards-deployment
+  namespace: default
+  labels:
+    name: boards-deployment
+    app: kantab
+spec:
+  selector:
+    matchLabels:
+      app: boards
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: boards
+    spec:
+      containers:
+        - name: boards
+          image: kantab
+          envFrom:
+            - configMapRef:
+                name: kantab-configmap
+            - secretRef:
+                name: kantab-secrets
+          env:
+            - name: SERVICES
+              value: boards
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "300Mi"
+              cpu: "150m"
+---
+#########################################################
+# Horizontal Pod AutoScaler for boards service (K8s >= v1.17)
+#########################################################
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-boards
+  namespace: default
+  labels:
+    name: hpa-boards
+    app: kantab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: boards-deployment
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+---
+
+

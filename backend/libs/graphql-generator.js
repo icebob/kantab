@@ -36,15 +36,22 @@ function getGraphqlTypeFromField(res, fieldName, field, kind) {
 	// Skip in create if it has a hook
 	if (kind == "create" && field.onCreate) return null;
 
-	// Skip not-well defined fields
-	if (field.type == "object" && !field.properties) return;
-	if (field.type == "array" && !field.items) return;
-
 	let gType = getGraphqlType(field, !!kind);
 	let type = gType || field.type || "string";
 	type = convertTypeToGraphQLType(type);
 
-	if (field.type == "array") {
+	if (field.graphql && field.graphql.query) {
+		return {
+			query: field.graphql.query,
+			description: field.description
+		};
+	}
+
+	// Skip not-well defined fields
+	if (field.type == "object" && !field.properties) return;
+	if (field.type == "array" && !field.items && !gType) return;
+
+	if (field.type == "array" && !gType) {
 		if (field.items.type == "object") {
 			let gType = getGraphqlType(field.items, !!kind);
 			let subTypeName = gType || `${res.entityName}${capitalize(pluralize(fieldName, 1))}`;
@@ -80,7 +87,11 @@ function generateEntityGraphQLType(res, typeName, fields, kind) {
 			content.push(`"""${gType.description}"""`);
 		}
 
-		content.push(`    ${fieldName}: ${gType.type}`);
+		if (gType.query) {
+			content.push(`    ${gType.query}`);
+		} else {
+			content.push(`    ${fieldName}: ${gType.type}`);
+		}
 
 		if (!kind && _.isPlainObject(field.populate)) {
 			if (field.populate.action) {
@@ -164,7 +175,7 @@ function generateCRUDGraphQL(name, schema) {
 					mutation: generateMutation(
 						res,
 						schema.settings.fields,
-						"create",
+						actionName,
 						`Create a new ${name}`
 					)
 				};
@@ -176,7 +187,7 @@ function generateCRUDGraphQL(name, schema) {
 					mutation: generateMutation(
 						res,
 						schema.settings.fields,
-						"update",
+						actionName,
 						`Update an existing ${name}`
 					)
 				};
@@ -188,7 +199,7 @@ function generateCRUDGraphQL(name, schema) {
 					mutation: generateMutation(
 						res,
 						schema.settings.fields,
-						"replace",
+						actionName,
 						`Replace an existing ${name}`
 					)
 				};
@@ -202,7 +213,7 @@ function generateCRUDGraphQL(name, schema) {
 					mutation: generateMutation(
 						res,
 						schema.settings.fields,
-						"remove",
+						actionName,
 						`Delete an existing ${name}`,
 						additionalParams
 					)
@@ -296,7 +307,7 @@ function generateCRUDGraphQL(name, schema) {
 						pluralize(entityName, 1)
 					)}ById(${
 						additionalParams ? additionalParams + ", " : ""
-					}id: String!, fields: [String], scopes: [String]): Board`
+					}id: String!, fields: [String], scopes: [String]): ${entityName}`
 				};
 			}
 
@@ -315,7 +326,7 @@ function generateCRUDGraphQL(name, schema) {
 						pluralizedName
 					)}ByIds(${
 						additionalParams ? additionalParams + ", " : ""
-					}id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [Board]`
+					}id: [String]!, fields: [String], scopes: [String], mapping: Boolean, throwIfNotExist: Boolean): [${entityName}]`
 				};
 			}
 		}

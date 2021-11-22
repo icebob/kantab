@@ -8,7 +8,7 @@ module.exports = {
 
 	serviceCreating(svc, schema) {
 		const name = schema.name;
-		/*if (!["boards", "lists"].includes(name))*/ return;
+		if (!["boards", "lists"].includes(name)) return;
 		const entityName = pluralize(name, 1);
 		generateCRUDGraphQL(entityName, schema);
 	}

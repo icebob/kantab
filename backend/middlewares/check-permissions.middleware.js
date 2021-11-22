@@ -31,16 +31,16 @@ module.exports = {
 						});
 					}
 
-					if (p == C.ROLE_OWNER) {
-						// Check if user is owner of the entity
+					if (p == C.ROLE_BOARD_OWNER) {
+						// Check if user is owner of the board
 						return permFuncs.push(async ctx => {
-							if (_.isFunction(ctx.service.isEntityOwner))
-								return ctx.service.isEntityOwner.call(this, ctx);
+							if (_.isFunction(ctx.service.isBoardOwner))
+								return ctx.service.isBoardOwner.call(this, ctx);
 							return false;
 						});
 					}
 
-					if (p == C.ROLE_MEMBER) {
+					if (p == C.ROLE_BOARD_MEMBER) {
 						// Check if user is member of the entity
 						return permFuncs.push(async ctx => {
 							if (_.isFunction(ctx.service.isBoardMember))
@@ -57,7 +57,7 @@ module.exports = {
 			return async function CheckPermissionsMiddleware(ctx) {
 				let res = false;
 
-				if (ctx.meta.$repl) res = true;
+				if (ctx.meta.$repl == true) res = true;
 				if (ctx.meta.roles && ctx.meta.roles.includes(C.ROLE_ADMINISTRATOR)) res = true;
 				if (permFuncs.length == 0) res = true;
 

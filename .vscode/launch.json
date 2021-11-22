@@ -13,11 +13,9 @@
 			"args": [
 				"--hot",
 				"--env",
-				"backend/services/config.service.js",
-				"backend/services/accounts.service.js",
-				"backend/services/boards.service.js"
+				"backend/services/**/*.js"
 			],
-			"env":{"PORT": 4000}
+			"env":{"PORT": "4000"}
 		},
 		{
 			"name": "Attach",
@@ -47,17 +45,37 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Jest",
+			"name": "Jest unit",
 			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
 			"args": [
 				"--testMatch",
-				"**/integration/**/*.spec.js",
+				"**/unit/**/*.spec.js",
 				"--runInBand"
 			],
 			"cwd": "${workspaceRoot}",
 			"runtimeArgs": [
                 "--nolazy"
             ]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Jest integration",
+			"program": "${workspaceRoot}/node_modules/jest-cli/bin/jest.js",
+			"args": [
+				"--testMatch",
+				"**/integration/**/*.spec.js",
+				"--runInBand",
+				"--no-cache"
+			],
+			"cwd": "${workspaceRoot}",
+			"runtimeArgs": [
+                "--nolazy"
+            ],
+			"env": {
+				"TEST_INT": "run",
+				"MONGO_URI": "mongodb://localhost/kantab-int"
+			}
 		}
 	]
 }

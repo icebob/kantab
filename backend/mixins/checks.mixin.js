@@ -1,16 +1,50 @@
+"use strict";
+
+const _ = require("lodash");
+
 module.exports = {
 	/**
 	 * Methods
 	 */
 	methods: {
 		/**
+		 * Try to resolve the board entity in order to check the permissions.
+		 *
+		 * @param {Context} ctx
+		 * @returns
+		 */
+		async _getBoardEntity(ctx) {
+			if (this.name == "boards") {
+				if (ctx.locals.entity && ctx.locals.entity.owner && ctx.locals.entity.members) {
+					return ctx.locals.entity;
+				} else {
+					return ctx.call("v1.boards.resolve", { id: ctx.locals.entity.id });
+				}
+			} else {
+				if (ctx.locals.entity) {
+					if (_.isObject(ctx.locals.entity.board)) {
+						return ctx.call("v1.boards.resolve", { id: ctx.locals.entity.board.id });
+					} else if (_.isString(ctx.locals.entity.board)) {
+						return ctx.call("v1.boards.resolve", { id: ctx.locals.entity.board });
+					}
+				} else if (_.isString(ctx.params.board)) {
+					return ctx.call("v1.boards.resolve", { id: ctx.params.board });
+				}
+			}
+		},
+
+		/**
 		 * Internal method to check the owner of entity. (called from CheckPermission middleware)
 		 *
 		 * @param {Context} ctx
 		 * @returns {Promise<Boolean>}
 		 */
-		async isEntityOwner(ctx) {
-			return !!(ctx.locals.entity && ctx.locals.entity.owner == ctx.meta.userID);
+		async isBoardOwner(ctx) {
+			if (ctx.meta.$repl) return true;
+			if (!ctx.meta.userID) return false;
+
+			const board = await this._getBoardEntity(ctx);
+			return board != null && board.owner == ctx.meta.userID;
 		},
 
 		/**
@@ -20,17 +54,11 @@ module.exports = {
 		 * @returns {Promise<Boolean>}
 		 */
 		async isBoardMember(ctx) {
-			if (!ctx.locals.entity || !ctx.meta.userID) return false;
+			if (ctx.meta.$repl) return true;
+			if (!ctx.meta.userID) return false;
 
-			// In boards service
-			const board =
-				this.name == "boards"
-					? ctx.locals.entity
-					: await ctx.call("v1.boards.resolve", { id: ctx.locals.entity.board });
-
-			if (!board) return false;
-
-			return board.members.includes(ctx.meta.userID);
+			const board = await this._getBoardEntity(ctx);
+			return board != null && board.members.includes(ctx.meta.userID);
 		}
 	}
 };

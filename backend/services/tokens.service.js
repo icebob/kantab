@@ -10,6 +10,8 @@ const Cron = require("../mixins/cron.mixin");
 
 const TOKEN_LENGTH = 50;
 
+const TESTING = process.env.NODE_ENV === "test";
+
 /**
  * Token service
  */
@@ -214,7 +216,15 @@ module.exports = {
 	/**
 	 * Service created lifecycle event handler
 	 */
-	created() {},
+	created() {
+		if (!process.env.TOKEN_SALT) {
+			if (TESTING || process.env.TEST_E2E) {
+				process.env.TOKEN_SALT = crypto.randomBytes(32).toString("hex");
+			} else {
+				this.broker.fatal("Environment variable 'TOKEN_SALT' must be configured!");
+			}
+		}
+	},
 
 	/**
 	 * Service started lifecycle event handler

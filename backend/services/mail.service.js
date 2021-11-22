@@ -34,7 +34,8 @@ module.exports = {
 	 */
 	settings: {
 		from: "no-reply@kantab.moleculer.services",
-		transport: process.env.TEST_E2E ? MAILDEV_TRANSPORT : MAILTRAP_TRANSPORT,
+		transport:
+			process.env.TEST_E2E || process.env.TEST_INT ? MAILDEV_TRANSPORT : MAILTRAP_TRANSPORT,
 		templateFolder: "./backend/templates/mail"
 	}
 };

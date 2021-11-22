@@ -8,7 +8,6 @@ const ConfigService = require("../../services/config.service");
 const E = require("moleculer").Errors;
 const { EntityNotFoundError } = require("@moleculer/database").Errors;
 
-process.env.JWT_SECRET = "kantab-secret-test";
 const SITE = { name: "KanTab", url: "http://localhost:4000" };
 
 const FindEntityMiddleware = require("../../middlewares/find-entity.middleware");
@@ -229,8 +228,7 @@ describe("Test Accounts service", () => {
 					createdAt: expect.any(Number),
 					verified: false,
 					status: 1,
-					avatar:
-						"https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
+					avatar: "https://gravatar.com/avatar/9b846cdc5f5eb743c4ef2c556a822d22?s=64&d=robohash"
 				});
 
 				expect(mailSendMock).toHaveBeenCalledTimes(1);
