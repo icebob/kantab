@@ -109,8 +109,7 @@ export default new Vuex.Store({
 					`,
 					variables: { id }
 				});
-
-				commit("SET_BOARD", res.data.boardById);
+				commit("SET_ENTITY", { type: "board", entity: res.data.boardById });
 				return res.data.board;
 			} catch (err) {
 				console.log("getBoardById error", err);
@@ -141,7 +140,7 @@ export default new Vuex.Store({
 						}
 					`
 				});
-				commit("SET_BOARDS", res.data.boards.rows);
+				commit("SET_ENTITIES", { type: "boards", entities: res.data.boards.rows });
 				return res.data.boards;
 			} catch (err) {
 				console.log("getBoard error", err);
@@ -170,7 +169,7 @@ export default new Vuex.Store({
 						}
 					`
 				});
-				commit("SET_BOARDS", res.data.boardsAll);
+				commit("SET_ENTITIES", { type: "boards", entities: res.data.boardsAll });
 				//return res.data.boards;
 			} catch (err) {
 				console.log("getBoard error", err);
@@ -192,7 +191,7 @@ export default new Vuex.Store({
 					variables: input
 				});
 
-				commit("ADD_BOARD", res.data.boardCreate);
+				commit("ADD_ENTITY", { type: "boards", entity: res.data.boardCreate });
 				Vue.prototype.toast.show("Board created");
 			} catch (err) {
 				console.error("createBoard err", err);
@@ -210,7 +209,7 @@ export default new Vuex.Store({
 					variables: { id }
 				});
 
-				commit("REMOVE_BOARD", res.data.boardRemove);
+				commit("REMOVE_ENTITY", { type: "boards", id: res.data.boardRemove });
 				Vue.prototype.toast.show("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
@@ -231,7 +230,7 @@ export default new Vuex.Store({
 					variables: input
 				});
 
-				commit("UPDATE_BOARD", res.data.boardUpdate);
+				commit("UPDATE_ENTITY", { type: "boards", entity: res.data.boardUpdate });
 				Vue.prototype.toast.show("Board updated");
 			} catch (err) {
 				console.error("updateBoard error: ", err);
@@ -239,6 +238,7 @@ export default new Vuex.Store({
 		},
 
 		async getLists({ commit }, board) {
+			console.log("Board", board);
 			try {
 				const res = await apolloClient.query({
 					query: gql`
@@ -254,9 +254,10 @@ export default new Vuex.Store({
 							}
 						}
 					`,
-					variables: { board }
+					variables: { board: board }
 				});
-				commit("SET_LISTS", res.data.lists.rows);
+				console.log("res.data", res.data);
+				commit("SET_ENTITIES", { type: "lists", entities: res.data.lists.rows });
 				return res.data.lists;
 			} catch (err) {
 				console.log("getLists error", err);
@@ -279,29 +280,49 @@ export default new Vuex.Store({
 					variables: input
 				});
 				console.log("res", res);
-				commit("ADD_LIST", res.data.listCreate);
+				commit("ADD_ENTITY", { type: "lists", entity: res.data.listCreate });
 				//Vue.prototype.toast.show("Board created");
 			} catch (err) {
 				console.error("createList err", err);
 			}
 		},
 
-		async removeList({ commit }, { id, board }) {
+		async removeList({ commit }, { id }) {
 			console.log("id", id);
 			try {
 				const res = await apolloClient.mutate({
 					mutation: gql`
-						mutation listRemove($id: String!, $board: String!) {
-							listRemove(id: $id, board: $board)
+						mutation listRemove($id: String!) {
+							listRemove(id: $id)
 						}
 					`,
-					variables: { id, board }
+					variables: { id }
 				});
-				console.log("res", res);
-				commit("REMOVE_LIST", res.data.listRemove);
+				commit("REMOVE_ENTITY", { type: "lists", id: res.data.listRemove });
 				Vue.prototype.toast.show("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
+			}
+		},
+		async updateList({ commit }, input) {
+			try {
+				const res = await apolloClient.mutate({
+					mutation: gql`
+						mutation listUpdate($input: ListUpdateInput!) {
+							listUpdate(input: $input) {
+								id
+								title
+								description
+							}
+						}
+					`,
+					variables: input
+				});
+
+				commit("UPDATE_ENTITY", { type: "lists", entity: res.data.listUpdate });
+				Vue.prototype.toast.show("List updated");
+			} catch (err) {
+				console.error("updateList error: ", err);
 			}
 		},
 
@@ -332,40 +353,35 @@ export default new Vuex.Store({
 		SET_AUTH_PROVIDERS(state, providers) {
 			state.providers = providers;
 		},
-		SET_BOARD(state, board) {
-			state.board = board;
-		},
-		SET_BOARDS(state, boards) {
-			state.boards = boards;
-		},
-		ADD_BOARD(state, board) {
-			state.boards.push(board);
-		},
-		UPDATE_BOARD(state, board) {
-			const found = state.boards.find(b => b.id == board.id);
-			if (found) {
-				Object.assign(found, board);
-			} else {
-				state.boards.push(board);
-			}
-		},
-		REMOVE_BOARD(state, id) {
-			const ix = state.boards.findIndex(b => b.id === id);
-			if (ix >= 0) state.boards.splice(ix, 1);
-		},
-		SET_LISTS(state, lists) {
-			state.lists = lists;
-		},
-		ADD_LIST(state, list) {
-			state.lists.push(list);
-		},
-		REMOVE_LIST(state, id) {
-			const ix = state.lists.findIndex(b => b.id === id);
-			if (ix >= 0) state.lists.splice(ix, 1);
-		},
 
 		LOGOUT(state) {
 			state.user = null;
+		},
+
+		SET_ENTITY(state, { type, entity }) {
+			state[type] = entity;
+		},
+
+		SET_ENTITIES(state, { type, entities }) {
+			state[type] = entities;
+		},
+
+		ADD_ENTITY(state, { type, entity }) {
+			state[type].push(entity);
+		},
+
+		UPDATE_ENTITY(state, { type, entity }) {
+			const found = state[type].find(b => b.id == entity.id);
+			if (found) {
+				Object.assign(found, entity);
+			} else {
+				state[type].push(entity);
+			}
+		},
+
+		REMOVE_ENTITY(state, { type, id }) {
+			const ix = state[type].findIndex(b => b.id === id);
+			if (ix >= 0) state[type].splice(ix, 1);
 		}
 	}
 });

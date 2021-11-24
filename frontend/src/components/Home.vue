@@ -4,7 +4,7 @@
 		<h4>Home</h4>
 		<div style="margin: 15px">
 			<!-- 			<pre v-if="boards"><code>{{ boards }}</code></pre> -->
-			<button style="margin: 15px" class="button primary" @click="createBoardApollo">
+			<button style="margin: 15px" class="button primary" @click="showDialog()">
 				Create board
 			</button>
 		</div>
@@ -29,10 +29,7 @@
 								<div style="margin-bottom: 10px">{{ board.id }}</div>
 
 								<div>
-									<button
-										class="button primary"
-										@click="showEditBoardDialog(board)"
-									>
+									<button class="button primary" @click="showDialog(board)">
 										Edit board
 									</button>
 									<router-link
@@ -58,7 +55,7 @@
 import Logo from "./account/partials/Logo";
 /* import { apolloClient } from "../apollo";
 import gql from "graphql-tag"; */
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
 import EditBoardDialog from "../components/EditBoardDialog";
 
 export default {
@@ -67,36 +64,13 @@ export default {
 		EditBoardDialog
 	},
 
-	data() {
-		return {
-			//boards: null,
-			//boardsApollo: null,
-			boardTitle: null
-		};
-	},
 	computed: {
 		...mapState(["boards"])
 	},
 
 	methods: {
-		...mapActions(["getBoards", "createBoard", "removeBoard", "updateBoard"]),
-		/* 		getBoards() {
-			this.$socket.emit("call", "v1.boards.list", { page: 1, pageSize: 5 }, (err, res) => {
-				if (err) return alert(err.message);
-
-				this.boards = res;
-			});
-		}, */
-		async getBoardApollo() {
-			await this.getBoards();
-		},
-		async createBoardApollo() {
-			console.log("he");
-			this.$refs.editDialog.show();
-			//await this.createBoard({ input: { title: this.boardTitle } });
-		},
-		showEditBoardDialog(board) {
-			this.$refs.editDialog.show(board);
+		showDialog(board) {
+			this.$refs.editDialog.show({ type: "board", board });
 		}
 	}
 };
