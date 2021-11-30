@@ -1,39 +1,27 @@
 <template>
 	<div>
 		<div v-if="board">
-			<div
-				class="content flex align-center justify-space-between wrap buttons"
-				style="margin: 1em"
-			>
+			<div class="content flex align-center justify-space-between wrap" style="margin: 1em">
 				<h3>{{ board.title }}</h3>
 				<button class="button primary" @click="showDialog()">
 					<i class="fa fa-plus"></i>
 				</button>
 			</div>
-			<div class="card-scene">
+			<div class="content flex align-start" style="margin: 1em">
 				<Container
 					orientation="horizontal"
 					@drop="onColumnDrop($event)"
-					drag-handle-selector=".column-drag-handle"
+					drag-handle-selector=".list-drag-handle"
 					@drag-start="dragStart"
 					:drop-placeholder="upperDropPlaceholderOptions"
 				>
 					<Draggable v-for="column in lists" :key="column.id">
-						<div class="card-container">
-							<div
-								class="
-									card-column-header
-									flex
-									align-center
-									justify-space-between
-									wrap
-									buttons
-								"
-							>
-								<span class="column-drag-handle">&#x2630;</span>
-								{{ column.title }}
+						<div class="list panel primary">
+							<div class="header flex align-center">
+								<span class="list-drag-handle">&#x2630;</span>
+								<span class="list-title flex-item-1">{{ column.title }}</span>
 								<button class="button outline small" @click="showDialog(column)">
-									<i class="fa fa-ellipsis-v"></i>
+									<i class="fa fa-pencil"></i>
 								</button>
 							</div>
 							<Container
@@ -56,38 +44,6 @@
 					</Draggable>
 				</Container>
 			</div>
-			<!-- 			<div class="card dialog board-panel">
-				<div class="block">
-					<div class="content card-columns">
-						<div v-for="list in lists" :key="list.id">
-							<div class="card list-panel">
-								<div
-									class="
-										content
-										flex
-										align-center
-										justify-space-between
-										wrap
-										buttons
-									"
-									style="margin: 0.5em"
-								>
-									<div class="header">{{ list.title }}</div>
-									<button class="button outline small" @click="showDialog(list)">
-										<i class="fa fa-ellipsis-v"></i>
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="block">
-					<small :title="dateToLong(board.updatedAt)" class="text-muted"
-						>Last modified {{ dateToAgo(board.updatedAt) }}</small
-					>
-				</div>
-			</div> -->
 		</div>
 
 		<edit-board-dialog ref="editDialog" />
@@ -194,24 +150,18 @@ export default {
 	}
 };
 </script>
-<style scoped>
-.board-panel {
-	height: 75vh;
-	margin: 1em;
-}
-.list-panel {
-	height: 65vh;
-	border: none;
-}
-.card-container {
+
+<style lang="scss" scoped>
+.list {
 	width: 320px;
-	margin: 5px;
-	margin-right: 45px;
-	background-color: darkgrey;
-	padding: 10px;
-	box-shadow: 0 1px 1px rgb(0 0 0 / 12%), 0 1px 1px rgb(0 0 0 / 24%);
-}
-.card-scene {
-	padding: 3em;
+	margin: 0 1em;
+
+	.list-drag-handle {
+		cursor: grab;
+	}
+
+	.list-title {
+		margin-left: 0.5em;
+	}
 }
 </style>

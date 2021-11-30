@@ -10,7 +10,10 @@
 		</div>
 		<div style="margin: 15px" class="form-group">
 			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
-			<fieldset v-if="boards" class="content flex align-start justify-space-around panels">
+			<fieldset
+				v-if="boards"
+				class="content flex align-start justify-space-between panels wrap"
+			>
 				<div v-for="board in boards" :key="board.id">
 					<div class="card" style="margin: 15px">
 						<div class="block">
@@ -55,7 +58,7 @@
 import Logo from "./account/partials/Logo";
 /* import { apolloClient } from "../apollo";
 import gql from "graphql-tag"; */
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import EditBoardDialog from "../components/EditBoardDialog";
 
 export default {
@@ -69,6 +72,8 @@ export default {
 	},
 
 	methods: {
+		...mapActions(["removeBoard"]),
+
 		showDialog(board) {
 			this.$refs.editDialog.show({ type: "board", board });
 		}
