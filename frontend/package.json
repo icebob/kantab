@@ -33,6 +33,7 @@
     "vue": "^2.6.14",
     "vue-apollo": "^3.0.8",
     "vue-router": "^3.5.2",
+    "vue-smooth-dnd": "^0.8.1",
     "vuex": "^3.4.0"
   },
   "devDependencies": {
