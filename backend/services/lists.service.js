@@ -94,7 +94,7 @@ module.exports = {
 						{ board: params.board }
 					);
 				}
-				if (ctx.action.params.board) {
+				if (ctx.action.params.board && !ctx.action.params.board.optional) {
 					throw new MoleculerClientError(`Board is required`, 422, "VALIDATION_ERROR", [
 						{ type: "required", field: "board" }
 					]);
