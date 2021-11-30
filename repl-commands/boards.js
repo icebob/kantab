@@ -27,7 +27,7 @@ module.exports = {
 			{
 				sort: "title",
 				populate: ["owner", "members"],
-				scope: !!options.user
+				scope: options.user ? true : ["notDeleted"]
 			},
 			{ meta: { userID: options.user, $repl: true } }
 		);

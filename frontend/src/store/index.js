@@ -35,7 +35,8 @@ export default new Vuex.Store({
 		user: null,
 		providers: [],
 		board: null,
-		boards: []
+		boards: [],
+		lists: []
 	},
 
 	getters: {},
@@ -45,6 +46,8 @@ export default new Vuex.Store({
 			try {
 				await dispatch("getMe");
 				await dispatch("getSupportedSocialAuthProviders");
+				//await dispatch("getBoards");
+				await dispatch("getBoardsAll");
 			} catch (err) {
 				console.log("Error", err);
 				//Raven.captureException(err);
@@ -69,142 +72,257 @@ export default new Vuex.Store({
 		},
 
 		async getMeApollo({ commit }) {
-			const user = await apolloClient.query({
-				query: gql`
-					query {
-						me {
-							id
-							username
-							fullName
-							email
+			try {
+				const user = await apolloClient.query({
+					query: gql`
+						query {
+							me {
+								id
+								username
+								fullName
+								email
+							}
 						}
-					}
-				`
-			});
+					`
+				});
+				return user.data.me;
+			} catch (err) {
+				console.log("error", err);
+			}
 			//commit("SET_LOGGED_IN_USER", user.data.me);
-			return user.data.me;
 		},
-		async getBoard({ commit }, id) {
-			const res = await apolloClient.query({
-				query: gql`
-					query board($id: String!) {
-						board(id: $id) {
-							id
-							title
-							slug
-							description
-							position
-							archived
-							public
+		async getBoardById({ commit }, id) {
+			try {
+				const res = await apolloClient.query({
+					query: gql`
+						query boardById($id: String!) {
+							boardById(id: $id) {
+								id
+								title
+								slug
+								description
+								position
+								archived
+								public
+							}
 						}
-					}
-				`,
-				variables: { id }
-			});
-			commit("SET_BOARD", res.data.board);
-			return res.data.board;
+					`,
+					variables: { id }
+				});
+				commit("SET_ENTITY", { type: "board", entity: res.data.boardById });
+				return res.data.board;
+			} catch (err) {
+				console.log("getBoardById error", err);
+			}
 		},
 
 		async getBoards({ commit }) {
-			const res = await apolloClient.query({
-				query: gql`
-					query {
-						boards {
-							id
-							title
-							description
-							createdAt
-							updatedAt
-							owner {
-								username
-								fullName
-								boards {
+			try {
+				const res = await apolloClient.query({
+					query: gql`
+						query boards {
+							boards {
+								rows {
+									id
 									title
+									description
+									createdAt
+									updatedAt
+									owner {
+										username
+										fullName
+										boards {
+											title
+										}
+									}
 								}
 							}
 						}
-					}
-				`
-			});
-			commit("SET_BOARDS", res.data.boards);
-			return res.data.boards;
+					`
+				});
+				commit("SET_ENTITIES", { type: "boards", entities: res.data.boards.rows });
+				return res.data.boards;
+			} catch (err) {
+				console.log("getBoard error", err);
+			}
+		},
+
+		async getBoardsAll({ commit }) {
+			try {
+				const res = await apolloClient.query({
+					query: gql`
+						query boardsAll {
+							boardsAll {
+								id
+								title
+								description
+								createdAt
+								updatedAt
+								owner {
+									username
+									fullName
+									boards {
+										title
+									}
+								}
+							}
+						}
+					`
+				});
+				commit("SET_ENTITIES", { type: "boards", entities: res.data.boardsAll });
+				//return res.data.boards;
+			} catch (err) {
+				console.log("getBoard error", err);
+			}
 		},
 
 		async createBoard({ commit }, input) {
-			// Call to the graphql mutation
-			apolloClient
-				.mutate({
-					// Query
+			try {
+				const res = await apolloClient.mutate({
 					mutation: gql`
-						mutation createBoard($input: CreateBoardInput!) {
-							createBoard(input: $input) {
+						mutation boardCreate($input: BoardCreateInput!) {
+							boardCreate(input: $input) {
 								id
 								title
 								description
 							}
 						}
 					`,
-
-					// Parameters
 					variables: input
-				})
-				.then(async data => {
-					// Result
-					commit("ADD_BOARD", data.data.createBoard);
-				})
-				.catch(error => {
-					// Error
-					console.error(error);
 				});
+
+				commit("ADD_ENTITY", { type: "boards", entity: res.data.boardCreate });
+				Vue.prototype.toast.show("Board created");
+			} catch (err) {
+				console.error("createBoard err", err);
+			}
 		},
 
 		async removeBoard({ commit }, id) {
-			// Call to the graphql mutation
-			apolloClient
-				.mutate({
-					// Query
-					mutation: gql`
-						mutation removeBoard($id: String!) {
-							removeBoard(id: $id)
-						}
-					`,
-
-					// Parameters
-					variables: { id }
-				})
-				.then(async data => {
-					// Result
-					commit("REMOVE_BOARD", data.data.removeBoard);
-				})
-				.catch(error => {
-					// Error
-					console.error(error);
-				});
-		},
-		async updateBoard({ commit }, input) {
-			// Call to the graphql mutation
-
 			try {
 				const res = await apolloClient.mutate({
-					// Query
 					mutation: gql`
-						mutation updateBoard($input: UpdateBoardInput!) {
-							updateBoard(input: $input) {
+						mutation boardRemove($id: String!) {
+							boardRemove(id: $id)
+						}
+					`,
+					variables: { id }
+				});
+
+				commit("REMOVE_ENTITY", { type: "boards", id: res.data.boardRemove });
+				Vue.prototype.toast.show("Board removed");
+			} catch (err) {
+				console.error("removeBoard error: ", err);
+			}
+		},
+		async updateBoard({ commit }, input) {
+			try {
+				const res = await apolloClient.mutate({
+					mutation: gql`
+						mutation boardUpdate($input: BoardUpdateInput!) {
+							boardUpdate(input: $input) {
 								id
 								title
 								description
 							}
 						}
 					`,
-
-					// Parameters
 					variables: input
 				});
-				console.log("vue.proto", Vue.prototype);
-				//Vue.prototype.$toast.prototype.show("Welcome!", "Hey");
-				commit("UPDATE_BOARD", res.data.updateBoard);
-			} catch (error) {
-				console.error(error);
+
+				commit("UPDATE_ENTITY", { type: "boards", entity: res.data.boardUpdate });
+				Vue.prototype.toast.show("Board updated");
+			} catch (err) {
+				console.error("updateBoard error: ", err);
+			}
+		},
+
+		async getLists({ commit }, board) {
+			console.log("Board", board);
+			try {
+				const res = await apolloClient.query({
+					query: gql`
+						query lists($board: String!) {
+							lists(board: $board) {
+								rows {
+									id
+									title
+									description
+									createdAt
+									updatedAt
+								}
+							}
+						}
+					`,
+					variables: { board: board }
+				});
+				console.log("res.data", res.data);
+				commit("SET_ENTITIES", { type: "lists", entities: res.data.lists.rows });
+				return res.data.lists;
+			} catch (err) {
+				console.log("getLists error", err);
+			}
+		},
+		async createList({ commit }, input) {
+			console.log("input", input);
+			try {
+				const res = await apolloClient.mutate({
+					mutation: gql`
+						mutation listCreate($input: ListCreateInput!) {
+							listCreate(input: $input) {
+								id
+								title
+								description
+								position
+							}
+						}
+					`,
+					variables: input
+				});
+				console.log("res", res);
+				commit("ADD_ENTITY", { type: "lists", entity: res.data.listCreate });
+				//Vue.prototype.toast.show("Board created");
+			} catch (err) {
+				console.error("createList err", err);
+			}
+		},
+
+		async removeList({ commit }, { id }) {
+			console.log("id", id);
+			try {
+				const res = await apolloClient.mutate({
+					mutation: gql`
+						mutation listRemove($id: String!) {
+							listRemove(id: $id)
+						}
+					`,
+					variables: { id }
+				});
+				commit("REMOVE_ENTITY", { type: "lists", id: res.data.listRemove });
+				Vue.prototype.toast.show("List removed");
+			} catch (err) {
+				console.error("removeList error: ", err);
+			}
+		},
+		async updateList({ commit }, input) {
+			try {
+				const res = await apolloClient.mutate({
+					mutation: gql`
+						mutation listUpdate($input: ListUpdateInput!) {
+							listUpdate(input: $input) {
+								id
+								title
+								description
+							}
+						}
+					`,
+					variables: input
+				});
+
+				commit("UPDATE_ENTITY", { type: "lists", entity: res.data.listUpdate });
+				Vue.prototype.toast.show("List updated");
+			} catch (err) {
+				console.error("updateList error: ", err);
 			}
 		},
 
@@ -235,30 +353,35 @@ export default new Vuex.Store({
 		SET_AUTH_PROVIDERS(state, providers) {
 			state.providers = providers;
 		},
-		SET_BOARD(state, board) {
-			state.board = board;
-		},
-		SET_BOARDS(state, boards) {
-			state.boards = boards;
-		},
-		ADD_BOARD(state, board) {
-			state.boards.push(board);
-		},
-		UPDATE_BOARD(state, board) {
-			const found = state.boards.find(b => b.id == board.id);
-			if (found) {
-				Object.assign(found, board);
-			} else {
-				state.boards.push(board);
-			}
-		},
-		REMOVE_BOARD(state, id) {
-			const ix = state.boards.findIndex(b => b.id === id);
-			if (ix >= 0) state.boards.splice(ix, 1);
-		},
 
 		LOGOUT(state) {
 			state.user = null;
+		},
+
+		SET_ENTITY(state, { type, entity }) {
+			state[type] = entity;
+		},
+
+		SET_ENTITIES(state, { type, entities }) {
+			state[type] = entities;
+		},
+
+		ADD_ENTITY(state, { type, entity }) {
+			state[type].push(entity);
+		},
+
+		UPDATE_ENTITY(state, { type, entity }) {
+			const found = state[type].find(b => b.id == entity.id);
+			if (found) {
+				Object.assign(found, entity);
+			} else {
+				state[type].push(entity);
+			}
+		},
+
+		REMOVE_ENTITY(state, { type, id }) {
+			const ix = state[type].findIndex(b => b.id === id);
+			if (ix >= 0) state[type].splice(ix, 1);
 		}
 	}
 });
