@@ -4,7 +4,10 @@ const port = Number(process.env.LABORATORY_PORT || 3212);
 
 module.exports = {
 	name: "laboratory",
-	mixins: [Laboratory.AgentService],
+	mixins:
+		process.env.TEST_E2E || process.env.TEST_INT || process.env.NODE_ENV == "test"
+			? undefined
+			: [Laboratory.AgentService],
 
 	metadata: {
 		dockerCompose: {
