@@ -47,16 +47,19 @@ module.exports = function (opts = {}) {
 	const schema = {
 		mixins: [DbService(opts)],
 
-		methods: {
-			encodeID(id) {
-				if (ObjectID.isValid(id)) id = id.toString();
-				return hashids.encodeHex(id);
-			},
+		// No need hashids encoding for NeDB at unit testing
+		methods: !TESTING
+			? {
+					encodeID(id) {
+						if (ObjectID.isValid(id)) id = id.toString();
+						return hashids.encodeHex(id);
+					},
 
-			decodeID(id) {
-				return hashids.decodeHex(id);
-			}
-		},
+					decodeID(id) {
+						return hashids.decodeHex(id);
+					}
+			  }
+			: undefined,
 
 		created() {
 			if (!process.env.HASHID_SALT) {
