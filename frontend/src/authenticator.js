@@ -106,7 +106,7 @@ export default new (class Authenticator {
 
 			const { redirect } = store.state.route.query;
 			router.push(redirect ? redirect : { name: "home" });
-
+			await store.dispatch("getBoardsAll");
 			return user;
 		}
 

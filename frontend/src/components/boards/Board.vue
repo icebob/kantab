@@ -3,7 +3,7 @@
 		<div v-if="board">
 			<div class="content flex align-center justify-space-between wrap" style="margin: 1em">
 				<h3>{{ board.title }}</h3>
-				<button class="button primary" @click="showDialog()">
+				<button v-if="user" class="button primary" @click="showDialog()">
 					<i class="fa fa-plus"></i>
 				</button>
 			</div>
@@ -13,13 +13,15 @@
 					@drop="onColumnDrop($event)"
 					drag-handle-selector=".list-drag-handle"
 					@drag-start="dragStart"
+					@drag-end="e => log('drag enddddd', e)"
 					:drop-placeholder="upperDropPlaceholderOptions"
 				>
-					<Draggable v-for="column in lists" :key="column.id">
+					<Draggable v-for="column in lists" :key="column.position">
 						<div class="list panel primary">
 							<div class="header flex align-center">
 								<span class="list-drag-handle">&#x2630;</span>
 								<span class="list-title flex-item-1">{{ column.title }}</span>
+								<span style="margin: 5px">pos: {{ column.position }}</span>
 								<button class="button outline small" @click="showDialog(column)">
 									<i class="fa fa-pencil"></i>
 								</button>
@@ -85,17 +87,38 @@ export default {
 		};
 	},
 	computed: {
-		...mapState(["board", "lists"])
+		...mapState(["user", "board", "lists"])
 	},
 	methods: {
-		...mapActions(["getBoardById", "getLists"]),
+		...mapActions(["getBoardById", "getLists", "updateList", "changeListOrder"]),
 		showDialog(list) {
 			this.$refs.editDialog.show({ type: "list", boardId: this.id, list: list });
 		},
-		onColumnDrop(dropResult) {
-			const scene = Object.assign({}, this.scene);
-			//scene.children = applyDrag(scene.children, dropResult);
-			this.scene = scene;
+		async onColumnDrop(dropResult) {
+			this.changeListOrder(dropResult);
+			const to = this.lists[dropResult.addedIndex];
+			let newPosition = 0;
+			const toNext = this.lists[dropResult.addedIndex + 1];
+
+			const toPrev = this.lists[dropResult.addedIndex - 1];
+			if (dropResult.addedIndex == this.lists.length - 1) {
+				newPosition = toPrev.position + 1;
+			} else if (dropResult.addedIndex == 0) {
+				newPosition = toNext.position - 1;
+			} else {
+				newPosition = (toNext?.position + toPrev?.position) / 2;
+			}
+			console.log("newPosition", newPosition);
+
+			await this.updateList({
+				input: {
+					id: to.id,
+					title: to.title,
+					description: to.description,
+					board: to.boardId,
+					position: newPosition
+				}
+			});
 		},
 		onCardDrop(columnId, dropResult) {
 			if (dropResult.removedIndex !== null || dropResult.addedIndex !== null) {

@@ -67,7 +67,7 @@ module.exports = {
 				openapi: { example: "My list description" }
 			},
 			color: { type: "string", required: false, trim: true },
-			position: { type: "number", integer: true, default: 0 },
+			position: { type: "number", default: 0, graphql: { type: "Float" } },
 			options: { type: "object" },
 			...C.TIMESTAMP_FIELDS
 		},

@@ -4,7 +4,7 @@
 		<h4>Home</h4>
 		<div style="margin: 15px">
 			<!-- 			<pre v-if="boards"><code>{{ boards }}</code></pre> -->
-			<button style="margin: 15px" class="button primary" @click="showDialog()">
+			<button v-if="user" style="margin: 15px" class="button primary" @click="showDialog()">
 				Create board
 			</button>
 		</div>
@@ -19,22 +19,16 @@
 						<div class="block">
 							<div>
 								<span class="title">{{ board.title }}</span>
-								<button
-									style="margin: 5px"
-									class="button small primary"
-									@click="removeBoard(board.id)"
-								>
-									X
-								</button>
 							</div>
 							<div class="body">
 								<div style="margin-bottom: 10px">{{ board.description }}</div>
 								<div style="margin-bottom: 10px">{{ board.id }}</div>
 
 								<div>
-									<button class="button primary" @click="showDialog(board)">
-										Edit board
+									<button v-if="user" class="button" @click="showDialog(board)">
+										<i class="fa fa-edit"></i>
 									</button>
+
 									<router-link
 										:to="{ name: 'Board', params: { id: board.id } }"
 										class="button primary"
@@ -68,12 +62,10 @@ export default {
 	},
 
 	computed: {
-		...mapState(["boards"])
+		...mapState(["boards", "user"])
 	},
 
 	methods: {
-		...mapActions(["removeBoard"]),
-
 		showDialog(board) {
 			this.$refs.editDialog.show({ type: "board", board });
 		}
