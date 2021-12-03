@@ -21,6 +21,12 @@
 								class="form-control"
 								v-model="entity.description"
 							/>
+							<div v-if="entity.public != null" class="form-option">
+								<input v-model="entity.public" id="check2" type="checkbox" /><label
+									for="check2"
+									>Public</label
+								>
+							</div>
 						</div>
 					</fieldset>
 				</div>
@@ -76,11 +82,13 @@ export default {
 			if (type == "board" && board) {
 				this.pageTitle = "Edit board";
 				this.entity = board;
+				console.log("entity", this.entity);
 				this.isUpdate = true;
 			} else {
 				this.entity = {
 					title: "",
-					description: ""
+					description: "",
+					public: false
 				};
 				this.pageTitle = "Add board";
 			}
@@ -122,7 +130,8 @@ export default {
 						input: {
 							id: this.entity.id,
 							title: this.entity.title,
-							description: this.entity.description
+							description: this.entity.description,
+							public: this.entity.public
 						}
 					});
 				} else {
@@ -140,7 +149,8 @@ export default {
 					await this.createBoard({
 						input: {
 							title: this.entity.title,
-							description: this.entity.description
+							description: this.entity.description,
+							public: this.entity.public
 						}
 					});
 				} else {

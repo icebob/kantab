@@ -113,6 +113,7 @@ export default new Vuex.Store({
 				return res.data.board;
 			} catch (err) {
 				console.log("getBoardById error", err);
+				Vue.prototype.toast.show("Could not load board: " + err.message);
 			}
 		},
 
@@ -144,6 +145,7 @@ export default new Vuex.Store({
 				return res.data.boards;
 			} catch (err) {
 				console.log("getBoard error", err);
+				Vue.prototype.toast.show("Could not load boards: " + err.message);
 			}
 		},
 
@@ -158,6 +160,7 @@ export default new Vuex.Store({
 								description
 								createdAt
 								updatedAt
+								public
 								owner {
 									username
 									fullName
@@ -170,9 +173,10 @@ export default new Vuex.Store({
 					`
 				});
 				commit("SET_ENTITIES", { type: "boards", entities: res.data.boardsAll });
-				//return res.data.boards;
+				//return res.data.boardsAll;
 			} catch (err) {
 				console.log("getBoard error", err);
+				Vue.prototype.toast.show("Could not load boards: " + err.message);
 			}
 		},
 
@@ -195,6 +199,7 @@ export default new Vuex.Store({
 				Vue.prototype.toast.show("Board created");
 			} catch (err) {
 				console.error("createBoard err", err);
+				Vue.prototype.toast.show("Could not create board: " + err.message);
 			}
 		},
 
@@ -213,6 +218,7 @@ export default new Vuex.Store({
 				Vue.prototype.toast.show("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
+				Vue.prototype.toast.show("Board creation failed: " + err.message);
 			}
 		},
 		async updateBoard({ commit }, input) {
@@ -234,11 +240,11 @@ export default new Vuex.Store({
 				Vue.prototype.toast.show("Board updated");
 			} catch (err) {
 				console.error("updateBoard error: ", err);
+				Vue.prototype.toast.show("Could not update board: " + err.message);
 			}
 		},
 
 		async getLists({ commit }, board) {
-			console.log("Board", board);
 			try {
 				const res = await apolloClient.query({
 					query: gql`
@@ -248,6 +254,7 @@ export default new Vuex.Store({
 									id
 									title
 									description
+									position
 									createdAt
 									updatedAt
 								}
@@ -257,10 +264,15 @@ export default new Vuex.Store({
 					variables: { board: board }
 				});
 				console.log("res.data", res.data);
-				commit("SET_ENTITIES", { type: "lists", entities: res.data.lists.rows });
+
+				const sorted = res.data.lists.rows;
+				sorted.sort((a, b) => a.position - b.position);
+
+				commit("SET_ENTITIES", { type: "lists", entities: sorted });
 				return res.data.lists;
 			} catch (err) {
 				console.log("getLists error", err);
+				Vue.prototype.toast.show("Could not load lists: " + err.message);
 			}
 		},
 		async createList({ commit }, input) {
@@ -284,6 +296,7 @@ export default new Vuex.Store({
 				//Vue.prototype.toast.show("Board created");
 			} catch (err) {
 				console.error("createList err", err);
+				Vue.prototype.toast.show("Could not create list: " + err.message);
 			}
 		},
 
@@ -302,6 +315,7 @@ export default new Vuex.Store({
 				Vue.prototype.toast.show("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
+				Vue.prototype.toast.show("Could not remove list: " + err.message);
 			}
 		},
 		async updateList({ commit }, input) {
@@ -323,7 +337,27 @@ export default new Vuex.Store({
 				Vue.prototype.toast.show("List updated");
 			} catch (err) {
 				console.error("updateList error: ", err);
+				Vue.prototype.toast.show("Could not update list: " + err.message);
 			}
+		},
+		changeListOrder({ state, commit }, dragResult) {
+			let arr = state.lists;
+			const { removedIndex, addedIndex, payload } = dragResult;
+			if (removedIndex === null && addedIndex === null) return arr;
+
+			const result = [...arr];
+			let itemToAdd = payload;
+
+			if (removedIndex !== null) {
+				itemToAdd = result.splice(removedIndex, 1)[0];
+			}
+
+			if (addedIndex !== null) {
+				result.splice(addedIndex, 0, itemToAdd);
+			}
+			//console.log("result", result);
+			//return result;
+			commit("SET_NEW_LIST_ORDER", result);
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {
@@ -382,6 +416,10 @@ export default new Vuex.Store({
 		REMOVE_ENTITY(state, { type, id }) {
 			const ix = state[type].findIndex(b => b.id === id);
 			if (ix >= 0) state[type].splice(ix, 1);
+		},
+
+		SET_NEW_LIST_ORDER(state, listsInOrder) {
+			state.lists = listsInOrder;
 		}
 	}
 });
