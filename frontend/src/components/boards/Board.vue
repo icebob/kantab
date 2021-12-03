@@ -12,8 +12,6 @@
 					orientation="horizontal"
 					@drop="onColumnDrop($event)"
 					drag-handle-selector=".list-drag-handle"
-					@drag-start="dragStart"
-					@drag-end="e => log('drag end', e)"
 					:drop-placeholder="upperDropPlaceholderOptions"
 				>
 					<Draggable v-for="column in lists" :key="column.position">
@@ -32,8 +30,6 @@
 							<Container
 								group-name="col"
 								@drop="e => onCardDrop(column.id, e)"
-								@drag-start="e => log('drag start', e)"
-								@drag-end="e => log('drag end', e)"
 								:get-child-payload="getCardPayload(column.id)"
 								drag-class="card-ghost"
 								drop-class="card-ghost-drop"
@@ -137,29 +133,6 @@ export default {
 			return index => {
 				return this.scene.children.filter(p => p.id === columnId)[0].children[index];
 			};
-		},
-		dragStart() {
-			//console.log("drag started");
-		},
-		log(...params) {
-			//console.log(...params);
-		},
-		applyDrag(arr, dragResult) {
-			const { removedIndex, addedIndex, payload } = dragResult;
-			if (removedIndex === null && addedIndex === null) return arr;
-
-			const result = [...arr];
-			let itemToAdd = payload;
-
-			if (removedIndex !== null) {
-				itemToAdd = result.splice(removedIndex, 1)[0];
-			}
-
-			if (addedIndex !== null) {
-				result.splice(addedIndex, 0, itemToAdd);
-			}
-
-			return result;
 		}
 	},
 	async created() {
