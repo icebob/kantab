@@ -266,9 +266,7 @@ export default new Vuex.Store({
 				console.log("res.data", res.data);
 
 				const sorted = res.data.lists.rows;
-				sorted.sort((a, b) =>
-					a.position > b.position ? 1 : b.position > a.position ? -1 : 0
-				);
+				sorted.sort((a, b) => a.position - b.position);
 
 				commit("SET_ENTITIES", { type: "lists", entities: sorted });
 				return res.data.lists;
