@@ -13,6 +13,7 @@
 								placeholder="My epic title"
 								class="form-control"
 								v-model="entity.title"
+								ref="mainInput"
 							/>
 							<label>Description</label>
 							<input
@@ -47,7 +48,7 @@
 					</button>
 				</div>
 			</div>
-			<div class="block">
+			<div v-if="entity.updatedAt" class="block">
 				<small :title="dateToLong(entity.updatedAt)" class="text-muted"
 					>Last modified {{ dateToAgo(entity.updatedAt) }}</small
 				>
@@ -107,6 +108,7 @@ export default {
 				};
 			}
 			this.visible = true;
+			this.$nextTick(() => this.$refs.mainInput.focus());
 		},
 		async removeEntity(entity) {
 			if (entity.__typename == "Board") {
@@ -158,9 +160,7 @@ export default {
 						input: {
 							board: this.entity.boardId,
 							title: this.entity.title,
-							description: this.entity.description,
-							position: 0,
-							color: "red"
+							description: this.entity.description
 						}
 					});
 				}

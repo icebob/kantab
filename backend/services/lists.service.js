@@ -67,7 +67,13 @@ module.exports = {
 				openapi: { example: "My list description" }
 			},
 			color: { type: "string", required: false, trim: true },
-			position: { type: "number", default: 0, graphql: { type: "Float" } },
+			position: {
+				type: "number",
+				graphql: { type: "Float" },
+				default({ ctx }) {
+					return ctx.call("v1.lists.getNextPosition", { board: ctx.params.board });
+				}
+			},
 			options: { type: "object" },
 			...C.TIMESTAMP_FIELDS
 		},
@@ -113,7 +119,7 @@ module.exports = {
 	 */
 	actions: {
 		create: {
-			permissions: [C.ROLE_AUTHENTICATED]
+			permissions: [C.ROLE_BOARD_MEMBER]
 		},
 		list: {
 			permissions: [],
@@ -152,7 +158,16 @@ module.exports = {
 
 		remove: {
 			needEntity: true,
-			permissions: [C.ROLE_BOARD_OWNER]
+			permissions: [C.ROLE_BOARD_MEMBER]
+		},
+
+		getNextPosition: {
+			visibility: "protected",
+			handler(ctx) {
+				return this.findEntities(ctx).then(
+					lists => lists.reduce((a, list) => Math.max(a, list.position), 0) + 1
+				);
+			}
 		}
 	},
 

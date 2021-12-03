@@ -33,9 +33,6 @@ function getGraphqlTypeFromField(res, fieldName, field, kind) {
 	// Skip readonly fields in create/update/replace
 	if (kind && field.readonly) return null;
 
-	// Skip in create if it has a hook
-	if (kind == "create" && field.onCreate) return null;
-
 	let gType = getGraphqlType(field, !!kind);
 	let type = gType || field.type || "string";
 	type = convertTypeToGraphQLType(type);

@@ -3,9 +3,6 @@
 		<div v-if="board">
 			<div class="content flex align-center justify-space-between wrap" style="margin: 1em">
 				<h3>{{ board.title }}</h3>
-				<button v-if="user" class="button primary" @click="showDialog()">
-					<i class="fa fa-plus"></i>
-				</button>
 			</div>
 			<div class="content flex align-start" style="margin: 1em">
 				<Container
@@ -44,6 +41,12 @@
 						</div>
 					</Draggable>
 				</Container>
+				<div class="new-list-placeholder" @click="showDialog()">
+					<div class="icon">
+						<i class="fa fa-plus"></i>
+					</div>
+					<div class="label">New list</div>
+				</div>
 			</div>
 		</div>
 
@@ -160,6 +163,47 @@ export default {
 
 	.list-title {
 		margin-left: 0.5em;
+	}
+
+	.header {
+		padding: 0.4em 0.8em;
+		.button {
+			border: none;
+			box-shadow: none;
+			padding: 2px 4px;
+		}
+	}
+}
+
+.new-list-placeholder {
+	width: 240px;
+	height: 80px;
+	padding: 0.5em;
+
+	border: 2px dashed #666;
+	border-radius: 8px;
+	color: #666;
+	cursor: pointer;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	.icon {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		font-size: 2em;
+		.fa {
+			transition: transform 0.2s ease-in-out;
+		}
+	}
+
+	&:hover .icon .fa {
+		transform: rotate(180deg);
+	}
+
+	.label {
 	}
 }
 </style>
