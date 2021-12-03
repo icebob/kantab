@@ -7,6 +7,17 @@
   - [ ] https://github.com/yeojz/otplib
   - [ ] https://github.com/hectorm/otpauth
 
+
+## Boards
+- [ ] Only the owner can make a board to public/private
+
+## Lists
+- [ ] Set default position value if null. Get the max position + 1
+
+
+## Cards
+
+
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
 
@@ -29,11 +40,3 @@
 
 
 ## Frontend
-- [x] Without login on public board, must hide the "Edit board" and Remove X button. 
-  - [x] IF you click on buttons, it doesn't show error toast.
-  - [x] If you open the board, it shows "+" add list buttons, but it's not enabled without login.
-- [x] If you open the page without login, it shows public boards, and after login boards are not refreshed.
-- [x] wrap the boards cards.
-
-### Board page
-- [x] if you move a list, the order is not changed (labels switch back to the original labels)
