@@ -87,7 +87,8 @@ export default {
 			} else {
 				this.entity = {
 					title: "",
-					description: ""
+					description: "",
+					public: false
 				};
 				this.pageTitle = "Add board";
 			}
@@ -148,7 +149,8 @@ export default {
 					await this.createBoard({
 						input: {
 							title: this.entity.title,
-							description: this.entity.description
+							description: this.entity.description,
+							public: this.entity.public
 						}
 					});
 				} else {

@@ -245,7 +245,6 @@ export default new Vuex.Store({
 		},
 
 		async getLists({ commit }, board) {
-			console.log("Board", board);
 			try {
 				const res = await apolloClient.query({
 					query: gql`

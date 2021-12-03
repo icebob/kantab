@@ -13,16 +13,19 @@
 					@drop="onColumnDrop($event)"
 					drag-handle-selector=".list-drag-handle"
 					@drag-start="dragStart"
-					@drag-end="e => log('drag enddddd', e)"
+					@drag-end="e => log('drag end', e)"
 					:drop-placeholder="upperDropPlaceholderOptions"
 				>
 					<Draggable v-for="column in lists" :key="column.position">
 						<div class="list panel primary">
 							<div class="header flex align-center">
-								<span class="list-drag-handle">&#x2630;</span>
+								<span v-if="user" class="list-drag-handle">&#x2630;</span>
 								<span class="list-title flex-item-1">{{ column.title }}</span>
-								<span style="margin: 5px">pos: {{ column.position }}</span>
-								<button class="button outline small" @click="showDialog(column)">
+								<button
+									v-if="user"
+									class="button outline small"
+									@click="showDialog(column)"
+								>
 									<i class="fa fa-pencil"></i>
 								</button>
 							</div>
@@ -96,7 +99,7 @@ export default {
 		},
 		async onColumnDrop(dropResult) {
 			this.changeListOrder(dropResult);
-			const to = this.lists[dropResult.addedIndex];
+			const movedList = this.lists[dropResult.addedIndex];
 			let newPosition = 0;
 			const toNext = this.lists[dropResult.addedIndex + 1];
 
@@ -108,14 +111,13 @@ export default {
 			} else {
 				newPosition = (toNext?.position + toPrev?.position) / 2;
 			}
-			console.log("newPosition", newPosition);
 
 			await this.updateList({
 				input: {
-					id: to.id,
-					title: to.title,
-					description: to.description,
-					board: to.boardId,
+					id: movedList.id,
+					title: movedList.title,
+					description: movedList.description,
+					board: movedList.boardId,
 					position: newPosition
 				}
 			});
@@ -137,10 +139,10 @@ export default {
 			};
 		},
 		dragStart() {
-			console.log("drag started");
+			//console.log("drag started");
 		},
 		log(...params) {
-			console.log(...params);
+			//console.log(...params);
 		},
 		applyDrag(arr, dragResult) {
 			const { removedIndex, addedIndex, payload } = dragResult;

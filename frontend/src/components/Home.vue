@@ -10,10 +10,7 @@
 		</div>
 		<div style="margin: 15px" class="form-group">
 			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
-			<fieldset
-				v-if="boards"
-				class="content flex align-start justify-space-between panels wrap"
-			>
+			<fieldset v-if="boards" class="content flex align-start justify-center panels wrap">
 				<div v-for="board in boards" :key="board.id">
 					<div class="card" style="margin: 15px">
 						<div class="block">

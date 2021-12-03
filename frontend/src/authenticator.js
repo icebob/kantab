@@ -7,7 +7,7 @@ import store from "./store";
 import axios from "axios";
 import * as Cookie from "js-cookie";
 import gql from "graphql-tag";
-import { apolloClient } from "./apollo";
+import { apolloClient, apolloAuth } from "./apollo";
 
 import { isFunction } from "lodash";
 
@@ -103,10 +103,10 @@ export default new (class Authenticator {
 		const res = await axios.post("/api/v1/accounts/login", { email, password, token });
 		if (res.token) {
 			const user = await this.applyToken(res.token);
-
+			await apolloAuth();
+			await store.dispatch("getBoardsAll");
 			const { redirect } = store.state.route.query;
 			router.push(redirect ? redirect : { name: "home" });
-			await store.dispatch("getBoardsAll");
 			return user;
 		}
 
