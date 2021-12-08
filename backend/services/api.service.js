@@ -103,7 +103,13 @@ module.exports = {
 			{
 				path: "/api",
 
-				whitelist: ["v1.accounts.**", "v1.boards.**", "v1.lists.**", "maildev.**"],
+				whitelist: [
+					"v1.accounts.**",
+					"v1.boards.**",
+					"v1.lists.**",
+					"v1.cards.**",
+					"maildev.**"
+				],
 
 				etag: true,
 

@@ -8,7 +8,7 @@ module.exports = {
 
 	serviceCreating(svc, schema) {
 		const name = schema.name;
-		if (!["boards", "lists", "accounts"].includes(name)) return;
+		if (!["boards", "lists", "accounts", "cards"].includes(name)) return;
 		const entityName = pluralize(name, 1);
 		generateOpenAPISchema(entityName, schema);
 	}

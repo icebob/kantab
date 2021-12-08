@@ -53,7 +53,6 @@ module.exports = {
 			onUpdate: () => Date.now(),
 			graphql: { type: "Long" }
 		},
-		archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } },
 		deletedAt: {
 			type: "number",
 			readonly: true,
@@ -61,5 +60,10 @@ module.exports = {
 			onRemove: () => Date.now(),
 			graphql: { type: "Long" }
 		}
+	},
+
+	ARCHIVED_FIELDS: {
+		archived: { type: "boolean", readonly: true, default: false },
+		archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } }
 	}
 };

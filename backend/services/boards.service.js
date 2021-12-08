@@ -8,7 +8,7 @@ const { inspect } = require("util");
 
 const DbService = require("../mixins/db.mixin");
 const CacheCleaner = require("../mixins/cache-cleaner.mixin");
-const ChecksMixin = require("../mixins/checks.mixin");
+const MemberCheckMixin = require("../mixins/member-check.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
 
@@ -37,7 +37,7 @@ module.exports = {
 			}
 		}),
 		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"]),
-		ChecksMixin
+		MemberCheckMixin
 		//ConfigLoader([])
 	],
 
@@ -73,7 +73,13 @@ module.exports = {
 				validate: "validateOwner",
 				graphql: { type: "User", inputType: "String" }
 			},
-			title: { type: "string", required: true, trim: true, openapi: { example: "My board" } },
+			title: {
+				type: "string",
+				required: true,
+				trim: true,
+				empty: false,
+				openapi: { example: "My board" }
+			},
 			slug: {
 				type: "string",
 				readonly: true,
@@ -89,7 +95,6 @@ module.exports = {
 				openapi: { example: "My board description" }
 			},
 			position: { type: "number", integer: true, default: 0 },
-			archived: { type: "boolean", readonly: true, default: false },
 			public: { type: "boolean", default: false },
 			//stars: { type: "number", integer: true, min: 0, default: 0 },
 			//starred: { type: "boolean", virtual: true, get: (value, entity, field, ctx) => ctx.call("v1.stars.has", { type: "board", entity: entity.id, user: ctx.meta.userID })},
@@ -148,7 +153,7 @@ module.exports = {
 				}
 			},
 			options: { type: "object" },
-			archivedAt: { type: "number", readonly: true, graphql: { type: "Long" } },
+			...C.ARCHIVED_FIELDS,
 			...C.TIMESTAMP_FIELDS
 		},
 

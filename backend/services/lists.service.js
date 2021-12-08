@@ -1,12 +1,11 @@
 "use strict";
 
-const _ = require("lodash");
-const fs = require("fs");
-
 const C = require("../constants");
 const DbService = require("../mixins/db.mixin");
 const CacheCleaner = require("../mixins/cache-cleaner.mixin");
-const ChecksMixin = require("../mixins/checks.mixin");
+const MemberCheckMixin = require("../mixins/member-check.mixin");
+const NextPositionMixin = require("../mixins/next-position.mixin");
+const BoardValidatorsMixin = require("../mixins/board-validators.mixin");
 //const ConfigLoader = require("../mixins/config.mixin");
 const { MoleculerClientError } = require("moleculer").Errors;
 
@@ -24,7 +23,9 @@ module.exports = {
 			}
 		}),
 		CacheCleaner(["cache.clean.v1.lists", "cache.clean.v1.boards", "cache.clean.v1.accounts"]),
-		ChecksMixin
+		MemberCheckMixin,
+		NextPositionMixin,
+		BoardValidatorsMixin
 		//ConfigLoader([])
 	],
 
@@ -59,7 +60,13 @@ module.exports = {
 				validate: "validateBoard",
 				graphql: { type: "Board", inputType: "String" }
 			},
-			title: { type: "string", required: true, trim: true, openapi: { example: "Backlog" } },
+			title: {
+				type: "string",
+				required: true,
+				trim: true,
+				empty: false,
+				openapi: { example: "Backlog" }
+			},
 			description: {
 				type: "string",
 				required: false,
@@ -71,7 +78,29 @@ module.exports = {
 				type: "number",
 				graphql: { type: "Float" },
 				default({ ctx }) {
-					return ctx.call("v1.lists.getNextPosition", { board: ctx.params.board });
+					return this.getNextPosition(ctx);
+				}
+			},
+			cards: {
+				type: "array",
+				items: { type: "string", empty: false },
+				readonly: true,
+				graphql: {
+					query: "cards(page: Int, pageSize: Int, sort: String): CardListResponse"
+				},
+				populate: {
+					action: "v1.cards.list",
+					handler(ctx, values, boards) {
+						return this.Promise.all(
+							boards.map(async board => {
+								const res = await ctx.call("v1.cards.list", {
+									board: this.encodeID(board._id)
+								});
+								return res.rows;
+							})
+						);
+					},
+					graphqlRootParams: { id: "list" }
 				}
 			},
 			options: { type: "object" },
@@ -107,7 +136,7 @@ module.exports = {
 				}
 			},
 
-			// List the not deleted boards
+			// List the not deleted lists
 			notDeleted: { deletedAt: null }
 		},
 
@@ -159,15 +188,6 @@ module.exports = {
 		remove: {
 			needEntity: true,
 			permissions: [C.ROLE_BOARD_MEMBER]
-		},
-
-		getNextPosition: {
-			visibility: "protected",
-			handler(ctx) {
-				return this.findEntities(ctx).then(
-					lists => lists.reduce((a, list) => Math.max(a, list.position), 0) + 1
-				);
-			}
 		}
 	},
 
@@ -201,17 +221,7 @@ module.exports = {
 	/**
 	 * Methods
 	 */
-	methods: {
-		/**
-		 * Validate the `board` property of list.
-		 */
-		validateBoard({ ctx, value }) {
-			return ctx
-				.call("v1.boards.resolve", { id: value, throwIfNotExist: true, fields: ["id"] })
-				.then(() => true)
-				.catch(err => err.message);
-		}
-	},
+	methods: {},
 
 	/**
 	 * Service created lifecycle event handler
@@ -221,9 +231,7 @@ module.exports = {
 	/**
 	 * Service started lifecycle event handler
 	 */
-	started() {
-		fs.writeFileSync("./service-schema.json", JSON.stringify(this.schema, null, 4), "utf8");
-	},
+	started() {},
 
 	/**
 	 * Service stopped lifecycle event handler

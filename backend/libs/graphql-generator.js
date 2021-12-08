@@ -62,7 +62,8 @@ function getGraphqlTypeFromField(res, fieldName, field, kind) {
 
 	// Required
 	// If there is `set` we can't set the required maybe the value will be set in the `set`
-	if (field.required && kind != "update" && !field.set && !field.onCreate) type += "!";
+	if (field.required && kind != "update" && !field.set && !field.default && !field.onCreate)
+		type += "!";
 	else if (field.primaryKey) type += "!";
 
 	return {

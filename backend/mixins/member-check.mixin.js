@@ -26,9 +26,22 @@ module.exports = {
 						return ctx.call("v1.boards.resolve", { id: ctx.locals.entity.board.id });
 					} else if (_.isString(ctx.locals.entity.board)) {
 						return ctx.call("v1.boards.resolve", { id: ctx.locals.entity.board });
+					} else if (_.isObject(ctx.locals.entity.list)) {
+						const list = await ctx.call("v1.lists.resolve", {
+							id: ctx.locals.entity.list.id
+						});
+						return ctx.call("v1.boards.resolve", { id: list.board });
+					} else if (_.isString(ctx.locals.entity.list)) {
+						const list = await ctx.call("v1.lists.resolve", {
+							id: ctx.locals.entity.list
+						});
+						return ctx.call("v1.boards.resolve", { id: list.board });
 					}
 				} else if (_.isString(ctx.params.board)) {
 					return ctx.call("v1.boards.resolve", { id: ctx.params.board });
+				} else if (_.isString(ctx.params.list)) {
+					const list = await ctx.call("v1.lists.resolve", { id: ctx.params.list });
+					return ctx.call("v1.boards.resolve", { id: list.board });
 				}
 			}
 		},

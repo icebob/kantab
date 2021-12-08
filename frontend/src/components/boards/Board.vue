@@ -177,6 +177,7 @@ export default {
 
 .new-list-placeholder {
 	width: 240px;
+	min-width: 240px;
 	height: 80px;
 	padding: 0.5em;
 
