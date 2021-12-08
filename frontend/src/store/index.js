@@ -255,6 +255,7 @@ export default new Vuex.Store({
 									title
 									description
 									position
+									color
 									createdAt
 									updatedAt
 								}

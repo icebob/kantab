@@ -11,30 +11,29 @@
 					drag-handle-selector=".list-drag-handle"
 					:drop-placeholder="upperDropPlaceholderOptions"
 				>
-					<Draggable v-for="column in lists" :key="column.position">
+					<Draggable v-for="list in lists" :key="list.id">
 						<div class="list panel primary">
-							<div class="header flex align-center">
+							<div class="header flex align-center" :style="getListHeaderStyle(list)">
 								<span v-if="user" class="list-drag-handle">&#x2630;</span>
-								<span class="list-title flex-item-1">{{ column.title }}</span>
+								<span class="list-title flex-item-1">{{ list.title }}</span>
 								<button
 									v-if="user"
 									class="button outline small"
-									@click="showDialog(column)"
+									@click="showDialog(list)"
 								>
 									<i class="fa fa-pencil"></i>
 								</button>
 							</div>
 							<Container
 								group-name="col"
-								@drop="e => onCardDrop(column.id, e)"
-								:get-child-payload="getCardPayload(column.id)"
+								@drop="e => onCardDrop(list.id, e)"
 								drag-class="card-ghost"
 								drop-class="card-ghost-drop"
 								:drop-placeholder="dropPlaceholderOptions"
 							>
-								<Draggable v-for="card in column.children" :key="card.id">
-									<div :class="card.props.className" :style="card.props.style">
-										<p>{{ card.data }}</p>
+								<Draggable v-for="card in list.cards" :key="card.id">
+									<div>
+										<p>{{ card.title }}</p>
 									</div>
 								</Draggable>
 							</Container>
@@ -59,6 +58,7 @@ import { Container, Draggable } from "vue-smooth-dnd";
 import { mapState, mapActions } from "vuex";
 import dateFormatter from "../../mixins/dateFormatter";
 import EditBoardDialog from "../EditBoardDialog";
+import { getTextColorByBackgroundColor } from "../../utils";
 
 export default {
 	props: {
@@ -132,10 +132,14 @@ export default {
 				this.scene = scene;
 			}
 		},
-		getCardPayload(columnId) {
-			return index => {
-				return this.scene.children.filter(p => p.id === columnId)[0].children[index];
-			};
+
+		getListHeaderStyle(list) {
+			if (list.color) {
+				return {
+					backgroundColor: list.color,
+					color: getTextColorByBackgroundColor(list.color)
+				};
+			}
 		}
 	},
 	async created() {
