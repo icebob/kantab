@@ -142,7 +142,10 @@ module.exports = {
 						throwIfNotExist: false
 					});
 					if (res) {
-						query.list = params.list;
+						if (ctx.action.rawName != "update") {
+							// Support moving card between lists
+							query.list = params.list;
+						}
 						return query;
 					}
 					throw new MoleculerClientError(

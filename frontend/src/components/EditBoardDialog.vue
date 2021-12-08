@@ -129,39 +129,31 @@ export default {
 			if (this.isUpdate) {
 				if (entity.__typename == "Board") {
 					await this.updateBoard({
-						input: {
-							id: this.entity.id,
-							title: this.entity.title,
-							description: this.entity.description,
-							public: this.entity.public
-						}
+						id: this.entity.id,
+						title: this.entity.title,
+						description: this.entity.description,
+						public: this.entity.public
 					});
 				} else {
 					await this.updateList({
-						input: {
-							id: this.entity.id,
-							title: this.entity.title,
-							description: this.entity.description,
-							board: this.entity.boardId
-						}
+						id: this.entity.id,
+						title: this.entity.title,
+						description: this.entity.description,
+						board: this.entity.boardId
 					});
 				}
 			} else {
 				if (!this.entity.boardId) {
 					await this.createBoard({
-						input: {
-							title: this.entity.title,
-							description: this.entity.description,
-							public: this.entity.public
-						}
+						title: this.entity.title,
+						description: this.entity.description,
+						public: this.entity.public
 					});
 				} else {
 					await this.createList({
-						input: {
-							board: this.entity.boardId,
-							title: this.entity.title,
-							description: this.entity.description
-						}
+						board: this.entity.boardId,
+						title: this.entity.title,
+						description: this.entity.description
 					});
 				}
 			}

@@ -104,7 +104,7 @@ export default new (class Authenticator {
 		if (res.token) {
 			const user = await this.applyToken(res.token);
 			await apolloAuth();
-			await store.dispatch("getBoardsAll");
+			await store.dispatch("getBoards");
 			const { redirect } = store.state.route.query;
 			router.push(redirect ? redirect : { name: "home" });
 			return user;

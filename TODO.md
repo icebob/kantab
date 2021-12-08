@@ -6,13 +6,14 @@
   - [ ] https://www.npmtrends.com/otpauth-vs-otplib-vs-speakeasy
   - [ ] https://github.com/yeojz/otplib
   - [ ] https://github.com/hectorm/otpauth
+- [ ] remove deleted boards, list, cards after 30 days
+- [ ] openapi UI not working
 
 
 ## Boards
 - [ ] Only the owner can make a board to public/private
 
 ## Lists
-- [ ] Set default position value if null. Get the max position + 1
 
 
 ## Cards
@@ -40,3 +41,8 @@
 
 
 ## Frontend
+
+## Lists
+- [ ] collapsible lists
+- [ ] editable color of list
+- [ ] scrolling at moving

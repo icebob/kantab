@@ -1,58 +1,64 @@
 <template>
-	<dir>
+	<div>
 		<Logo />
-		<h4>Home</h4>
-		<div style="margin: 15px">
-			<!-- 			<pre v-if="boards"><code>{{ boards }}</code></pre> -->
-			<button v-if="user" style="margin: 15px" class="button primary" @click="showDialog()">
-				Create board
-			</button>
-		</div>
 		<div style="margin: 15px" class="form-group">
-			<!-- <pre v-if="boardsApollo"><code>{{ boardsApollo}}</code></pre> -->
-			<fieldset v-if="boards" class="content flex align-start justify-center panels wrap">
+			<div v-if="boards" class="content flex align-start justify-center panels wrap">
 				<div v-for="board in boards" :key="board.id">
-					<div class="card" style="margin: 15px">
-						<div class="block">
-							<div>
-								<span class="title">{{ board.title }}</span>
+					<router-link
+						:to="{ name: 'Board', params: { id: board.id } }"
+						class="div text-nodec"
+					>
+						<div class="card" style="margin: 1em; min-width: 250px">
+							<div v-if="user && board.public" class="ribbon right blue">
+								<span>Public</span>
 							</div>
-							<div class="body">
-								<div style="margin-bottom: 10px">{{ board.description }}</div>
-								<div style="margin-bottom: 10px">{{ board.id }}</div>
-
-								<div>
-									<button v-if="user" class="button" @click="showDialog(board)">
-										<i class="fa fa-edit"></i>
-									</button>
-
-									<router-link
-										:to="{ name: 'Board', params: { id: board.id } }"
-										class="button primary"
-										style="margin-left: 10px"
-									>
-										Open
-									</router-link>
+							<div class="block">
+								<div style="margin-bottom: 0.3em">
+									<span class="title">{{ board.title }}</span>
+								</div>
+								<div class="body">
+									<div>
+										<span v-if="board.description" class="text-muted">{{
+											board.description
+										}}</span>
+										<span
+											v-else
+											class="text-muted text-italic"
+											style="font-size: 0.8em"
+											>no description</span
+										>
+									</div>
 								</div>
 							</div>
+							<div class="block">
+								<small class="text-muted"
+									>Modified at
+									{{ dateToAgo(board.updatedAt || board.createdAt) }}</small
+								>
+							</div>
 						</div>
-					</div>
+					</router-link>
 				</div>
-			</fieldset>
+			</div>
 		</div>
 
+		<button class="new-board button fab large primary icon" @click="showDialog()">
+			<i class="fa fa-plus"></i>Primary
+		</button>
+
 		<edit-board-dialog ref="editDialog" />
-	</dir>
+	</div>
 </template>
 
 <script>
 import Logo from "./account/partials/Logo";
-/* import { apolloClient } from "../apollo";
-import gql from "graphql-tag"; */
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
+import dateFormatter from "../mixins/dateFormatter";
 import EditBoardDialog from "../components/EditBoardDialog";
 
 export default {
+	mixins: [dateFormatter],
+
 	components: {
 		Logo,
 		EditBoardDialog
@@ -69,3 +75,12 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+.new-board {
+	position: fixed;
+	bottom: 1em;
+	right: 1em;
+	z-index: 1;
+}
+</style>

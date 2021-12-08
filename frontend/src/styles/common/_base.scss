@@ -31,9 +31,11 @@
 .text-justify {	text-align: justify !important; }
 
 //.text-muted { 		color: mix($textColor, $backgroundColor, 60%) !important; }
-.text-muted { 		color: darken($color4, 20%) !important; }
+.text-muted { 		color: darken($color4, 30%) !important; }
+.text-italic { 		font-style: italic; }
 .text-nowrap {		white-space: nowrap !important; }
 .text-uppercase { 	text-transform: uppercase !important; }
+.text-nodec { 	text-decoration: none !important; }
 
 .disable-text-selection {
 	-webkit-touch-callout: none;
