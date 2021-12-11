@@ -1,4 +1,6 @@
-@import "variables";
+@use "sass:math";
+
+@import "../_variables.scss";
 
 @mixin clearfix() {
 	&:before,
@@ -76,8 +78,8 @@
 
 @mixin center($size) {
 	left: 50%;
-	margin-left: -($size / 2);
-	margin-top: -($size / 2);
+	margin-left: math.div($size, -2);
+	margin-top: math.div($size, -2);
 	position: absolute;
 	top: 50%;
 }

@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import SocialLinks from "./account/partials/SocialLinks";
+import SocialLinks from "./account/partials/SocialLinks.vue";
 import { mapState, mapActions } from "vuex";
 import qrcode from "yaqrcode";
 

@@ -2,12 +2,12 @@ import { ApolloClient } from "apollo-client";
 import { createHttpLink } from "apollo-link-http";
 import { InMemoryCache } from "apollo-cache-inmemory";
 import { setContext } from "apollo-link-context";
-import * as Cookie from "js-cookie";
+import Cookie from "js-cookie";
 
 const COOKIE_TOKEN_NAME = "jwt-token";
 // HTTP connection to the API
 const httpLink = createHttpLink({
-	uri: "http://localhost:4000/graphql"
+	uri: "/graphql"
 });
 
 // Cache implementation

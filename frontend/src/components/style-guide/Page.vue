@@ -16,16 +16,16 @@
 </template>
 
 <script>
-import Colors from "./Colors";
-import Typo from "./Typo";
-import Buttons from "./Buttons";
-import Forms from "./Forms";
-import Alerts from "./Alerts";
-import Tables from "./Tables";
-import Tags from "./Tags";
-import Progressbars from "./Progressbars";
-import Panels from "./Panels";
-import Media from "./Media";
+import Colors from "./Colors.vue";
+import Typo from "./Typo.vue";
+import Buttons from "./Buttons.vue";
+import Forms from "./Forms.vue";
+import Alerts from "./Alerts.vue";
+import Tables from "./Tables.vue";
+import Tags from "./Tags.vue";
+import Progressbars from "./Progressbars.vue";
+import Panels from "./Panels.vue";
+import Media from "./Media.vue";
 
 export default {
 	components: {

@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import SectionHeader from "./section-header";
+import SectionHeader from "./section-header.vue";
 
 export default {
 	components: {
@@ -52,7 +52,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/variables";
+@import "../../styles/_variables.scss";
 
 .colors {
 	$boxSize: 150px;

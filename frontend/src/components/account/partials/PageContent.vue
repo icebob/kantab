@@ -5,7 +5,7 @@
 </template>
 
 <style lang="scss" scoped>
-@import "../../../styles/variables";
+@import "../../../styles/_variables.scss";
 
 main {
 	position: absolute;

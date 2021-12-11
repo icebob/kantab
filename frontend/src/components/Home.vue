@@ -53,10 +53,10 @@
 </template>
 
 <script>
-import Logo from "./account/partials/Logo";
+import Logo from "./account/partials/Logo.vue";
 import { mapState } from "vuex";
 import dateFormatter from "../mixins/dateFormatter";
-import EditBoardDialog from "../components/EditBoardDialog";
+import EditBoardDialog from "../components/EditBoardDialog.vue";
 
 export default {
 	mixins: [dateFormatter],

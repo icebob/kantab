@@ -3,7 +3,7 @@
 </template>
 
 <style lang="scss" scoped>
-@import "../../../styles/variables";
+@import "../../../styles/_variables.scss";
 
 h3 {
 	margin: 0;
