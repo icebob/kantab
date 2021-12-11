@@ -2,24 +2,15 @@
   "name": "kantab-frontend",
   "version": "0.2.0",
   "description": "Kanban board application with Moleculer microservices & Vue.js",
+  "author": "Icebob",
   "scripts": {
-    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "lint": "vue-cli-service lint",
-    "lint:fix": "vue-cli-service lint --fix",
-    "deps": "npm-check -u"
+    "deps": "npm-check -u",
+    "dev": "vue-cli-service serve",
+    "lint:fix": "vue-cli-service lint --fix"
   },
-  "keywords": [
-    "microservices",
-    "moleculer"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/icebob/kantab.git"
-  },
-  "author": "Icebob",
-  "license": "GPL-3.0-or-later",
   "dependencies": {
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
@@ -46,6 +37,7 @@
     "@vue/cli-service": "^4.5.15",
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/test-utils": "^1.3.0",
+    "autoprefixer": "^10.4.0",
     "axios": "^0.24.0",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.32.0",
@@ -55,11 +47,13 @@
     "js-cookie": "^3.0.1",
     "moment": "^2.29.1",
     "npm-check": "^5.9.2",
+    "postcss": "^8.4.4",
     "prettier": "^2.5.0",
     "pug": "^3.0.2",
     "sass": "^1.44.0",
     "sass-loader": "^8.0.2",
     "sweetalert": "^2.1.2",
+    "tailwindcss": "^3.0.1",
     "vue-izitoast": "^1.2.1",
     "vue-template-compiler": "^2.6.14",
     "vue-websocket": "^0.2.3",
@@ -68,5 +62,14 @@
   },
   "engines": {
     "node": ">= 12.x.x"
+  },
+  "keywords": [
+    "microservices",
+    "moleculer"
+  ],
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icebob/kantab.git"
   }
 }

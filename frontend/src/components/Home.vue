@@ -42,6 +42,8 @@
 			</div>
 		</div>
 
+		<div class="w-40 h-40 bg-pink-500"></div>
+
 		<button class="new-board button fab large primary icon" @click="showDialog()">
 			<i class="fa fa-plus"></i>Primary
 		</button>

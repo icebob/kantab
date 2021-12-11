@@ -45,6 +45,9 @@ const apolloProvider = new VueApollo({
 });
 Vue.use(VueApollo);
 
+// TalwindCSS
+import "./tailwind.css";
+
 // Authenticator
 import authenticator from "./authenticator";
 Vue.prototype.$authenticator = authenticator;
