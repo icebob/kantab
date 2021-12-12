@@ -5,8 +5,39 @@ import i18NBackendAdapter from "i18next-multiload-backend-adapter";
 
 import moment from "moment";
 
-function install(Vue, callback) {
-	i18next
+export default function () {
+	return init()
+		.then(t => {
+			return app => {
+				app.config.globalProperties.$i18n = i18next;
+				app.config.globalProperties.$t = i18next.t;
+				app.config.globalProperties.$lang = i18next.language;
+				app.config.globalProperties.$t = t;
+
+				// Register as a directive
+				app.directive("i18n", {
+					bind: function (el, binding) {
+						el.innerHTML = i18next.t(binding.expression);
+					}
+				});
+
+				moment.locale(i18next.language);
+
+				console.log(
+					`I18Next initialized! Language: ${
+						i18next.language
+					}, Date format: ${moment().format("LLL")}`
+				);
+			};
+		})
+		.catch(err => {
+			console.error("Unable to initialize I18Next", err);
+			return err;
+		});
+}
+
+async function init() {
+	return i18next
 		.use(i18NBackendAdapter)
 		.use(i18NextLanguageDetector)
 		.init({
@@ -33,52 +64,17 @@ function install(Vue, callback) {
 			detection: {
 				order: ["cookie", "navigator"]
 				/*
-				// keys or params to lookup language from
-				lookupCookie: 'i18next',
-				lookupLocalStorage: 'i18nextLng',
+					// keys or params to lookup language from
+					lookupCookie: 'i18next',
+					lookupLocalStorage: 'i18nextLng',
 
-				// cache user language on
-				caches: ['localStorage', 'cookie']
+					// cache user language on
+					caches: ['localStorage', 'cookie']
 
-				// optional expire and domain for set cookie
-				cookieMinutes: 10,
-				cookieDomain: 'myDomain',
-				*/
+					// optional expire and domain for set cookie
+					cookieMinutes: 10,
+					cookieDomain: 'myDomain',
+					*/
 			}
-		})
-		.then(t => {
-			Vue.prototype.$lang = i18next.language;
-			Vue.prototype.$t = t;
-
-			moment.locale(i18next.language);
-
-			console.log(
-				`I18Next initialized! Language: ${i18next.language}, Date format: ${moment().format(
-					"LLL"
-				)}`
-			);
-
-			if (callback) return callback(i18next, t);
-		})
-		.catch(err => {
-			console.error("Unable to initialize I18Next", err);
-			return err;
 		});
-
-	// Register as a filter
-	Vue.filter("i18n", i18next.t);
-
-	// Register as a directive
-	Vue.directive("i18n", {
-		bind: function (el, binding) {
-			el.innerHTML = i18next.t(binding.expression);
-		}
-	});
-
-	Vue.prototype.$i18n = i18next;
-	Vue.prototype.$t = i18next.t;
 }
-
-export default {
-	install
-};

@@ -4,10 +4,10 @@ import { createApp, h } from "vue";
 import VueI18Next from "./i18next";
 
 // --- VUE-ROUTER ---
-import router from "./router/index";
+import router from "./router";
 
 // --- VUEX STORE ---
-import store from "./store/index";
+import store from "./store";
 
 // --- VUE-ROUTER-SYNC ---
 import { sync } from "vuex-router-sync";
@@ -47,20 +47,20 @@ import authenticator from "./authenticator";
 // --- APP ---
 import App from "./App.vue";
 
-//Vue.use(VueI18Next, () => {
 // --- BOOTSTRAP ---
-const app = createApp({
-	render: () => h(App)
+VueI18Next().then(i18n => {
+	const app = createApp({
+		render: () => h(App)
+	});
+	app.use(store);
+	app.use(router);
+	app.use(i18n);
+	app.use(apolloProvider);
+
+	app.config.globalProperties.$swal = swal;
+	app.config.globalProperties.$toast = iziToast;
+	app.config.globalProperties.$apollo = apolloClient;
+	app.config.globalProperties.$authenticator = authenticator;
+
+	app.mount("#app");
 });
-app.use(store);
-app.use(router);
-app.use(apolloProvider);
-
-app.config.globalProperties.$swal = swal;
-app.config.globalProperties.$toast = iziToast;
-app.config.globalProperties.$apollo = apolloClient;
-app.config.globalProperties.$authenticator = authenticator;
-app.config.globalProperties.$t = text => text;
-
-app.mount("#app");
-//});
