@@ -1,4 +1,4 @@
-import { createStore } from 'vuex'
+import { createStore } from "vuex";
 import authenticator from "../authenticator";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
@@ -461,7 +461,7 @@ export default createStore({
 			const result = [...list.cards.rows];
 
 			if (fromIndex !== null) {
-				result.splice(fromIndex, 1)[0];
+				result.splice(fromIndex, 1);
 			}
 
 			if (toIndex !== null) {
@@ -534,7 +534,13 @@ export default createStore({
 		},
 
 		SET_BOARD(state, board) {
-			state.board = board;
+			console.log(board, Object.isFrozen(board));
+			// TODO: Apollo client set it to frozen, so vuex can't update it.
+			if (Object.isFrozen(board)) {
+				state.board = JSON.parse(JSON.stringify(board));
+			} else {
+				state.board = board;
+			}
 		},
 
 		SET_BOARDS(state, boards) {
@@ -565,9 +571,9 @@ export default createStore({
 		UPDATE_LIST(state, list) {
 			const found = state.board.lists.rows.find(b => b.id == list.id);
 			if (found) {
-				Object.assign(found, board);
+				Object.assign(found, list);
 			} else {
-				state.board.lists.rows = [...state.board.lists.rows, list];
+				state.board.lists.rows.push(list);
 			}
 		},
 

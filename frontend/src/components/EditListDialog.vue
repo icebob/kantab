@@ -9,18 +9,18 @@
 						<div class="form-group">
 							<label>Title</label>
 							<input
+								ref="mainInput"
+								v-model="entity.title"
 								type="text"
 								placeholder="My epic title"
 								class="form-control"
-								v-model="entity.title"
-								ref="mainInput"
 							/>
 							<label>Description</label>
 							<input
+								v-model="entity.description"
 								type="text"
 								placeholder="My epic description"
 								class="form-control"
-								v-model="entity.description"
 							/>
 						</div>
 					</fieldset>
@@ -70,11 +70,9 @@ export default {
 			"removeList"
 		]),
 		show({ list, boardId }) {
-			if (list && boardId) {
-				console.log("list", boardId);
+			if (list) {
 				this.pageTitle = "Edit list";
 				this.entity = list;
-				this.boardId = boardId;
 				this.isUpdate = true;
 			} else {
 				this.pageTitle = "Add list";
@@ -84,6 +82,7 @@ export default {
 					description: ""
 				};
 			}
+			this.boardId = boardId;
 			this.visible = true;
 			this.$nextTick(() => this.$refs.mainInput.focus());
 		},

@@ -27,11 +27,7 @@ import swal from "sweetalert";
 import iziToast from "./toast";
 
 // --- VUE APOLLO CLIENT ---
-import { createApolloProvider } from "@vue/apollo-option";
-import { apolloClient } from "./apollo";
-const apolloProvider = createApolloProvider({
-	defaultClient: apolloClient
-});
+import { apolloProvider, apolloClient } from "./apollo";
 
 // TalwindCSS
 import "./index.css";
@@ -41,8 +37,6 @@ import "./styles/style.scss";
 
 // Authenticator
 import authenticator from "./authenticator";
-
-//Vue.config.productionTip = false;
 
 // --- APP ---
 import App from "./App.vue";

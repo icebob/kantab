@@ -1,5 +1,6 @@
 import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client/core";
 import { setContext } from "apollo-link-context";
+import { createApolloProvider } from "@vue/apollo-option";
 
 import Cookie from "js-cookie";
 
@@ -8,9 +9,6 @@ const COOKIE_TOKEN_NAME = "jwt-token";
 const httpLink = createHttpLink({
 	uri: "/graphql"
 });
-
-// Cache implementation
-const cache = new InMemoryCache();
 
 const authLink = setContext((_, { headers }) => {
 	const token = Cookie.get(COOKIE_TOKEN_NAME);
@@ -27,12 +25,20 @@ export async function apolloAuth() {
 	try {
 		await apolloClient.resetStore();
 	} catch (e) {
-		console.log("%cError on cache reset (login)", "color: orange;", e.message);
+		console.error("Error on cache reset (login)", e.message);
 	}
 }
 
 export const apolloClient = new ApolloClient({
 	link: authLink.concat(httpLink),
-	//link: httpLink,
-	cache
+	cache: new InMemoryCache({
+		addTypename: false,
+		freezeResults: false,
+		resultCaching: false
+	}),
+	assumeImmutableResults: false
+});
+
+export const apolloProvider = createApolloProvider({
+	defaultClient: apolloClient
 });

@@ -7,10 +7,10 @@
 			<div class="content flex align-start" style="margin: 1em">
 				<Container
 					orientation="horizontal"
-					@drop="onListDrop($event)"
 					drag-handle-selector=".list-drag-handle"
-					:drop-placeholder="upperDropPlaceholderOptions"
+					:drop-placeholder="listDropPlaceholderOptions"
 					:get-child-payload="idx => board.lists.rows[idx]"
+					@drop="onListDrop($event)"
 				>
 					<Draggable v-for="list in board.lists.rows" :key="list.id">
 						<div class="list panel primary">
@@ -30,11 +30,11 @@
 							<Container
 								class="list-content"
 								group-name="col"
-								@drop="e => onCardDrop(list, e)"
 								drag-class="card-ghost"
 								drop-class="card-ghost-drop"
-								:drop-placeholder="dropPlaceholderOptions"
+								:drop-placeholder="cardDropPlaceholderOptions"
 								:get-child-payload="idx => list.cards.rows[idx]"
+								@drop="e => onCardDrop(list, e)"
 							>
 								<Draggable v-for="card in list.cards.rows" :key="card.id">
 									<div class="card">
@@ -55,10 +55,10 @@
 								</div>
 								<div v-else>
 									<textarea
-										class="adding-card-textarea"
-										v-model="addingCardTitle"
-										placeholder="Enter card title"
 										ref="addingCardTextarea"
+										v-model="addingCardTitle"
+										class="adding-card-textarea"
+										placeholder="Enter card title"
 										@keydown.enter.stop.prevent="addCard(list)"
 										@keydown.esc.stop.prevent="cancelAddingCard"
 									></textarea>
@@ -88,18 +88,18 @@ import EditListDialog from "../EditListDialog.vue";
 import { getTextColorByBackgroundColor } from "../../utils";
 
 export default {
-	props: {
-		id: {
-			required: true,
-			type: String
-		}
-	},
 	components: {
 		EditListDialog,
 		Container,
 		Draggable
 	},
 	mixins: [dateFormatter],
+	props: {
+		id: {
+			required: true,
+			type: String
+		}
+	},
 
 	data() {
 		return {
@@ -107,12 +107,12 @@ export default {
 			addingCardList: null,
 			addingCardTitle: "",
 
-			upperDropPlaceholderOptions: {
+			listDropPlaceholderOptions: {
 				className: "cards-drop-preview",
 				animationDuration: "150",
 				showOnTop: true
 			},
-			dropPlaceholderOptions: {
+			cardDropPlaceholderOptions: {
 				className: "drop-preview",
 				animationDuration: "150",
 				showOnTop: true
@@ -122,6 +122,17 @@ export default {
 	computed: {
 		...mapState(["user", "board"])
 	},
+
+	watch: {
+		async id() {
+			await this.getBoardById(this.id);
+		}
+	},
+
+	async mounted() {
+		await this.getBoardById(this.id);
+	},
+
 	methods: {
 		...mapActions([
 			"getBoardById",
@@ -197,16 +208,6 @@ export default {
 					color: getTextColorByBackgroundColor(list.color)
 				};
 			}
-		}
-	},
-
-	async mounted() {
-		await this.getBoardById(this.id);
-	},
-
-	watch: {
-		async id() {
-			await this.getBoardById(this.id);
 		}
 	}
 };
