@@ -1,10 +1,11 @@
-import Vue from "vue";
-import Vuex from "vuex";
+import { createStore } from 'vuex'
 import authenticator from "../authenticator";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
 
-Vue.use(Vuex);
+function showToast() {
+	//show izitoast
+}
 
 import axios from "axios";
 axios.defaults.headers.common["Content-Type"] = "application/json";
@@ -29,7 +30,7 @@ axios.interceptors.response.use(
 	}
 );
 
-export default new Vuex.Store({
+export default createStore({
 	state: {
 		// Logged in user entity
 		user: null,
@@ -139,7 +140,7 @@ export default new Vuex.Store({
 				return res.data.boardById;
 			} catch (err) {
 				console.log("getBoardById error", err);
-				Vue.prototype.toast.show("Could not load board: " + err.message);
+				showToast("Could not load board: " + err.message);
 			}
 		},
 
@@ -172,7 +173,7 @@ export default new Vuex.Store({
 				return res.data.boards.rows;
 			} catch (err) {
 				console.log("getBoard error", err);
-				Vue.prototype.toast.show("Could not load boards: " + err.message);
+				showToast("Could not load boards: " + err.message);
 			}
 		},
 
@@ -202,10 +203,10 @@ export default new Vuex.Store({
 				});
 
 				commit("ADD_BOARD", res.data.boardCreate);
-				Vue.prototype.toast.show("Board created");
+				showToast("Board created");
 			} catch (err) {
 				console.error("createBoard err", err);
-				Vue.prototype.toast.show("Could not create board: " + err.message);
+				showToast("Could not create board: " + err.message);
 			}
 		},
 
@@ -235,10 +236,10 @@ export default new Vuex.Store({
 				});
 
 				commit("UPDATE_BOARD", res.data.boardUpdate);
-				Vue.prototype.toast.show("Board updated");
+				showToast("Board updated");
 			} catch (err) {
 				console.error("updateBoard error: ", err);
-				Vue.prototype.toast.show("Could not update board: " + err.message);
+				showToast("Could not update board: " + err.message);
 			}
 		},
 
@@ -254,10 +255,10 @@ export default new Vuex.Store({
 				});
 
 				commit("REMOVE_BOARD", res.data.boardRemove);
-				Vue.prototype.toast.show("Board removed");
+				showToast("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
-				Vue.prototype.toast.show("Board creation failed: " + err.message);
+				showToast("Board creation failed: " + err.message);
 			}
 		},
 
@@ -288,10 +289,10 @@ export default new Vuex.Store({
 				});
 				console.log("res", res);
 				commit("ADD_LIST", res.data.listCreate);
-				Vue.prototype.toast.show("List created");
+				showToast("List created");
 			} catch (err) {
 				console.error("createList err", err);
-				Vue.prototype.toast.show("Could not create list: " + err.message);
+				showToast("Could not create list: " + err.message);
 			}
 		},
 
@@ -321,10 +322,10 @@ export default new Vuex.Store({
 				});
 
 				commit("UPDATE_LIST", res.data.listUpdate);
-				Vue.prototype.toast.show("List updated");
+				showToast("List updated");
 			} catch (err) {
 				console.error("updateList error: ", err);
-				Vue.prototype.toast.show("Could not update list: " + err.message);
+				showToast("Could not update list: " + err.message);
 			}
 		},
 
@@ -340,10 +341,10 @@ export default new Vuex.Store({
 					variables: { id }
 				});
 				commit("REMOVE_LIST", res.data.listRemove);
-				Vue.prototype.toast.show("List removed");
+				showToast("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
-				Vue.prototype.toast.show("Could not remove list: " + err.message);
+				showToast("Could not remove list: " + err.message);
 			}
 		},
 
@@ -364,10 +365,10 @@ export default new Vuex.Store({
 				});
 				console.log("res", res);
 				commit("ADD_CARD", { list, card: res.data.cardCreate });
-				Vue.prototype.toast.show("Card created");
+				showToast("Card created");
 			} catch (err) {
 				console.error("createCard err", err);
-				Vue.prototype.toast.show("Could not create card: " + err.message);
+				showToast("Could not create card: " + err.message);
 			}
 		},
 
@@ -388,10 +389,10 @@ export default new Vuex.Store({
 				});
 
 				commit("UPDATE_CARD", { list, card: res.data.cardUpdate });
-				Vue.prototype.toast.show("Card updated");
+				showToast("Card updated");
 			} catch (err) {
 				console.error("updateCard error: ", err);
-				Vue.prototype.toast.show("Could not update card: " + err.message);
+				showToast("Could not update card: " + err.message);
 			}
 		},
 
@@ -406,10 +407,10 @@ export default new Vuex.Store({
 					variables: { id }
 				});
 				commit("REMOVE_CARD", { list, id });
-				Vue.prototype.toast.show("Card removed");
+				showToast("Card removed");
 			} catch (err) {
 				console.error("removeCard error: ", err);
-				Vue.prototype.toast.show("Could not remove card: " + err.message);
+				showToast("Could not remove card: " + err.message);
 			}
 		},
 

@@ -1,7 +1,6 @@
-import { ApolloClient } from "apollo-client";
-import { createHttpLink } from "apollo-link-http";
-import { InMemoryCache } from "apollo-cache-inmemory";
+import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client/core";
 import { setContext } from "apollo-link-context";
+
 import Cookie from "js-cookie";
 
 const COOKIE_TOKEN_NAME = "jwt-token";
@@ -23,6 +22,7 @@ const authLink = setContext((_, { headers }) => {
 		}
 	};
 });
+
 export async function apolloAuth() {
 	try {
 		await apolloClient.resetStore();
@@ -33,5 +33,6 @@ export async function apolloAuth() {
 
 export const apolloClient = new ApolloClient({
 	link: authLink.concat(httpLink),
+	//link: httpLink,
 	cache
 });

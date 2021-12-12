@@ -1,8 +1,9 @@
-// vite.config.js
-import { createVuePlugin } from "vite-plugin-vue2";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
 
-export default {
-	plugins: [createVuePlugin(/* options */)],
+// https://vitejs.dev/config/
+export default defineConfig({
+	plugins: [vue()],
 	build: {
 		outDir: "../public",
 		chunkSizeWarningLimit: 1024
@@ -16,4 +17,4 @@ export default {
 			"/graphql": "http://localhost:4000"
 		}
 	}
-};
+});

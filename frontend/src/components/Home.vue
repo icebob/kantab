@@ -42,7 +42,7 @@
 			</div>
 		</div>
 
-		<div class="w-40 h-40 text-primary text-3xl">Hello</div>
+		<div class="w-40 h-10 bg-primary text-3xl ml-5 text-center rounded-md text-black">Hello</div>
 
 		<button class="new-board button fab large primary icon" @click="showDialog()">
 			<i class="fa fa-plus"></i>Primary
