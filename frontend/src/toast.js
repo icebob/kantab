@@ -1,10 +1,12 @@
-import VueIziToast from "vue-izitoast";
+import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.css";
-import Vue from "vue";
 
-Vue.use(VueIziToast, {
+iziToast.settings({
 	theme: "light",
 	position: "topRight",
 	animateInside: false,
 	transitionIn: "fadeInDown"
+	//timeout: 10000,
 });
+
+export default iziToast;

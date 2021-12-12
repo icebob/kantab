@@ -3,8 +3,10 @@ import authenticator from "../authenticator";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
 
-function showToast() {
-	//show izitoast
+import toast from "../toast";
+
+function showToast(msg) {
+	toast.show({ title: msg });
 }
 
 import axios from "axios";
@@ -536,7 +538,7 @@ export default createStore({
 		},
 
 		ADD_BOARD(state, board) {
-			state.boards.push(board);
+			state.boards = [...state.boards, board];
 		},
 
 		UPDATE_BOARD(state, board) {
@@ -544,31 +546,29 @@ export default createStore({
 			if (found) {
 				Object.assign(found, board);
 			} else {
-				state.boards.push(board);
+				state.boards = [...state.boards, board];
 			}
 		},
 
 		REMOVE_BOARD(state, id) {
-			const idx = state.boards.findIndex(b => b.id === id);
-			if (idx >= 0) state.boards.splice(idx, 1);
+			state.boards = state.boards.filter(b => b.id !== id);
 		},
 
-		ADD_LIST(state, board) {
-			state.board.lists.rows.push(board);
+		ADD_LIST(state, list) {
+			state.board.lists.rows = [...state.board.lists.rows, list];
 		},
 
-		UPDATE_LIST(state, board) {
-			const found = state.board.lists.rows.find(b => b.id == board.id);
+		UPDATE_LIST(state, list) {
+			const found = state.board.lists.rows.find(b => b.id == list.id);
 			if (found) {
 				Object.assign(found, board);
 			} else {
-				state.board.lists.rows.push(board);
+				state.board.lists.rows = [...state.board.lists.rows, list];
 			}
 		},
 
 		REMOVE_LIST(state, id) {
-			const idx = state.board.lists.rows.findIndex(b => b.id === id);
-			if (idx >= 0) state.board.lists.rows.splice(idx, 1);
+			state.board.lists.rows = state.board.lists.rows.filter(b => b.id !== id);
 		},
 
 		ADD_CARD(state, { list, card }) {

@@ -24,8 +24,7 @@ import "./registerServiceWorker";
 import swal from "sweetalert";
 
 // --- NOTIFICATIONS (IZITOAST) ---
-import VueIziToast from "vue-izitoast";
-import "izitoast/dist/css/iziToast.css";
+import iziToast from "./toast";
 
 // --- VUE APOLLO CLIENT ---
 import { createApolloProvider } from "@vue/apollo-option";
@@ -56,16 +55,9 @@ const app = createApp({
 app.use(store);
 app.use(router);
 app.use(apolloProvider);
-/*
-app.use(VueIziToast, {
-	theme: "light",
-	position: "topRight",
-	animateInside: false,
-	transitionIn: "fadeInDown"
-});
-*/
+
 app.config.globalProperties.$swal = swal;
-app.config.globalProperties.$toast = VueIziToast;
+app.config.globalProperties.$toast = iziToast;
 app.config.globalProperties.$apollo = apolloClient;
 app.config.globalProperties.$authenticator = authenticator;
 app.config.globalProperties.$t = text => text;

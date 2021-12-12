@@ -76,7 +76,7 @@
 			</div>
 		</div>
 
-		<edit-board-dialog ref="editDialog" />
+		<edit-list-dialog ref="editDialog" />
 	</div>
 </template>
 <script>
@@ -84,7 +84,7 @@ import { Container, Draggable } from "vue3-smooth-dnd";
 
 import { mapState, mapActions } from "vuex";
 import dateFormatter from "../../mixins/dateFormatter";
-import EditBoardDialog from "../EditBoardDialog.vue";
+import EditListDialog from "../EditListDialog.vue";
 import { getTextColorByBackgroundColor } from "../../utils";
 
 export default {
@@ -95,7 +95,7 @@ export default {
 		}
 	},
 	components: {
-		EditBoardDialog,
+		EditListDialog,
 		Container,
 		Draggable
 	},
@@ -132,7 +132,7 @@ export default {
 		]),
 
 		showDialog(list) {
-			this.$refs.editDialog.show({ type: "list", boardId: this.id, list: list });
+			this.$refs.editDialog.show({ boardId: this.id, list: list });
 		},
 
 		addingCardEditMode(list) {

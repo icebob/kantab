@@ -28,6 +28,7 @@
 											>no description</span
 										>
 									</div>
+									<div class="button primary mt-2" @click.prevent.stop="showDialog(board)">Edit</div>
 								</div>
 							</div>
 							<div class="block">
@@ -72,7 +73,7 @@ export default {
 
 	methods: {
 		showDialog(board) {
-			this.$refs.editDialog.show({ type: "board", board });
+			this.$refs.editDialog.show({ board });
 		}
 	}
 };
