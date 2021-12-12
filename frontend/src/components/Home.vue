@@ -1,7 +1,8 @@
 <template>
 	<div>
 		<Logo />
-		<div style="margin: 15px" class="form-group">
+		<div class="m-5 form-group">
+			<h4>My boards</h4>
 			<div v-if="boards" class="content flex align-start justify-center panels wrap">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
@@ -46,31 +47,6 @@
 					</router-link>
 				</div>
 			</div>
-		</div>
-
-		<div
-			class="w-40 h-10 bg-primary text-3xl ml-5 text-center rounded-md text-black"
-			@click="changeA"
-		>
-			{{ arr[0].name }}
-		</div>
-		<div
-			class="w-40 h-10 bg-orange-400 text-3xl ml-5 text-center rounded-md text-black"
-			@click="$toast.warning({ title: 'Hello' })"
-		>
-			Hello
-		</div>
-		<div
-			class="w-40 h-10 bg-red-600 text-3xl ml-5 text-center rounded-md text-black"
-			@click="$toast.error({ title: 'Hello' })"
-		>
-			Hello
-		</div>
-		<div
-			class="w-40 h-10 bg-green-400 text-3xl ml-5 text-center rounded-md text-black"
-			@click="$toast.success({ title: 'Hello' })"
-		>
-			Hello
 		</div>
 
 		<button class="new-board button fab large primary icon" @click="showDialog()">
