@@ -43,7 +43,10 @@
 			</div>
 		</div>
 
-		<div class="w-40 h-10 bg-primary text-3xl ml-5 text-center rounded-md text-black">Hello</div>
+		<div class="w-40 h-10 bg-primary text-3xl ml-5 text-center rounded-md text-black" @click="$toast.info({ title: 'Hello' })">Hello</div>
+		<div class="w-40 h-10 bg-orange-400 text-3xl ml-5 text-center rounded-md text-black" @click="$toast.warning({ title: 'Hello' })">Hello</div>
+		<div class="w-40 h-10 bg-red-600 text-3xl ml-5 text-center rounded-md text-black" @click="$toast.error({ title: 'Hello' })">Hello</div>
+		<div class="w-40 h-10 bg-green-400 text-3xl ml-5 text-center rounded-md text-black" @click="$toast.success({ title: 'Hello' })">Hello</div>
 
 		<button class="new-board button fab large primary icon" @click="showDialog()">
 			<i class="fa fa-plus"></i>Primary

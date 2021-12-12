@@ -5,8 +5,12 @@ import gql from "graphql-tag";
 
 import toast from "../toast";
 
-function showToast(msg) {
-	toast.show({ title: msg });
+function showInfoToast(title) {
+	toast.info({ title });
+}
+
+function showErrorToast(title) {
+	toast.error({ title });
 }
 
 import axios from "axios";
@@ -142,7 +146,7 @@ export default createStore({
 				return res.data.boardById;
 			} catch (err) {
 				console.log("getBoardById error", err);
-				showToast("Could not load board: " + err.message);
+				showInfoToast("Could not load board: " + err.message);
 			}
 		},
 
@@ -175,7 +179,7 @@ export default createStore({
 				return res.data.boards.rows;
 			} catch (err) {
 				console.log("getBoard error", err);
-				showToast("Could not load boards: " + err.message);
+				showInfoToast("Could not load boards: " + err.message);
 			}
 		},
 
@@ -205,10 +209,10 @@ export default createStore({
 				});
 
 				commit("ADD_BOARD", res.data.boardCreate);
-				showToast("Board created");
+				showInfoToast("Board created");
 			} catch (err) {
 				console.error("createBoard err", err);
-				showToast("Could not create board: " + err.message);
+				showErrorToast("Could not create board: " + err.message);
 			}
 		},
 
@@ -238,10 +242,10 @@ export default createStore({
 				});
 
 				commit("UPDATE_BOARD", res.data.boardUpdate);
-				showToast("Board updated");
+				showInfoToast("Board updated");
 			} catch (err) {
 				console.error("updateBoard error: ", err);
-				showToast("Could not update board: " + err.message);
+				showErrorToast("Could not update board: " + err.message);
 			}
 		},
 
@@ -257,10 +261,10 @@ export default createStore({
 				});
 
 				commit("REMOVE_BOARD", res.data.boardRemove);
-				showToast("Board removed");
+				showInfoToast("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
-				showToast("Board creation failed: " + err.message);
+				showErrorToast("Board creation failed: " + err.message);
 			}
 		},
 
@@ -291,10 +295,10 @@ export default createStore({
 				});
 				console.log("res", res);
 				commit("ADD_LIST", res.data.listCreate);
-				showToast("List created");
+				showInfoToast("List created");
 			} catch (err) {
 				console.error("createList err", err);
-				showToast("Could not create list: " + err.message);
+				showErrorToast("Could not create list: " + err.message);
 			}
 		},
 
@@ -324,10 +328,10 @@ export default createStore({
 				});
 
 				commit("UPDATE_LIST", res.data.listUpdate);
-				showToast("List updated");
+				showInfoToast("List updated");
 			} catch (err) {
 				console.error("updateList error: ", err);
-				showToast("Could not update list: " + err.message);
+				showErrorToast("Could not update list: " + err.message);
 			}
 		},
 
@@ -343,10 +347,10 @@ export default createStore({
 					variables: { id }
 				});
 				commit("REMOVE_LIST", res.data.listRemove);
-				showToast("List removed");
+				showInfoToast("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
-				showToast("Could not remove list: " + err.message);
+				showErrorToast("Could not remove list: " + err.message);
 			}
 		},
 
@@ -367,10 +371,10 @@ export default createStore({
 				});
 				console.log("res", res);
 				commit("ADD_CARD", { list, card: res.data.cardCreate });
-				showToast("Card created");
+				showInfoToast("Card created");
 			} catch (err) {
 				console.error("createCard err", err);
-				showToast("Could not create card: " + err.message);
+				showErrorToast("Could not create card: " + err.message);
 			}
 		},
 
@@ -391,10 +395,10 @@ export default createStore({
 				});
 
 				commit("UPDATE_CARD", { list, card: res.data.cardUpdate });
-				showToast("Card updated");
+				showInfoToast("Card updated");
 			} catch (err) {
 				console.error("updateCard error: ", err);
-				showToast("Could not update card: " + err.message);
+				showErrorToast("Could not update card: " + err.message);
 			}
 		},
 
@@ -409,10 +413,10 @@ export default createStore({
 					variables: { id }
 				});
 				commit("REMOVE_CARD", { list, id });
-				showToast("Card removed");
+				showInfoToast("Card removed");
 			} catch (err) {
 				console.error("removeCard error: ", err);
-				showToast("Could not remove card: " + err.message);
+				showErrorToast("Could not remove card: " + err.message);
 			}
 		},
 

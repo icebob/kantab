@@ -3,9 +3,9 @@ import "izitoast/dist/css/iziToast.css";
 
 iziToast.settings({
 	theme: "light",
-	position: "topRight",
+	position: "bottomRight",
 	animateInside: false,
-	transitionIn: "fadeInDown"
+	transitionIn: "fadeInUp"
 	//timeout: 10000,
 });
 
