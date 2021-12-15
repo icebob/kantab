@@ -2,7 +2,7 @@
 	<div>
 		<Logo />
 		<div class="m-5 form-group">
-			<h4>My boards</h4>
+			<h4 class="text-3xl text-center">My boards</h4>
 			<div v-if="boards" class="content flex align-start justify-center panels wrap">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
@@ -58,14 +58,12 @@
 </template>
 
 <script>
-import Logo from "./account/partials/Logo.vue";
 import { mapState } from "vuex";
 import dateFormatter from "../mixins/dateFormatter";
 import EditBoardDialog from "../components/EditBoardDialog.vue";
 
 export default {
 	components: {
-		Logo,
 		EditBoardDialog
 	},
 	mixins: [dateFormatter],

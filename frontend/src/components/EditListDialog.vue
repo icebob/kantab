@@ -4,7 +4,7 @@
 			<div class="block">
 				<div class="content forms">
 					<fieldset>
-						<legend>{{ pageTitle }}</legend>
+						<legend class="ml-0">{{ pageTitle }}</legend>
 
 						<div class="form-group">
 							<label>Title</label>
@@ -15,13 +15,31 @@
 								placeholder="My epic title"
 								class="form-control"
 							/>
-							<label>Description</label>
+							<label class="mt-2">Description</label>
 							<input
 								v-model="entity.description"
 								type="text"
 								placeholder="My epic description"
 								class="form-control"
 							/>
+							<label class="mt-2">Color</label>
+							<div class="form-control">
+								<input
+									id="colorCheck"
+									type="checkbox"
+									:value="entity.color != null"
+									@input="colorCheckboxInput($event)"
+								/>
+								<label class="ml-2" for="colorCheck">Use custom color</label>
+								<div v-if="entity.color != null" class="ml-5 mt-2">
+									<input
+										v-model="entity.color"
+										type="color"
+										placeholder="List color"
+										class="h-8 w-16"
+									/>
+								</div>
+							</div>
 						</div>
 					</fieldset>
 				</div>
@@ -31,8 +49,8 @@
 				style="margin: 1em"
 			>
 				<div>
-					<button class="button success" @click="dialogOk(entity)">Ok</button>
-					<button class="button" style="margin-left: 10px" @click="close()">
+					<button class="button primary" @click="dialogOk(entity)">Ok</button>
+					<button class="button outline" style="margin-left: 10px" @click="close()">
 						Cancel
 					</button>
 				</div>
@@ -89,6 +107,14 @@ export default {
 		async removeEntity(entity) {
 			await this.removeList({ id: entity.id });
 			this.close();
+		},
+
+		colorCheckboxInput(event) {
+			if (!event.target.checked) {
+				this.entity.color = null;
+			} else {
+				this.entity.color = "#000";
+			}
 		},
 
 		close() {

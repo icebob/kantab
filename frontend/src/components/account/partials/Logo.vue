@@ -7,7 +7,6 @@
 
 h3 {
 	margin: 0;
-	text-align: center;
 	font-size: 2em;
 	font-weight: 700;
 	color: $textColor2;

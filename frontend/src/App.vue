@@ -1,26 +1,44 @@
 <template>
 	<div id="app">
-		<div id="nav">
-			<router-link to="/">Home</router-link> |
-			<router-link to="/style-guide">Style Guide</router-link> |
-			<router-link to="/protected">Protected</router-link> |
-			<router-link to="/about">{{ $t("About") }}</router-link> |
-			<template v-if="!$authenticator.isAuthenticated()">
-				<router-link to="/login">Login</router-link> |
-				<router-link to="/signup">Sign Up</router-link> |
-			</template>
-			<template v-else>
-				<a style="cursor: pointer" @click="$authenticator.logout()">Logout</a> |
-			</template>
+		<div class="flex align-center p-5">
+			<Logo class="mr-2" />
+			<div class="flex-auto"></div>
+			<div>
+				<router-link class="mx-4 hover:underline" to="/">Home</router-link>
+				<router-link class="mx-4 hover:underline" to="/style-guide"
+					>Style Guide</router-link
+				>
+				<router-link class="mx-4 hover:underline" to="/protected">Protected</router-link>
+				<router-link class="mx-4 hover:underline" to="/about">{{
+					$t("About")
+				}}</router-link>
+				<template v-if="!$authenticator.isAuthenticated()">
+					<router-link class="mx-4 hover:underline" to="/login">Login</router-link>
+					<router-link class="mx-4 hover:underline" to="/signup">Sign Up</router-link>
+				</template>
+				<template v-else>
+					<a
+						class="mx-4 hover:underline"
+						style="cursor: pointer"
+						@click="$authenticator.logout()"
+						>Logout</a
+					>
+				</template>
+			</div>
 		</div>
 		<router-view />
 	</div>
 </template>
 
 <script>
+import Logo from "./components/account/partials/Logo.vue";
 import store from "./store/index";
 
 export default {
+	components: {
+		Logo
+	},
+
 	created() {
 		store.dispatch("init");
 	}
@@ -28,14 +46,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#nav {
-	padding: 30px;
-	a {
-		font-weight: bold;
-		color: #e4eaf1;
-		&.router-link-exact-active {
-			color: #42b983;
-		}
+a {
+	//font-weight: bold;
+	color: #e4eaf1;
+	&.router-link-exact-active {
+		color: #42b983;
 	}
 }
 </style>

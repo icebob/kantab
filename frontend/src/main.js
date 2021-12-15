@@ -29,11 +29,11 @@ import iziToast from "./toast";
 // --- VUE APOLLO CLIENT ---
 import { apolloProvider, apolloClient } from "./apollo";
 
-// TalwindCSS
-import "./index.css";
-
 // KanTab styles
 import "./styles/style.scss";
+
+// TalwindCSS
+import "./index.css";
 
 // Authenticator
 import authenticator from "./authenticator";

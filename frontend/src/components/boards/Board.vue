@@ -2,7 +2,7 @@
 	<div>
 		<div v-if="board">
 			<div class="content flex align-center justify-space-between wrap" style="margin: 1em">
-				<h3>{{ board.title }}</h3>
+				<h3 class="text-2xl">{{ board.title }}</h3>
 			</div>
 			<div class="content flex align-start" style="margin: 1em">
 				<Container

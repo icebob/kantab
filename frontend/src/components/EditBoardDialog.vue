@@ -4,26 +4,26 @@
 			<div class="block">
 				<div class="content forms">
 					<fieldset>
-						<legend>{{ pageTitle }}</legend>
+						<legend class="ml-0">{{ pageTitle }}</legend>
 
 						<div class="form-group">
 							<label>Title</label>
 							<input
+								ref="mainInput"
+								v-model="entity.title"
 								type="text"
 								placeholder="My epic title"
 								class="form-control"
-								v-model="entity.title"
-								ref="mainInput"
 							/>
-							<label>Description</label>
+							<label class="mt-2">Description</label>
 							<input
+								v-model="entity.description"
 								type="text"
 								placeholder="My epic description"
 								class="form-control"
-								v-model="entity.description"
 							/>
-							<div class="form-option">
-								<input v-model="entity.public" id="check2" type="checkbox" /><label
+							<div class="mt-2 form-option">
+								<input id="check2" v-model="entity.public" type="checkbox" /><label
 									for="check2"
 									>Public</label
 								>
@@ -66,11 +66,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions([
-			"updateBoard",
-			"createBoard",
-			"removeBoard",
-		]),
+		...mapActions(["updateBoard", "createBoard", "removeBoard"]),
 		show({ board }) {
 			if (board) {
 				this.pageTitle = "Edit board";

@@ -44,5 +44,5 @@
 
 ## Lists
 - [ ] collapsible lists
-- [ ] editable color of list
+- [x] editable color of list
 - [ ] scrolling at moving
