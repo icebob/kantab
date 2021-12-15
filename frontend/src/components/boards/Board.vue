@@ -7,10 +7,10 @@
 			<div class="content flex align-start" style="margin: 1em">
 				<Container
 					orientation="horizontal"
-					@drop="onListDrop($event)"
 					drag-handle-selector=".list-drag-handle"
-					:drop-placeholder="upperDropPlaceholderOptions"
+					:drop-placeholder="listDropPlaceholderOptions"
 					:get-child-payload="idx => board.lists.rows[idx]"
+					@drop="onListDrop($event)"
 				>
 					<Draggable v-for="list in board.lists.rows" :key="list.id">
 						<div class="list panel primary">
@@ -30,11 +30,11 @@
 							<Container
 								class="list-content"
 								group-name="col"
-								@drop="e => onCardDrop(list, e)"
 								drag-class="card-ghost"
 								drop-class="card-ghost-drop"
-								:drop-placeholder="dropPlaceholderOptions"
+								:drop-placeholder="cardDropPlaceholderOptions"
 								:get-child-payload="idx => list.cards.rows[idx]"
+								@drop="e => onCardDrop(list, e)"
 							>
 								<Draggable v-for="card in list.cards.rows" :key="card.id">
 									<div class="card">
@@ -55,10 +55,10 @@
 								</div>
 								<div v-else>
 									<textarea
-										class="adding-card-textarea"
-										v-model="addingCardTitle"
-										placeholder="Enter card title"
 										ref="addingCardTextarea"
+										v-model="addingCardTitle"
+										class="adding-card-textarea"
+										placeholder="Enter card title"
 										@keydown.enter.stop.prevent="addCard(list)"
 										@keydown.esc.stop.prevent="cancelAddingCard"
 									></textarea>
@@ -76,30 +76,30 @@
 			</div>
 		</div>
 
-		<edit-board-dialog ref="editDialog" />
+		<edit-list-dialog ref="editDialog" />
 	</div>
 </template>
 <script>
-import { Container, Draggable } from "vue-smooth-dnd";
+import { Container, Draggable } from "vue3-smooth-dnd";
 
 import { mapState, mapActions } from "vuex";
 import dateFormatter from "../../mixins/dateFormatter";
-import EditBoardDialog from "../EditBoardDialog";
+import EditListDialog from "../EditListDialog.vue";
 import { getTextColorByBackgroundColor } from "../../utils";
 
 export default {
+	components: {
+		EditListDialog,
+		Container,
+		Draggable
+	},
+	mixins: [dateFormatter],
 	props: {
 		id: {
 			required: true,
 			type: String
 		}
 	},
-	components: {
-		EditBoardDialog,
-		Container,
-		Draggable
-	},
-	mixins: [dateFormatter],
 
 	data() {
 		return {
@@ -107,12 +107,12 @@ export default {
 			addingCardList: null,
 			addingCardTitle: "",
 
-			upperDropPlaceholderOptions: {
+			listDropPlaceholderOptions: {
 				className: "cards-drop-preview",
 				animationDuration: "150",
 				showOnTop: true
 			},
-			dropPlaceholderOptions: {
+			cardDropPlaceholderOptions: {
 				className: "drop-preview",
 				animationDuration: "150",
 				showOnTop: true
@@ -122,6 +122,17 @@ export default {
 	computed: {
 		...mapState(["user", "board"])
 	},
+
+	watch: {
+		async id() {
+			await this.getBoardById(this.id);
+		}
+	},
+
+	async mounted() {
+		await this.getBoardById(this.id);
+	},
+
 	methods: {
 		...mapActions([
 			"getBoardById",
@@ -132,7 +143,7 @@ export default {
 		]),
 
 		showDialog(list) {
-			this.$refs.editDialog.show({ type: "list", boardId: this.id, list: list });
+			this.$refs.editDialog.show({ boardId: this.id, list: list });
 		},
 
 		addingCardEditMode(list) {
@@ -197,16 +208,6 @@ export default {
 					color: getTextColorByBackgroundColor(list.color)
 				};
 			}
-		}
-	},
-
-	async mounted() {
-		await this.getBoardById(this.id);
-	},
-
-	watch: {
-		async id() {
-			await this.getBoardById(this.id);
 		}
 	}
 };

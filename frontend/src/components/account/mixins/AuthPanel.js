@@ -1,10 +1,10 @@
 "use strict";
 
-import Logo from "../partials/Logo";
-import SubmitButton from "../partials/SubmitButton";
-import SocialAuth from "../partials/SocialAuth";
-import PageCenter from "../partials/PageCenter";
-import PageContent from "../partials/PageContent";
+import Logo from "../partials/Logo.vue";
+import SubmitButton from "../partials/SubmitButton.vue";
+import SocialAuth from "../partials/SocialAuth.vue";
+import PageCenter from "../partials/PageCenter.vue";
+import PageContent from "../partials/PageContent.vue";
 
 export default {
 	components: {

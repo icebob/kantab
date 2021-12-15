@@ -55,7 +55,7 @@ describe("Test login page with passwordless", () => {
 
 				cy.visit(`/passwordless?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "Home");
+				cy.contains("h4", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});

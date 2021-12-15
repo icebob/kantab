@@ -1,11 +1,10 @@
 "use strict";
 
-import Vue from "vue";
 import bus from "./bus";
-import router from "./router";
-import store from "./store";
+import router from "./router/index";
+import store from "./store/index";
 import axios from "axios";
-import * as Cookie from "js-cookie";
+import Cookie from "js-cookie";
 import gql from "graphql-tag";
 import { apolloClient, apolloAuth } from "./apollo";
 

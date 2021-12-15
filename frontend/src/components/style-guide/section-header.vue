@@ -13,7 +13,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/variables";
+@import "../../styles/_variables.scss";
 
 h2 {
 	font-size: 1.5rem;

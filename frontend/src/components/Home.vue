@@ -1,7 +1,8 @@
 <template>
 	<div>
 		<Logo />
-		<div style="margin: 15px" class="form-group">
+		<div class="m-5 form-group">
+			<h4>My boards</h4>
 			<div v-if="boards" class="content flex align-start justify-center panels wrap">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
@@ -28,6 +29,12 @@
 											>no description</span
 										>
 									</div>
+									<div
+										class="button primary mt-2"
+										@click.prevent.stop="showDialog(board)"
+									>
+										Edit
+									</div>
 								</div>
 							</div>
 							<div class="block">
@@ -51,18 +58,17 @@
 </template>
 
 <script>
-import Logo from "./account/partials/Logo";
+import Logo from "./account/partials/Logo.vue";
 import { mapState } from "vuex";
 import dateFormatter from "../mixins/dateFormatter";
-import EditBoardDialog from "../components/EditBoardDialog";
+import EditBoardDialog from "../components/EditBoardDialog.vue";
 
 export default {
-	mixins: [dateFormatter],
-
 	components: {
 		Logo,
 		EditBoardDialog
 	},
+	mixins: [dateFormatter],
 
 	computed: {
 		...mapState(["boards", "user"])
@@ -70,7 +76,7 @@ export default {
 
 	methods: {
 		showDialog(board) {
-			this.$refs.editDialog.show({ type: "board", board });
+			this.$refs.editDialog.show({ board });
 		}
 	}
 };

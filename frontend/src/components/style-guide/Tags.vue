@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import SectionHeader from "./section-header";
+import SectionHeader from "./section-header.vue";
 
 export default {
 	components: {

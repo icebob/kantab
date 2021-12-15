@@ -1,10 +1,17 @@
-import Vue from "vue";
-import Vuex from "vuex";
+import { createStore } from "vuex";
 import authenticator from "../authenticator";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
 
-Vue.use(Vuex);
+import toast from "../toast";
+
+function showInfoToast(title) {
+	toast.info({ title });
+}
+
+function showErrorToast(title) {
+	toast.error({ title });
+}
 
 import axios from "axios";
 axios.defaults.headers.common["Content-Type"] = "application/json";
@@ -29,7 +36,7 @@ axios.interceptors.response.use(
 	}
 );
 
-export default new Vuex.Store({
+export default createStore({
 	state: {
 		// Logged in user entity
 		user: null,
@@ -139,7 +146,7 @@ export default new Vuex.Store({
 				return res.data.boardById;
 			} catch (err) {
 				console.log("getBoardById error", err);
-				Vue.prototype.toast.show("Could not load board: " + err.message);
+				showInfoToast("Could not load board: " + err.message);
 			}
 		},
 
@@ -172,7 +179,7 @@ export default new Vuex.Store({
 				return res.data.boards.rows;
 			} catch (err) {
 				console.log("getBoard error", err);
-				Vue.prototype.toast.show("Could not load boards: " + err.message);
+				showInfoToast("Could not load boards: " + err.message);
 			}
 		},
 
@@ -202,10 +209,10 @@ export default new Vuex.Store({
 				});
 
 				commit("ADD_BOARD", res.data.boardCreate);
-				Vue.prototype.toast.show("Board created");
+				showInfoToast("Board created");
 			} catch (err) {
 				console.error("createBoard err", err);
-				Vue.prototype.toast.show("Could not create board: " + err.message);
+				showErrorToast("Could not create board: " + err.message);
 			}
 		},
 
@@ -235,10 +242,10 @@ export default new Vuex.Store({
 				});
 
 				commit("UPDATE_BOARD", res.data.boardUpdate);
-				Vue.prototype.toast.show("Board updated");
+				showInfoToast("Board updated");
 			} catch (err) {
 				console.error("updateBoard error: ", err);
-				Vue.prototype.toast.show("Could not update board: " + err.message);
+				showErrorToast("Could not update board: " + err.message);
 			}
 		},
 
@@ -254,10 +261,10 @@ export default new Vuex.Store({
 				});
 
 				commit("REMOVE_BOARD", res.data.boardRemove);
-				Vue.prototype.toast.show("Board removed");
+				showInfoToast("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
-				Vue.prototype.toast.show("Board creation failed: " + err.message);
+				showErrorToast("Board creation failed: " + err.message);
 			}
 		},
 
@@ -288,10 +295,10 @@ export default new Vuex.Store({
 				});
 				console.log("res", res);
 				commit("ADD_LIST", res.data.listCreate);
-				Vue.prototype.toast.show("List created");
+				showInfoToast("List created");
 			} catch (err) {
 				console.error("createList err", err);
-				Vue.prototype.toast.show("Could not create list: " + err.message);
+				showErrorToast("Could not create list: " + err.message);
 			}
 		},
 
@@ -321,10 +328,10 @@ export default new Vuex.Store({
 				});
 
 				commit("UPDATE_LIST", res.data.listUpdate);
-				Vue.prototype.toast.show("List updated");
+				showInfoToast("List updated");
 			} catch (err) {
 				console.error("updateList error: ", err);
-				Vue.prototype.toast.show("Could not update list: " + err.message);
+				showErrorToast("Could not update list: " + err.message);
 			}
 		},
 
@@ -340,10 +347,10 @@ export default new Vuex.Store({
 					variables: { id }
 				});
 				commit("REMOVE_LIST", res.data.listRemove);
-				Vue.prototype.toast.show("List removed");
+				showInfoToast("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
-				Vue.prototype.toast.show("Could not remove list: " + err.message);
+				showErrorToast("Could not remove list: " + err.message);
 			}
 		},
 
@@ -364,10 +371,10 @@ export default new Vuex.Store({
 				});
 				console.log("res", res);
 				commit("ADD_CARD", { list, card: res.data.cardCreate });
-				Vue.prototype.toast.show("Card created");
+				showInfoToast("Card created");
 			} catch (err) {
 				console.error("createCard err", err);
-				Vue.prototype.toast.show("Could not create card: " + err.message);
+				showErrorToast("Could not create card: " + err.message);
 			}
 		},
 
@@ -388,10 +395,10 @@ export default new Vuex.Store({
 				});
 
 				commit("UPDATE_CARD", { list, card: res.data.cardUpdate });
-				Vue.prototype.toast.show("Card updated");
+				showInfoToast("Card updated");
 			} catch (err) {
 				console.error("updateCard error: ", err);
-				Vue.prototype.toast.show("Could not update card: " + err.message);
+				showErrorToast("Could not update card: " + err.message);
 			}
 		},
 
@@ -406,10 +413,10 @@ export default new Vuex.Store({
 					variables: { id }
 				});
 				commit("REMOVE_CARD", { list, id });
-				Vue.prototype.toast.show("Card removed");
+				showInfoToast("Card removed");
 			} catch (err) {
 				console.error("removeCard error: ", err);
-				Vue.prototype.toast.show("Could not remove card: " + err.message);
+				showErrorToast("Could not remove card: " + err.message);
 			}
 		},
 
@@ -454,7 +461,7 @@ export default new Vuex.Store({
 			const result = [...list.cards.rows];
 
 			if (fromIndex !== null) {
-				result.splice(fromIndex, 1)[0];
+				result.splice(fromIndex, 1);
 			}
 
 			if (toIndex !== null) {
@@ -527,7 +534,13 @@ export default new Vuex.Store({
 		},
 
 		SET_BOARD(state, board) {
-			state.board = board;
+			console.log(board, Object.isFrozen(board));
+			// TODO: Apollo client set it to frozen, so vuex can't update it.
+			if (Object.isFrozen(board)) {
+				state.board = JSON.parse(JSON.stringify(board));
+			} else {
+				state.board = board;
+			}
 		},
 
 		SET_BOARDS(state, boards) {
@@ -535,7 +548,7 @@ export default new Vuex.Store({
 		},
 
 		ADD_BOARD(state, board) {
-			state.boards.push(board);
+			state.boards = [...state.boards, board];
 		},
 
 		UPDATE_BOARD(state, board) {
@@ -543,31 +556,29 @@ export default new Vuex.Store({
 			if (found) {
 				Object.assign(found, board);
 			} else {
-				state.boards.push(board);
+				state.boards = [...state.boards, board];
 			}
 		},
 
 		REMOVE_BOARD(state, id) {
-			const idx = state.boards.findIndex(b => b.id === id);
-			if (idx >= 0) state.boards.splice(idx, 1);
+			state.boards = state.boards.filter(b => b.id !== id);
 		},
 
-		ADD_LIST(state, board) {
-			state.board.lists.rows.push(board);
+		ADD_LIST(state, list) {
+			state.board.lists.rows = [...state.board.lists.rows, list];
 		},
 
-		UPDATE_LIST(state, board) {
-			const found = state.board.lists.rows.find(b => b.id == board.id);
+		UPDATE_LIST(state, list) {
+			const found = state.board.lists.rows.find(b => b.id == list.id);
 			if (found) {
-				Object.assign(found, board);
+				Object.assign(found, list);
 			} else {
-				state.board.lists.rows.push(board);
+				state.board.lists.rows.push(list);
 			}
 		},
 
 		REMOVE_LIST(state, id) {
-			const idx = state.board.lists.rows.findIndex(b => b.id === id);
-			if (idx >= 0) state.board.lists.rows.splice(idx, 1);
+			state.board.lists.rows = state.board.lists.rows.filter(b => b.id !== id);
 		},
 
 		ADD_CARD(state, { list, card }) {

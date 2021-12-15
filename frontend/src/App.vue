@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import store from "./store";
+import store from "./store/index";
 
 export default {
 	created() {
@@ -26,8 +26,6 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" src="./styles/style.scss"></style>
 
 <style lang="scss" scoped>
 #nav {

@@ -1,12 +1,9 @@
-import Vue from "vue";
-import VueRouter from "vue-router";
+import { createWebHistory, createRouter } from "vue-router";
 
 import Home from "../components/Home.vue";
 import StyleGuide from "../components/style-guide/Page.vue";
 import Protected from "../components/Protected.vue";
 import Board from "../components/boards/Board.vue";
-
-Vue.use(VueRouter);
 
 const routes = [
 	{
@@ -96,22 +93,21 @@ const routes = [
 		component: () => import(/* webpackChunkName: "about" */ "../components/About.vue")
 	},
 	{
-		path: "*",
-		name: "404",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/NotFound.vue")
-	},
-	{
 		path: "/board/:id",
 		name: "Board",
 		component: Board,
 		props: true
-	}
+	},
+	{
+		path: '/:pathMatch(.*)*',
+		name: "404",
+		component: () =>
+			import(/* webpackChunkName: "account" */ "../components/account/NotFound.vue")
+	},
 ];
 
-const router = new VueRouter({
-	mode: "history",
+export default createRouter({
+	history: createWebHistory(),
+	scrollBehavior: () => ({ top: 0 }),
 	routes
 });
-
-export default router;

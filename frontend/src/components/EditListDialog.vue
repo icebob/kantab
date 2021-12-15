@@ -9,25 +9,19 @@
 						<div class="form-group">
 							<label>Title</label>
 							<input
+								ref="mainInput"
+								v-model="entity.title"
 								type="text"
 								placeholder="My epic title"
 								class="form-control"
-								v-model="entity.title"
-								ref="mainInput"
 							/>
 							<label>Description</label>
 							<input
+								v-model="entity.description"
 								type="text"
 								placeholder="My epic description"
 								class="form-control"
-								v-model="entity.description"
 							/>
-							<div class="form-option">
-								<input v-model="entity.public" id="check2" type="checkbox" /><label
-									for="check2"
-									>Public</label
-								>
-							</div>
 						</div>
 					</fieldset>
 				</div>
@@ -61,6 +55,7 @@ export default {
 		return {
 			visible: false,
 			entity: null,
+			boardId: null,
 			isUpdate: false
 		};
 	},
@@ -69,27 +64,30 @@ export default {
 		...mapActions([
 			"updateBoard",
 			"createBoard",
+			"createList",
 			"removeBoard",
+			"updateList",
+			"removeList"
 		]),
-		show({ board }) {
-			if (board) {
-				this.pageTitle = "Edit board";
-				this.entity = { ...board };
-				console.log("entity", this.entity);
+		show({ list, boardId }) {
+			if (list) {
+				this.pageTitle = "Edit list";
+				this.entity = list;
 				this.isUpdate = true;
 			} else {
+				this.pageTitle = "Add list";
 				this.entity = {
+					boardId: boardId,
 					title: "",
-					description: "",
-					public: false
+					description: ""
 				};
-				this.pageTitle = "Add board";
 			}
+			this.boardId = boardId;
 			this.visible = true;
 			this.$nextTick(() => this.$refs.mainInput.focus());
 		},
 		async removeEntity(entity) {
-			await this.removeBoard(entity.id);
+			await this.removeList({ id: entity.id });
 			this.close();
 		},
 
@@ -101,17 +99,17 @@ export default {
 		async dialogOk(entity) {
 			console.log("entity", entity);
 			if (this.isUpdate) {
-				await this.updateBoard({
+				await this.updateList({
 					id: this.entity.id,
 					title: this.entity.title,
 					description: this.entity.description,
-					public: this.entity.public
+					board: this.boardId
 				});
 			} else {
-				await this.createBoard({
+				await this.createList({
+					board: this.boardId,
 					title: this.entity.title,
-					description: this.entity.description,
-					public: this.entity.public
+					description: this.entity.description
 				});
 			}
 			this.close();

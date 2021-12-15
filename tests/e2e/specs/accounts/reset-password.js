@@ -28,7 +28,7 @@ describe("Test forgot password flow", () => {
 
 				cy.visit(`/verify-account?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "Home");
+				cy.contains("h4", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -68,7 +68,7 @@ describe("Test forgot password flow", () => {
 
 				cy.resetPassword(token, "newpassword");
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "Home");
+				cy.contains("h4", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -86,7 +86,7 @@ describe("Test forgot password flow", () => {
 	it("Login with new password", () => {
 		cy.login(user.email, "newpassword");
 		cy.url().should("equal", `${baseUrl}/`);
-		cy.contains("h4", "Home");
+		cy.contains("h4", "My boards");
 		cy.logout();
 	});
 });
