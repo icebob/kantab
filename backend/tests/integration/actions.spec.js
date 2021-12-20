@@ -1,11 +1,9 @@
 "use strict";
 
-const path = require("path");
-const Runner = require("moleculer").Runner;
-const kleur = require("kleur");
 const C = require("../../constants");
 const Helper = require("./helper-actions");
-const _ = require("lodash");
+const env = require("./env")();
+const { checkResponse, checkError, checkBoardVisibility, listResponse } = require("./checks");
 
 const EMPTY_LIST_RESPONSE = {
 	page: 1,
@@ -15,110 +13,20 @@ const EMPTY_LIST_RESPONSE = {
 	totalPages: 0
 };
 
-//jest.setTimeout(60000);
+let helper = null;
+let state = null;
+
+/**
+ * Bootstrap the server and set the test coonfiguration
+ */
+beforeAll(async () => {
+	state = await env.setupEnv();
+	helper = new Helper(state);
+}, 60000);
+
+afterAll(async () => env.tearDownEnv(), 10000);
 
 describe("Integration test", () => {
-	let broker = null;
-	let helper = null;
-
-	const state = {
-		broker: null,
-		users: {
-			u1: null,
-			u2: null,
-			u3: null
-		},
-		contexts: {
-			u1: null,
-			u2: null,
-			u3: null,
-			guest: {}
-		},
-		boards: {
-			u1_b1: null,
-			u2_b1: null
-		}
-	};
-
-	beforeAll(async () => {
-		console.log(kleur.magenta().bold("Booting Moleculer project for integration tests..."));
-
-		try {
-			const runner = new Runner();
-			broker = await runner.start([
-				process.argv[0],
-				__filename,
-				path.join(__dirname, "..", "..", "services", "**", "*.service.js")
-			]);
-
-			console.log(kleur.magenta().bold("Broker started. NodeID:"), broker.nodeID);
-
-			// Disable verification
-			await broker.call("v1.config.set", {
-				key: "accounts.verification.enabled",
-				value: false
-			});
-			// Disable mail sending
-			await broker.call("v1.config.set", {
-				key: "mail.enabled",
-				value: false
-			});
-
-			state.broker = broker;
-			helper = new Helper(state);
-		} catch (err) {
-			console.error(err);
-			process.exit(1);
-		}
-	}, 60000);
-
-	afterAll(async () => {
-		if (broker) await broker.stop();
-	}, 10000);
-
-	function listResponse(rows) {
-		return {
-			page: 1,
-			pageSize: 10,
-			rows,
-			total: rows.length,
-			totalPages: 1
-		};
-	}
-
-	async function checkResponse(promise, expected) {
-		const res = await promise;
-		expect(res).toEqual(expected);
-
-		return res;
-	}
-
-	async function checkError(promise, errorName) {
-		try {
-			await promise;
-		} catch (err) {
-			if (typeof errorName === "string") {
-				//if (err.name != errorName) console.log(err);
-				expect(err.name).toBe(errorName);
-			} else if (_.isObject(errorName)) {
-				Object.keys(errorName).forEach(key => {
-					expect(err[key]).toBe(errorName[key]);
-				});
-			}
-		}
-	}
-
-	async function checkBoardVisibility(fn, params, responses) {
-		for (const user of Object.keys(responses)) {
-			const res = responses[user];
-			if (res.data) {
-				await checkResponse(fn(user, params), res.data);
-			} else if (res.error) {
-				await checkError(fn(user, params), res.error);
-			}
-		}
-	}
-
 	describe("Set up test environment", () => {
 		describe("Create accounts", () => {
 			it("create U1 account", async () => {

@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-		<div class="flex align-center p-5">
+		<header class="flex align-center p-5">
 			<Logo class="mr-2" />
 			<div class="flex-auto"></div>
 			<div>
@@ -13,19 +13,23 @@
 					$t("About")
 				}}</router-link>
 				<template v-if="!$authenticator.isAuthenticated()">
-					<router-link class="mx-4 hover:underline" to="/login">Login</router-link>
-					<router-link class="mx-4 hover:underline" to="/signup">Sign Up</router-link>
+					<router-link class="link-login mx-4 hover:underline" to="/login"
+						>Login</router-link
+					>
+					<router-link class="link-signup mx-4 hover:underline" to="/signup"
+						>Sign Up</router-link
+					>
 				</template>
 				<template v-else>
 					<a
-						class="mx-4 hover:underline"
+						class="link-logout mx-4 hover:underline"
 						style="cursor: pointer"
 						@click="$authenticator.logout()"
 						>Logout</a
 					>
 				</template>
 			</div>
-		</div>
+		</header>
 		<router-view />
 	</div>
 </template>

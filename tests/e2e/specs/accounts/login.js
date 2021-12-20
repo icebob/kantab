@@ -27,7 +27,7 @@ describe("Test login page with username & password", () => {
 	});
 
 	it("Logout", () => {
-		cy.get("#nav a:nth-child(5)").click();
+		cy.get("header .link-logout").click();
 
 		cy.url().should("contain", `${baseUrl}/login`);
 	});

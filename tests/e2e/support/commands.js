@@ -41,7 +41,7 @@ Cypress.Commands.add("login", (email, password) => {
 });
 
 Cypress.Commands.add("logout", () => {
-	cy.get("#nav a:nth-child(5)").click();
+	cy.get("header .link-logout").click();
 
 	cy.url().should("contain", `${Cypress.config("baseUrl")}/login`);
 });
