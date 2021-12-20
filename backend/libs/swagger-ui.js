@@ -88,6 +88,7 @@ const htmlTplString = `
 <script src="./swagger-ui-bundle.js"> </script>
 <script src="./swagger-ui-standalone-preset.js"> </script>
 <script src="./swagger-ui-init.js"> </script>
+<% customJs %>
 <% customCssUrl %>
 <style>
   <% customCss %>

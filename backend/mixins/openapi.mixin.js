@@ -136,7 +136,7 @@ module.exports = function (mixinOptions) {
 						next();
 					},
 					...SwaggerUI.serve,
-					SwaggerUI.setup()
+					SwaggerUI.setup(null, { swaggerUrl: "/openapi/openapi.json" })
 				],
 
 				aliases: {
