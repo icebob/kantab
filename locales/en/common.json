@@ -4,5 +4,7 @@
 	"SignIn": "Sign In",
 	"SignUp": "Sign Up",
 
+	"ModifiedAt": "Modified at {{ago}}",
+
     "About": "About"
 }

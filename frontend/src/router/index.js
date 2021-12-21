@@ -1,9 +1,6 @@
 import { createWebHistory, createRouter } from "vue-router";
 
-import Home from "../components/Home.vue";
-import StyleGuide from "../components/style-guide/Page.vue";
-import Protected from "../components/Protected.vue";
-import Board from "../components/boards/Board.vue";
+import Home from "../pages/Home.vue";
 
 const routes = [
 	{
@@ -14,75 +11,12 @@ const routes = [
 	{
 		path: "/style-guide",
 		name: "style-guide",
-		component: StyleGuide
-	},
-	{
-		path: "/login",
-		name: "login",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/Login.vue"),
-		meta: {
-			redirectAuth: "home"
-		}
-	},
-	{
-		path: "/loginApollo",
-		name: "loginApollo",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/LoginApollo.vue")
-		/* 		meta: {
-			redirectAuth: "home"
-		} */
-	},
-	{
-		path: "/signup",
-		name: "signup",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/SignUp.vue"),
-		meta: {
-			redirectAuth: "home"
-		}
-	},
-	{
-		path: "/forgot-password",
-		name: "forgot-password",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/ForgotPassword.vue"),
-		meta: {
-			redirectAuth: "home"
-		}
-	},
-	{
-		path: "/reset-password",
-		name: "reset-password",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/ResetPassword.vue"),
-		meta: {
-			redirectAuth: "home"
-		}
-	},
-	{
-		path: "/verify-account",
-		name: "verify-account",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/VerifyAccount.vue"),
-		meta: {
-			redirectAuth: "home"
-		}
-	},
-	{
-		path: "/passwordless",
-		name: "passwordless",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/Passwordless.vue"),
-		meta: {
-			redirectAuth: "home"
-		}
+		component: () => import("../pages/StyleGuide.vue")
 	},
 	{
 		path: "/protected",
 		name: "protected",
-		component: Protected,
+		component: () => import("../pages/Protected.vue"),
 		meta: {
 			requiresAuth: true
 		}
@@ -90,20 +24,75 @@ const routes = [
 	{
 		path: "/about",
 		name: "about",
-		component: () => import(/* webpackChunkName: "about" */ "../components/About.vue")
+		component: () => import("../pages/About.vue")
 	},
 	{
 		path: "/board/:id",
 		name: "Board",
-		component: Board,
+		component: () => import("../pages/Board.vue"),
 		props: true
 	},
 	{
-		path: '/:pathMatch(.*)*',
-		name: "404",
-		component: () =>
-			import(/* webpackChunkName: "account" */ "../components/account/NotFound.vue")
+		path: "/login",
+		name: "login",
+		component: () => import("../components/account/Login.vue"),
+		meta: {
+			redirectAuth: "home"
+		}
 	},
+	{
+		path: "/loginApollo",
+		name: "loginApollo",
+		component: () => import("../components/account/LoginApollo.vue")
+		/* 		meta: {
+			redirectAuth: "home"
+		} */
+	},
+	{
+		path: "/signup",
+		name: "signup",
+		component: () => import("../components/account/SignUp.vue"),
+		meta: {
+			redirectAuth: "home"
+		}
+	},
+	{
+		path: "/forgot-password",
+		name: "forgot-password",
+		component: () => import("../components/account/ForgotPassword.vue"),
+		meta: {
+			redirectAuth: "home"
+		}
+	},
+	{
+		path: "/reset-password",
+		name: "reset-password",
+		component: () => import("../components/account/ResetPassword.vue"),
+		meta: {
+			redirectAuth: "home"
+		}
+	},
+	{
+		path: "/verify-account",
+		name: "verify-account",
+		component: () => import("../components/account/VerifyAccount.vue"),
+		meta: {
+			redirectAuth: "home"
+		}
+	},
+	{
+		path: "/passwordless",
+		name: "passwordless",
+		component: () => import("../components/account/Passwordless.vue"),
+		meta: {
+			redirectAuth: "home"
+		}
+	},
+	{
+		path: "/:pathMatch(.*)*",
+		name: "404",
+		component: () => import("../components/account/NotFound.vue")
+	}
 ];
 
 export default createRouter({

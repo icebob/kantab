@@ -1,11 +1,16 @@
-import moment from "moment";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
+
 export default {
 	methods: {
 		dateToAgo(timestamp) {
-			return moment(timestamp).fromNow();
+			return dayjs(timestamp).fromNow();
 		},
 		dateToLong(timestamp) {
-			return moment(timestamp).format("LLL");
+			return dayjs(timestamp).format("LLL");
 		}
 	}
 };

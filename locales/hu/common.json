@@ -4,5 +4,7 @@
 	"SignIn": "Bejelentkezés",
 	"SignUp": "Regisztráció",
 
+	"ModifiedAt": "Módosítva {{ago}}",
+
     "About": "Névjegy"
 }

@@ -32,7 +32,7 @@ import { apolloProvider, apolloClient } from "./apollo";
 // KanTab styles
 import "./styles/style.scss";
 
-// TalwindCSS
+// TailwindCSS
 import "./index.css";
 
 // Authenticator

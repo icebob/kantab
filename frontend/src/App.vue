@@ -3,7 +3,7 @@
 		<header class="flex align-center p-5">
 			<Logo class="mr-2" />
 			<div class="flex-auto"></div>
-			<div>
+			<div class="font-title text-xl">
 				<router-link class="mx-4 hover:underline" to="/">Home</router-link>
 				<router-link class="mx-4 hover:underline" to="/style-guide"
 					>Style Guide</router-link
@@ -13,16 +13,17 @@
 					$t("About")
 				}}</router-link>
 				<template v-if="!$authenticator.isAuthenticated()">
-					<router-link class="link-login mx-4 hover:underline" to="/login"
+					<router-link id="link-login" class="mx-4 hover:underline" to="/login"
 						>Login</router-link
 					>
-					<router-link class="link-signup mx-4 hover:underline" to="/signup"
+					<router-link id="link-signup" class="mx-4 hover:underline" to="/signup"
 						>Sign Up</router-link
 					>
 				</template>
 				<template v-else>
 					<a
-						class="link-logout mx-4 hover:underline"
+						id="link-logout"
+						class="mx-4 hover:underline"
 						style="cursor: pointer"
 						@click="$authenticator.logout()"
 						>Logout</a
@@ -54,7 +55,7 @@ a {
 	//font-weight: bold;
 	color: #e4eaf1;
 	&.router-link-exact-active {
-		color: #42b983;
+		color: #90b227;
 	}
 }
 </style>

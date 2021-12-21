@@ -3,14 +3,16 @@ import i18NextLanguageDetector from "i18next-browser-languagedetector";
 import i18NextXHR from "i18next-xhr-backend";
 import i18NBackendAdapter from "i18next-multiload-backend-adapter";
 
-import moment from "moment";
+import dayjs from "dayjs";
+import "dayjs/locale/hu.js";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+dayjs.extend(localizedFormat);
 
 export default function () {
 	return init()
 		.then(t => {
 			return app => {
 				app.config.globalProperties.$i18n = i18next;
-				app.config.globalProperties.$t = i18next.t;
 				app.config.globalProperties.$lang = i18next.language;
 				app.config.globalProperties.$t = t;
 
@@ -21,12 +23,12 @@ export default function () {
 					}
 				});
 
-				moment.locale(i18next.language);
+				dayjs.locale(i18next.language);
 
 				console.log(
 					`I18Next initialized! Language: ${
 						i18next.language
-					}, Date format: ${moment().format("LLL")}`
+					}, Date format: ${dayjs().format("LLLL")}`
 				);
 			};
 		})

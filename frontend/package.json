@@ -6,6 +6,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "dayjs": "^1.10.7",
     "vue": "^3.2.26"
   },
   "devDependencies": {
@@ -27,7 +28,6 @@
     "izitoast": "^1.4.0",
     "js-cookie": "^3.0.1",
     "mitt": "^3.0.0",
-    "moment": "^2.29.1",
     "npm-check": "^5.9.2",
     "postcss": "^8.4.5",
     "prettier": "^2.5.0",

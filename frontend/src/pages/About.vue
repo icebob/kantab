@@ -49,8 +49,8 @@
 								<br />
 								<div class="form-group">
 									<input
-										class="form-control"
 										v-model="otpUserToken"
+										class="form-control"
 										@keyup.enter.prevent="finalize2FA"
 									/>
 									<button class="button primary" @click="finalize2FA">
@@ -76,8 +76,8 @@
 
 						<div class="form-group">
 							<input
-								class="form-control"
 								v-model="otpUserToken"
+								class="form-control"
 								@keyup.enter.prevent="disable2FA"
 							/>
 							<button class="button primary" @click="disable2FA">Deactivate</button>
@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import SocialLinks from "./account/partials/SocialLinks.vue";
+import SocialLinks from "../components/account/partials/SocialLinks.vue";
 import { mapState, mapActions } from "vuex";
 import qrcode from "yaqrcode";
 
@@ -100,16 +100,16 @@ export default {
 		SocialLinks
 	},
 
-	computed: {
-		...mapState(["user"])
-	},
-
 	data() {
 		return {
 			otpauthURL: null,
 			otpUserToken: "",
 			disabling: false
 		};
+	},
+
+	computed: {
+		...mapState(["user"])
 	},
 
 	methods: {

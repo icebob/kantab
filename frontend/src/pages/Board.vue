@@ -83,9 +83,9 @@
 import { Container, Draggable } from "vue3-smooth-dnd";
 
 import { mapState, mapActions } from "vuex";
-import dateFormatter from "../../mixins/dateFormatter";
-import EditListDialog from "../EditListDialog.vue";
-import { getTextColorByBackgroundColor } from "../../utils";
+import dateFormatter from "../mixins/dateFormatter";
+import EditListDialog from "../components/EditListDialog.vue";
+import { getTextColorByBackgroundColor } from "../utils";
 
 export default {
 	components: {
