@@ -2,7 +2,7 @@
 	<div>
 		<div v-if="board">
 			<div class="m-4 flex items-center justify-space-between wrap">
-				<h3 class="text-3xl">{{ board.title }}</h3>
+				<h3 class="text-3xl font-title">{{ board.title }}</h3>
 			</div>
 			<div class="m-4 flex items-start">
 				<Container
@@ -23,7 +23,7 @@
 								<span v-if="user" class="list-drag-handle cursor-grab"
 									>&#x2630;</span
 								>
-								<span class="ml-2 flex-item-1"
+								<span class="ml-2 flex-1"
 									>{{ list.title }} ({{ list.position }})</span
 								>
 								<button

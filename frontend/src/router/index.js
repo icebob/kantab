@@ -27,7 +27,7 @@ const routes = [
 		component: () => import("../pages/About.vue")
 	},
 	{
-		path: "/board/:id",
+		path: "/board/:id-:slug",
 		name: "Board",
 		component: () => import("../pages/Board.vue"),
 		props: true

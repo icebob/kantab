@@ -1,11 +1,11 @@
 <template>
 	<div>
 		<div class="m-5">
-			<h4 class="text-3xl mb-2 text-center">{{ $t("MyBoards") }}</h4>
-			<div v-if="boards" class="flex justify-center wrap">
+			<h4 class="text-3xl mb-2 text-center font-title">{{ $t("MyBoards") }}</h4>
+			<div v-if="boards" class="flex justify-center flex-wrap">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
-						:to="{ name: 'Board', params: { id: board.id } }"
+						:to="{ name: 'Board', params: { id: board.id, slug: board.slug } }"
 						class="div text-nodec"
 					>
 						<card

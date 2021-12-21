@@ -29,12 +29,8 @@
 						{{ $t("Cancel") }}
 					</button>
 				</div>
-				<div v-if="isUpdate">
-					<button
-						class="k-button danger"
-						:title="$t('Remove')"
-						@click="removeEntity(entity)"
-					>
+				<div v-if="entity.id">
+					<button class="k-button danger" :title="$t('Remove')" @click="removeEntity()">
 						<i class="fa fa-trash"></i>
 					</button>
 				</div>
@@ -84,8 +80,8 @@ export default {
 			this.$nextTick(() => this.$refs.mainInput.focus());
 		},
 
-		async removeEntity(entity) {
-			await this.removeBoard(entity.id);
+		async removeEntity() {
+			await this.removeBoard(this.entity.id);
 			this.close();
 		},
 
