@@ -33,7 +33,8 @@ module.exports = {
 					900: "#000000"
 				},
 				panel: "#2e353a",
-				muted: "#929292"
+				muted: "#929292",
+				text: "#dedede"
 			},
 
 			fontFamily: {

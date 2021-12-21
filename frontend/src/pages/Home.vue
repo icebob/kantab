@@ -55,7 +55,7 @@ export default {
 
 	methods: {
 		showDialog(board) {
-			this.$refs.editDialog.show({ board });
+			this.$refs.editDialog.show(board);
 		}
 	}
 };

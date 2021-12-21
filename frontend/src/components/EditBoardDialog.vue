@@ -1,73 +1,88 @@
 <template>
-	<div v-if="visible" class="panel">
-		<div class="card dialog">
-			<div class="block">
-				<div class="content forms">
-					<fieldset>
-						<legend class="ml-0">{{ pageTitle }}</legend>
-
-						<div class="form-group">
-							<label>Title</label>
+	<transition name="fade">
+		<div
+			v-if="visible"
+			class="fixed top-0 right-0 bottom-0 left-0 bg-black bg-opacity-50 flex justify-center items-center"
+			@click="close()"
+		>
+			<div
+				class="w-[400px] max-w-full border border-neutral-500 rounded-md bg-panel shadow-2xl"
+			>
+				<div class="px-5 pt-5">
+					<div class="">
+						<div
+							class="mb-3 font-title font-light text-xl uppercase pb-1 border-b-2 border-primary-600"
+						>
+							{{ pageTitle }}
+						</div>
+						<div>
+							<label class="block">Title</label>
 							<input
 								ref="mainInput"
 								v-model="entity.title"
 								type="text"
 								placeholder="My epic title"
-								class="form-control"
+								class="k-input"
 							/>
+						</div>
+						<div class="mt-2">
 							<label class="mt-2">Description</label>
 							<input
 								v-model="entity.description"
 								type="text"
 								placeholder="My epic description"
-								class="form-control"
+								class="k-input"
 							/>
-							<div class="mt-2 form-option">
-								<input id="check2" v-model="entity.public" type="checkbox" /><label
-									for="check2"
-									>Public</label
-								>
-							</div>
 						</div>
-					</fieldset>
+						<div class="mt-2">
+							<label class="block select-none">
+								<input
+									v-model="entity.public"
+									class="mr-2 leading-tight"
+									type="checkbox"
+								/>
+								<span class="">Public</span>
+							</label>
+						</div>
+					</div>
 				</div>
-			</div>
-			<div
-				class="content flex align-center justify-space-between wrap buttons"
-				style="margin: 1em"
-			>
-				<div>
-					<button class="button success" @click="dialogOk(entity)">Ok</button>
-					<button class="button" style="margin-left: 10px" @click="close()">
-						Cancel
-					</button>
-				</div>
-				<div v-if="isUpdate">
-					<button class="button danger" @click="removeEntity(entity)">
-						<i class="fa fa-trash"></i>
-					</button>
+
+				<div class="flex justify-between items-center m-4">
+					<div class="space-x-3">
+						<button class="k-button primary" @click="dialogOk(entity)">Ok</button>
+						<button class="k-button outlined" @click="close()">Cancel</button>
+					</div>
+					<div v-if="isUpdate">
+						<button class="k-button danger" @click="removeEntity(entity)">
+							<i class="fa fa-trash"></i>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
+	</transition>
 </template>
 <script>
 import { mapActions } from "vuex";
-import dateFormatter from "../mixins/dateFormatter";
 
 export default {
-	mixins: [dateFormatter],
 	data() {
 		return {
 			visible: false,
-			entity: null,
+			pageTitle: "Add board",
+			entity: {
+				title: "",
+				description: "",
+				public: false
+			},
 			isUpdate: false
 		};
 	},
 
 	methods: {
 		...mapActions(["updateBoard", "createBoard", "removeBoard"]),
-		show({ board }) {
+
+		show(board) {
 			if (board) {
 				this.pageTitle = "Edit board";
 				this.entity = { ...board };
@@ -84,6 +99,7 @@ export default {
 			this.visible = true;
 			this.$nextTick(() => this.$refs.mainInput.focus());
 		},
+
 		async removeEntity(entity) {
 			await this.removeBoard(entity.id);
 			this.close();
