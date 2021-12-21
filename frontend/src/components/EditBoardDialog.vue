@@ -1,81 +1,65 @@
 <template>
-	<transition name="fade">
-		<div
-			v-if="visible"
-			class="fixed top-0 right-0 bottom-0 left-0 bg-black bg-opacity-50 flex justify-center items-center"
-			@click="close()"
-		>
-			<div
-				class="w-[400px] max-w-full border border-neutral-500 rounded-md bg-panel shadow-2xl"
-			>
-				<div class="px-5 pt-5">
-					<div class="">
-						<div
-							class="mb-3 font-title font-light text-xl uppercase pb-1 border-b-2 border-primary-600"
-						>
-							{{ pageTitle }}
-						</div>
-						<div>
-							<label class="block">Title</label>
-							<input
-								ref="mainInput"
-								v-model="entity.title"
-								type="text"
-								placeholder="My epic title"
-								class="k-input"
-							/>
-						</div>
-						<div class="mt-2">
-							<label class="mt-2">Description</label>
-							<input
-								v-model="entity.description"
-								type="text"
-								placeholder="My epic description"
-								class="k-input"
-							/>
-						</div>
-						<div class="mt-2">
-							<label class="block select-none">
-								<input
-									v-model="entity.public"
-									class="mr-2 leading-tight"
-									type="checkbox"
-								/>
-								<span class="">Public</span>
-							</label>
-						</div>
-					</div>
+	<k-dialog v-model="visible" :title="pageTitle">
+		<template #default>
+			<div class="">
+				<div>
+					<label class="block mb-1">{{ $t("Title") }}</label>
+					<input ref="mainInput" v-model="entity.title" type="text" class="k-input" />
 				</div>
-
-				<div class="flex justify-between items-center m-4">
-					<div class="space-x-3">
-						<button class="k-button primary" @click="dialogOk(entity)">Ok</button>
-						<button class="k-button outlined" @click="close()">Cancel</button>
-					</div>
-					<div v-if="isUpdate">
-						<button class="k-button danger" @click="removeEntity(entity)">
-							<i class="fa fa-trash"></i>
-						</button>
-					</div>
+				<div class="mt-3">
+					<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
+					<input v-model="entity.description" type="text" class="k-input" />
+				</div>
+				<div class="mt-3">
+					<label class="block select-none">
+						<input v-model="entity.public" class="mr-2 leading-tight" type="checkbox" />
+						<span class="">{{ $t("Public") }}</span>
+					</label>
 				</div>
 			</div>
-		</div>
-	</transition>
+		</template>
+
+		<template #actions>
+			<div class="flex justify-between items-center my-4">
+				<div class="space-x-3">
+					<button class="k-button primary" @click="save()">
+						{{ $t("Ok") }}
+					</button>
+					<button class="k-button flat" @click="close()">
+						{{ $t("Cancel") }}
+					</button>
+				</div>
+				<div v-if="isUpdate">
+					<button
+						class="k-button danger"
+						:title="$t('Remove')"
+						@click="removeEntity(entity)"
+					>
+						<i class="fa fa-trash"></i>
+					</button>
+				</div>
+			</div>
+		</template>
+	</k-dialog>
 </template>
 <script>
 import { mapActions } from "vuex";
+import KDialog from "./Dialog.vue";
 
 export default {
+	components: {
+		KDialog
+	},
+
 	data() {
 		return {
 			visible: false,
-			pageTitle: "Add board",
+			pageTitle: "",
 			entity: {
 				title: "",
 				description: "",
 				public: false
-			},
-			isUpdate: false
+			}
 		};
 	},
 
@@ -84,7 +68,7 @@ export default {
 
 		show(board) {
 			if (board) {
-				this.pageTitle = "Edit board";
+				this.pageTitle = this.$t("EditBoard");
 				this.entity = { ...board };
 				console.log("entity", this.entity);
 				this.isUpdate = true;
@@ -94,7 +78,7 @@ export default {
 					description: "",
 					public: false
 				};
-				this.pageTitle = "Add board";
+				this.pageTitle = this.$t("NewBoard");
 			}
 			this.visible = true;
 			this.$nextTick(() => this.$refs.mainInput.focus());
@@ -107,12 +91,10 @@ export default {
 
 		close() {
 			this.visible = false;
-			this.isUpdate = false;
 		},
 
-		async dialogOk(entity) {
-			console.log("entity", entity);
-			if (this.isUpdate) {
+		async save() {
+			if (this.entity.id) {
 				await this.updateBoard({
 					id: this.entity.id,
 					title: this.entity.title,
@@ -131,22 +113,3 @@ export default {
 	}
 };
 </script>
-<style scoped>
-.panel {
-	background: rgba(0, 0, 0, 0.5);
-	position: fixed;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-}
-
-.dialog {
-	position: fixed;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	width: 400px;
-	max-width: 100%;
-}
-</style>

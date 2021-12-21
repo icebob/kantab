@@ -6,5 +6,20 @@
 
 	"ModifiedAt": "Módosítva {{ago}}",
 
-    "About": "Névjegy"
+    "About": "Névjegy",
+
+	"Public": "Nyilvános",
+    "MyBoards": "Tábláim",
+    "noDescription": "nincs megjegyzés",
+    "Title": "Cím",
+    "EditBoard": "Tábla szerkesztése",
+    "NewBoard": "Új tábla",
+    "Description": "Megjegyzés",
+    "Ok": "Ok",
+    "Cancel": "Mégsem",
+	"UseCustomColor": "Egyedi szín használata",
+    "Remove": "Eltávolítás",
+	"EditList": "Lista szerkesztése",
+    "NewList": "Új lista",
+	"NewCard": "Új kártya"
 }

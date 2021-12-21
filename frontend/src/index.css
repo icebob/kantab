@@ -4,6 +4,10 @@
 
 @tailwind utilities;
 
+.list-text-shadow {
+	text-shadow: 0 0 4px rgb(0 0 0 / 60%);
+}
+
 .k-button {
 	@apply py-1.5 px-5
 		rounded-md shadow-lg
@@ -25,6 +29,22 @@
 	text-shadow: none;
 }
 
+
+.k-button.flat {
+	@apply bg-transparent
+		border-0
+		shadow-none
+		text-text
+		hover:bg-white hover:bg-opacity-10
+		active:bg-white active:bg-opacity-20;
+
+	text-shadow: none;
+}
+
+.k-button.small {
+	@apply py-1 px-2;
+}
+
 .k-button.primary {
 	@apply bg-primary-500 hover:bg-primary-400 active:bg-primary-300;
 }
@@ -34,7 +54,11 @@
 }
 
 .k-input {
-	@apply w-full border border-neutral-600 bg-neutral-800 rounded-md px-2 py-1 my-1 outline-none focus:ring-1 focus:ring-primary-600;
+	@apply w-full px-2 py-1
+		border border-neutral-600 bg-neutral-800 rounded-md
+		placeholder-neutral-500
+		outline-none
+		focus:ring-1 focus:ring-primary-600;
 }
 
 /* ---------------------------------- */
@@ -43,7 +67,17 @@
   transition: opacity .2s linear;
 }
 
-.fade-enter,
+.fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.scale-enter-active,
+.scale-leave-active {
+  transition: transform .2s linear;
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  transform: scale(0);
 }

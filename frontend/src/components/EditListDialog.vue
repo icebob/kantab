@@ -1,103 +1,91 @@
 <template>
-	<div v-if="visible" class="panel">
-		<div class="card dialog">
-			<div class="block">
-				<div class="content forms">
-					<fieldset>
-						<legend class="ml-0">{{ pageTitle }}</legend>
-
-						<div class="form-group">
-							<label>Title</label>
-							<input
-								ref="mainInput"
-								v-model="entity.title"
-								type="text"
-								placeholder="My epic title"
-								class="form-control"
-							/>
-							<label class="mt-2">Description</label>
-							<input
-								v-model="entity.description"
-								type="text"
-								placeholder="My epic description"
-								class="form-control"
-							/>
-							<label class="mt-2">Color</label>
-							<div class="form-control">
-								<input
-									id="colorCheck"
-									type="checkbox"
-									:value="entity.color != null"
-									@input="colorCheckboxInput($event)"
-								/>
-								<label class="ml-2" for="colorCheck">Use custom color</label>
-								<div v-if="entity.color != null" class="ml-5 mt-2">
-									<input
-										v-model="entity.color"
-										type="color"
-										placeholder="List color"
-										class="h-8 w-16"
-									/>
-								</div>
-							</div>
+	<k-dialog v-model="visible" :title="pageTitle">
+		<template #default>
+			<div class="">
+				<div>
+					<label class="block mb-1">{{ $t("Title") }}</label>
+					<input ref="mainInput" v-model="entity.title" type="text" class="k-input" />
+				</div>
+				<div class="mt-3">
+					<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
+					<input v-model="entity.description" type="text" class="k-input" />
+				</div>
+				<div class="mt-3">
+					<label class="block select-none">
+						<input
+							class="mr-2 leading-tight"
+							type="checkbox"
+							:value="entity.color != null"
+							@input="colorCheckboxInput($event)"
+						/>
+						<span class="">{{ $t("UseCustomColor") }}</span>
+						<div v-if="entity.color != null" class="ml-5 mt-2">
+							<input v-model="entity.color" type="color" class="h-8 w-16" />
 						</div>
-					</fieldset>
+					</label>
 				</div>
 			</div>
-			<div
-				class="content flex align-center justify-space-between wrap buttons"
-				style="margin: 1em"
-			>
-				<div>
-					<button class="button primary" @click="dialogOk(entity)">Ok</button>
-					<button class="button outline" style="margin-left: 10px" @click="close()">
-						Cancel
+		</template>
+
+		<template #actions>
+			<div class="flex justify-between items-center my-4">
+				<div class="space-x-3">
+					<button class="k-button primary" @click="save()">
+						{{ $t("Ok") }}
+					</button>
+					<button class="k-button flat" @click="close()">
+						{{ $t("Cancel") }}
 					</button>
 				</div>
 				<div v-if="isUpdate">
-					<button class="button danger" @click="removeEntity(entity)">
+					<button
+						class="k-button danger"
+						:title="$t('Remove')"
+						@click="removeEntity(entity)"
+					>
 						<i class="fa fa-trash"></i>
 					</button>
 				</div>
 			</div>
-		</div>
-	</div>
+		</template>
+	</k-dialog>
 </template>
 <script>
 import { mapActions } from "vuex";
-import dateFormatter from "../mixins/dateFormatter";
+import KDialog from "./Dialog.vue";
 
 export default {
-	mixins: [dateFormatter],
+	components: {
+		KDialog
+	},
+
 	data() {
 		return {
 			visible: false,
-			entity: null,
-			boardId: null,
-			isUpdate: false
+			pageTitle: "",
+			entity: {
+				boardId: null,
+				title: "",
+				description: "",
+				color: null
+			},
+			boardId: null
 		};
 	},
 
 	methods: {
-		...mapActions([
-			"updateBoard",
-			"createBoard",
-			"createList",
-			"removeBoard",
-			"updateList",
-			"removeList"
-		]),
+		...mapActions(["createList", "updateList", "removeList"]),
 		show({ list, boardId }) {
 			if (list) {
-				this.pageTitle = "Edit list";
+				this.pageTitle = this.$t("EditList");
 				this.entity = list;
-				this.isUpdate = true;
 			} else {
-				this.pageTitle = "Add list";
+				this.pageTitle = this.$t("NewList");
 				this.entity = {
 					boardId: boardId,
 					title: "",
-					description: ""
+					description: "",
+					color: null
 				};
 			}
 			this.boardId = boardId;
@@ -119,23 +107,23 @@ export default {
 
 		close() {
 			this.visible = false;
-			this.isUpdate = false;
 		},
 
-		async dialogOk(entity) {
-			console.log("entity", entity);
-			if (this.isUpdate) {
+		async save() {
+			if (this.entity.id) {
 				await this.updateList({
 					id: this.entity.id,
 					title: this.entity.title,
 					description: this.entity.description,
+					color: this.entity.color,
 					board: this.boardId
 				});
 			} else {
 				await this.createList({
 					board: this.boardId,
 					title: this.entity.title,
-					description: this.entity.description
+					description: this.entity.description,
+					color: this.entity.color
 				});
 			}
 			this.close();
@@ -143,22 +131,3 @@ export default {
 	}
 };
 </script>
-<style scoped>
-.panel {
-	background: rgba(0, 0, 0, 0.5);
-	position: fixed;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-}
-
-.dialog {
-	position: fixed;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	width: 400px;
-	max-width: 100%;
-}
-</style>

@@ -1,10 +1,10 @@
 <template>
 	<div>
 		<div v-if="board">
-			<div class="content flex align-center justify-space-between wrap" style="margin: 1em">
-				<h3 class="text-2xl">{{ board.title }}</h3>
+			<div class="m-4 flex items-center justify-space-between wrap">
+				<h3 class="text-3xl">{{ board.title }}</h3>
 			</div>
-			<div class="content flex align-start" style="margin: 1em">
+			<div class="m-4 flex items-start">
 				<Container
 					orientation="horizontal"
 					drag-handle-selector=".list-drag-handle"
@@ -13,23 +13,37 @@
 					@drop="onListDrop($event)"
 				>
 					<Draggable v-for="list in board.lists.rows" :key="list.id">
-						<div class="list panel primary">
-							<div class="header flex align-center" :style="getListHeaderStyle(list)">
-								<span v-if="user" class="list-drag-handle">&#x2630;</span>
-								<span class="list-title flex-item-1"
+						<div
+							class="w-list min-w-list mx-2 bg-panel rounded-md shadow-panel border border-neutral-600"
+						>
+							<div
+								class="flex items-center bg-primary-550 rounded-t-md py-2 px-4 font-title text-lg list-text-shadow"
+								:style="getListHeaderStyle(list)"
+							>
+								<span v-if="user" class="list-drag-handle cursor-grab"
+									>&#x2630;</span
+								>
+								<span class="ml-2 flex-item-1"
 									>{{ list.title }} ({{ list.position }})</span
 								>
 								<button
 									v-if="user"
-									class="button outline small"
+									class="k-button flat small"
+									@click="addingCardEditMode(list)"
+								>
+									<i class="fa fa-plus"></i>
+								</button>
+								<button
+									v-if="user"
+									class="k-button flat small"
 									@click="showDialog(list)"
 								>
 									<i class="fa fa-pencil"></i>
 								</button>
 							</div>
 							<Container
-								class="list-content"
-								group-name="col"
+								class="p-2"
+								group-name="card"
 								drag-class="card-ghost"
 								drop-class="card-ghost-drop"
 								:drop-placeholder="cardDropPlaceholderOptions"
@@ -37,27 +51,29 @@
 								@drop="e => onCardDrop(list, e)"
 							>
 								<Draggable v-for="card in list.cards.rows" :key="card.id">
-									<div class="card">
-										<div class="block">
+									<div
+										class="my-2 border border-neutral-700 bg-card shadow rounded-md transition-transform"
+									>
+										<div class="p-5">
 											<div>{{ card.title }} ({{ card.position }})</div>
 										</div>
 									</div>
 								</Draggable>
 								<div
 									v-if="!addingCard || addingCardList != list.id"
-									class="new-card-placeholder"
+									class="my-2 border-2 border-neutral-600 border-dashed text-neutral-500 rounded-md flex justify-center items-center h-16"
 									@click="addingCardEditMode(list)"
 								>
-									<div class="icon">
-										<i class="fa fa-plus"></i>
+									<div class="flex-1 text-center">
+										<i class="fa fa-plus text-3xl"></i>
+										<div class="text-md">{{ $t("NewCard") }}</div>
 									</div>
-									<div class="label">Add card</div>
 								</div>
 								<div v-else>
 									<textarea
 										ref="addingCardTextarea"
 										v-model="addingCardTitle"
-										class="adding-card-textarea"
+										class="k-input"
 										placeholder="Enter card title"
 										@keydown.enter.stop.prevent="addCard(list)"
 										@keydown.esc.stop.prevent="cancelAddingCard"
@@ -67,11 +83,15 @@
 						</div>
 					</Draggable>
 				</Container>
-				<div class="new-list-placeholder" @click="showDialog()">
-					<div class="icon">
-						<i class="fa fa-plus"></i>
+
+				<div
+					class="w-list min-w-list mx-2 border-2 border-neutral-500 border-dashed text-neutral-500 rounded-md flex justify-center items-center h-20"
+					@click="showDialog()"
+				>
+					<div class="flex-1 text-center">
+						<i class="fa fa-plus text-3xl"></i>
+						<div class="text-md">{{ $t("NewList") }}</div>
 					</div>
-					<div class="label">New list</div>
 				</div>
 			</div>
 		</div>
@@ -214,93 +234,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.list {
-	width: 280px;
-	margin: 0 0.5em;
-
-	&.panel {
-		border: 1px solid #3c4348;
-	}
-
-	.list-drag-handle {
-		cursor: grab;
-	}
-
-	.list-title {
-		margin-left: 0.5em;
-	}
-
-	.header {
-		padding: 0.4em 0.8em;
-		.button {
-			border: none;
-			box-shadow: none;
-			padding: 2px 4px;
-			color: inherit;
-		}
-	}
-
-	.list-content {
-		padding: 0.5em;
-
-		.card {
-			margin: 0.5em 0;
-			border: 1px solid #3c4348;
-			box-shadow: 0 3px 5px 0 rgb(black, 0.25);
-			background-color: #22272b;
-			transition: transform 0.2s ease-in-out;
-		}
-
-		.card-ghost {
-			transition: transform 0.18s ease;
-			transform: rotateZ(5deg);
-		}
-
-		.card-ghost-drop {
-			transition: transform 0.18s ease-in-out;
-			transform: rotateZ(0deg);
-		}
-	}
+.card-ghost {
+	transition: transform 0.18s ease;
+	transform: rotateZ(5deg);
 }
 
-.new-list-placeholder,
-.new-card-placeholder {
-	padding: 0.5em;
-
-	border: 2px dashed #666;
-	border-radius: 8px;
-	color: #666;
-	cursor: pointer;
-
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-	.icon {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		font-size: 2em;
-		.fa {
-			transition: transform 0.2s ease-in-out;
-		}
-	}
-}
-
-.new-list-placeholder {
-	width: 240px;
-	min-width: 240px;
-	height: 80px;
-}
-
-.adding-card-textarea {
-	height: 70px;
-	width: 100%;
-	background: black;
-	color: white;
-
-	overflow: hidden;
-	overflow-wrap: break-word;
-	resize: none;
+.card-ghost-drop {
+	transition: transform 0.18s ease-in-out;
+	transform: rotateZ(0deg);
 }
 </style>

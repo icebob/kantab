@@ -27,12 +27,14 @@ module.exports = {
 					300: "#B8D952",
 					400: "#AAD230",
 					500: "#90B227",
+					550: "#7f9d23",
 					600: "#6B841D",
 					700: "#465613",
 					800: "#202809",
 					900: "#000000"
 				},
 				panel: "#2e353a",
+				card: "#22272b",
 				muted: "#929292",
 				text: "#dedede"
 			},
@@ -54,6 +56,14 @@ module.exports = {
 
 			boxShadow: {
 				panel: "2px 5px 5px 0 rgb(0 0 0 / 25%)"
+			},
+
+			width: {
+				list: "280px"
+			},
+
+			minWidth: {
+				list: "280px"
 			}
 		}
 	},

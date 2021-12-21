@@ -6,5 +6,21 @@
 
 	"ModifiedAt": "Modified at {{ago}}",
 
-    "About": "About"
+    "About": "About",
+
+    "Public": "Public",
+    "MyBoards": "My boards",
+    "noDescription": "no description",
+    "Title": "Title",
+    "EditBoard": "Edit board",
+    "NewBoard": "New board",
+    "Description": "Description",
+    "Ok": "Ok",
+    "Cancel": "Cancel",
+	"UseCustomColor": "Use custom color",
+    "Remove": "Remove",
+	"EditList": "Edit list",
+    "NewList": "New list",
+	"NewCard": "Add card"
+
 }
