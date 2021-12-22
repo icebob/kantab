@@ -8,6 +8,9 @@
 				<router-link class="mx-4 hover:underline" to="/style-guide"
 					>Style Guide</router-link
 				>
+				<router-link class="mx-4 hover:underline" to="/style-guide2"
+					>Style Guide 2</router-link
+				>
 				<router-link class="mx-4 hover:underline" to="/protected">Protected</router-link>
 				<router-link class="mx-4 hover:underline" to="/about">{{
 					$t("About")

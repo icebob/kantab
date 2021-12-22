@@ -36,6 +36,10 @@ html, body {
 	h5 {
 		@apply text-xl font-title font-light;
 	}
+
+	a.link {
+		@apply border-b border-b-primary text-white hover:text-primary
+	}
 }
 
 @layer components {
@@ -58,65 +62,122 @@ html, body {
 
 	.button {
 		@apply py-1.5 px-5
-			rounded-md shadow-lg
-			text-base text-gray-900
-			bg-gray-400
-			hover:bg-gray-300
-			active:bg-gray-200;
+			rounded-md shadow
+			text-gray-900
+
+			bg-gradient-to-b
+			from-gray-400 to-gray-500
+			hover:from-gray-300 hover:to-gray-400
+			active:from-gray-200 active:to-gray-300
+
+			hover:shadow-lg
+			active:shadow-none;
 
 			text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
+
+		&.icon > i {
+			@apply mr-2;
+		}
+
+		&.primary {
+			@apply bg-gradient-to-b
+				from-primary-400 to-primary-500
+				hover:from-primary-300 hover:to-primary-400
+				active:from-primary-200 active:to-primary-300;
+		}
+		&.secondary {
+			@apply bg-gradient-to-b
+				from-secondary-400 to-secondary-500
+				hover:from-secondary-300 hover:to-secondary-400
+				active:from-secondary-200 active:to-secondary-300;
+		}
+		&.success {
+			@apply bg-gradient-to-b
+				from-green-500 to-green-600
+				hover:from-green-400 hover:to-green-500
+				active:from-green-300 active:to-green-400;
+		}
+		&.warning {
+			@apply bg-gradient-to-b
+				from-yellow-500 to-yellow-600
+				hover:from-yellow-400 hover:to-yellow-500
+				active:from-yellow-300 active:to-yellow-400;
+		}
+		&.danger {
+			@apply bg-gradient-to-b
+				from-red-700 to-red-800
+				hover:from-red-600 hover:to-red-700
+				active:from-red-500 active:to-red-600
+				text-white text-shadow-none;
+		}
+
+		&.outlined {
+			@apply bg-none bg-transparent
+				border border-text
+				text-text
+				hover:bg-white hover:bg-opacity-10
+				active:bg-white active:bg-opacity-20
+				text-shadow-none;
+
+			&.large {
+				@apply border-2;
+			}
+		}
+
+		&.flat {
+			@apply bg-none bg-transparent
+				border-0
+				shadow-none
+				text-shadow-none
+				text-text
+				hover:bg-white hover:bg-opacity-10
+				active:bg-white active:bg-opacity-20;
+		}
+
+		&[disabled] {
+			@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
+		}
+
+		&.loading {
+			@apply text-transparent pointer-events-none relative text-shadow-none;
+		}
+
+		&.loading::after {
+			@apply rounded-full block absolute
+				w-4 h-4 -ml-2 -mt-2 left-1/2 top-1/2
+				animate-spin;
+
+			content: "";
+			border: 2px solid #1D2124;
+			border-right-color: transparent;
+			border-top-color: transparent;
+		}
+
+		&.floating {
+			@apply w-10 h-10 p-0 rounded-full text-center;
+		}
+
+		&.small {
+			@apply py-1 px-3 text-sm;
+
+			&.floating {
+				@apply w-8 h-8 p-0 rounded-full text-sm;
+			}
+		}
+
+		&.large {
+			@apply py-2 px-8 text-lg;
+
+			&.loading::after {
+				@apply w-6 h-6 -mt-3;
+			}
+
+			&.floating {
+				@apply w-14 h-14 p-0 rounded-full text-2xl;
+			}
+		}
 	}
 
-	.button.outlined {
-		@apply bg-transparent
-			border border-gray-400
-			text-text
-			hover:bg-white hover:bg-opacity-10
-			active:bg-white active:bg-opacity-20;
-
-		text-shadow: none;
-	}
-
-
-	.button.flat {
-		@apply bg-transparent
-			border-0
-			shadow-none
-			text-shadow-none
-			text-text
-			hover:bg-white hover:bg-opacity-10
-			active:bg-white active:bg-opacity-20;
-	}
-
-	.button.small {
-		@apply py-1 px-2;
-	}
-
-	.button.primary {
-		@apply bg-primary-500 hover:bg-primary-400 active:bg-primary-300;
-	}
-	.button.danger {
-		@apply bg-red-800 hover:bg-red-700 active:bg-red-600 text-white text-shadow-none;
-	}
-
-	.button.loading {
-		@apply text-transparent pointer-events-none relative text-shadow-none;
-	}
-
-	.button.loading::after {
-		@apply rounded-full block absolute
-			w-4 h-4 -ml-2 -mt-2 left-1/2 top-1/2
-			animate-spin;
-
-		content: "";
-		border: 2px solid #1D2124;
-		border-right-color: transparent;
-		border-top-color: transparent;
-	}
-
-	.button[disabled] {
-		@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
-	}
 
 	.form-input {
 		@apply w-full px-2 py-1
@@ -132,17 +193,18 @@ html, body {
 			shadow-md
 			text-shadow
 			text-sm;
-	}
-	.alert.warning {
-		@apply bg-yellow-500;
-	}
 
-	.alert.error {
-		@apply bg-red-500;
-	}
+		&.warning {
+			@apply bg-yellow-500;
+		}
 
-	.alert.success {
-		@apply bg-green-600;
+		&.error {
+			@apply bg-red-500;
+		}
+
+		&.success {
+			@apply bg-green-600;
+		}
 	}
 
 }

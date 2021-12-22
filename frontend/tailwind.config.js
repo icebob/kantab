@@ -21,17 +21,17 @@ module.exports = {
 			colors: {
 				// https://www.tailwindshades.com/#color=74.70967741935483%2C63.78600823045269%2C47.647058823529406&step-up=8&step-down=11&hue-shift=0&name=atlantis&overrides=e30%3D
 				primary: {
-					DEFAULT: "#A1C72C",
-					50: "#E3F0BB",
-					100: "#DCECAA",
-					200: "#CEE589",
-					300: "#C0DD67",
-					400: "#B3D646",
-					500: "#A1C72C",
-					600: "#7C9922",
-					700: "#576B18",
-					800: "#313D0E",
-					900: "#0C0F03"
+					DEFAULT: "#8CAD26",
+					50: "#D8EAA0",
+					100: "#D1E790",
+					200: "#C4DF6E",
+					300: "#B6D84D",
+					400: "#A7CE2D",
+					500: "#8CAD26",
+					600: "#677F1C",
+					700: "#425112",
+					800: "#1C2308",
+					900: "#000000"
 				},
 				secondary: {
 					DEFAULT: "#C96B2C",
