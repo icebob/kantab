@@ -13,7 +13,7 @@ describe("Test signup page with password", () => {
 	const baseUrl = Cypress.config("baseUrl");
 	it("Check the signup screen", () => {
 		cy.visit("/signup");
-		cy.contains("h4", "Sign Up");
+		cy.contains("h3", "Sign Up");
 	});
 
 	it("Try too short password", () => {
@@ -40,7 +40,7 @@ describe("Test signup page with password", () => {
 
 				cy.visit(`/verify-account?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "My boards");
+				cy.contains("h3", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -88,7 +88,7 @@ describe("Test signup page with passwordless account", () => {
 
 				cy.visit(`/verify-account?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "My boards");
+				cy.contains("h3", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -121,7 +121,7 @@ describe("Test signup page with passwordless account", () => {
 
 				cy.visit(`/passwordless?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "My boards");
+				cy.contains("h3", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -147,7 +147,7 @@ describe("Test signup page with passwordless account", () => {
 
 				cy.visit(`/passwordless?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "My boards");
+				cy.contains("h3", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});

@@ -40,23 +40,21 @@ html, body {
 
 @layer components {
 
-	@responsive {
-        .text-shadow {
-        	text-shadow: 0 0 0.25rem rgb(0 0 0 / 60%);
-        }
+	.text-shadow {
+		text-shadow: 0 0 0.25rem rgb(0 0 0 / 60%);
+	}
 
-        .text-shadow-md {
-        	text-shadow: 0 0 0.5rem rgb(0 0 0 / 60%);
-        }
+	.text-shadow-md {
+		text-shadow: 0 0 0.5rem rgb(0 0 0 / 60%);
+	}
 
-        .text-shadow-lg {
-        	text-shadow: 0 0 1rem rgb(0 0 0 / 60%);
-        }
+	.text-shadow-lg {
+		text-shadow: 0 0 1rem rgb(0 0 0 / 60%);
+	}
 
-        .text-shadow-none {
-        	text-shadow: none;
-        }
-    }
+	.text-shadow-none {
+		text-shadow: none;
+	}
 
 	.button {
 		@apply py-1.5 px-5

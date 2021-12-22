@@ -6,7 +6,7 @@ describe("Test login page with username & password", () => {
 	const baseUrl = Cypress.config("baseUrl");
 	it("Check the login page", () => {
 		cy.visit("/login");
-		cy.contains("h4", "Sign In");
+		cy.contains("h3", "Sign In");
 	});
 
 	it("Try to login with wrong username", () => {
@@ -55,7 +55,7 @@ describe("Test login page with passwordless", () => {
 
 				cy.visit(`/passwordless?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h4", "My boards");
+				cy.contains("h3", "My boards");
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
