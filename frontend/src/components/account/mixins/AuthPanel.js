@@ -3,16 +3,12 @@
 import Logo from "../partials/Logo.vue";
 import SubmitButton from "../partials/SubmitButton.vue";
 import SocialAuth from "../partials/SocialAuth.vue";
-import PageCenter from "../partials/PageCenter.vue";
-import PageContent from "../partials/PageContent.vue";
 
 export default {
 	components: {
 		Logo,
 		SubmitButton,
-		SocialAuth,
-		PageContent,
-		PageCenter
+		SocialAuth
 	},
 	data() {
 		return {

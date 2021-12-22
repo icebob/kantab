@@ -35,7 +35,7 @@ const routes = [
 	{
 		path: "/login",
 		name: "login",
-		component: () => import("../components/account/Login.vue"),
+		component: () => import("../pages/auth/Login.vue"),
 		meta: {
 			redirectAuth: "home"
 		}

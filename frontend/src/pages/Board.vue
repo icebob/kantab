@@ -2,7 +2,7 @@
 	<div>
 		<div v-if="board">
 			<div class="m-4 flex items-center justify-space-between wrap">
-				<h3 class="text-3xl font-title">{{ board.title }}</h3>
+				<h3>{{ board.title }}</h3>
 			</div>
 			<div class="m-4 flex items-start">
 				<Container
@@ -17,7 +17,7 @@
 							class="w-list min-w-list mx-2 bg-panel rounded-md shadow-panel border border-neutral-600"
 						>
 							<div
-								class="flex items-center bg-primary-550 rounded-t-md py-2 px-4 font-title text-lg list-text-shadow"
+								class="flex items-center bg-primary-550 rounded-t-md py-2 px-4 font-title text-lg text-shadow"
 								:style="getListHeaderStyle(list)"
 							>
 								<span v-if="user" class="list-drag-handle cursor-grab"

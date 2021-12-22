@@ -20,61 +20,140 @@ html, body {
 	background-attachment: fixed;
 }
 
-.list-text-shadow {
-	text-shadow: 0 0 4px rgb(0 0 0 / 60%);
+@layer base {
+	h1 {
+		@apply text-5xl font-title font-light;
+	}
+	h2 {
+		@apply text-4xl font-title font-light;
+	}
+	h3 {
+		@apply text-3xl font-title font-light;
+	}
+	h4 {
+		@apply text-2xl font-title font-light;
+	}
+	h5 {
+		@apply text-xl font-title font-light;
+	}
 }
 
-.k-button {
-	@apply py-1.5 px-5
-		rounded-md shadow-lg
-		text-base text-gray-900
-		bg-gray-400
-		hover:bg-gray-300
-		active:bg-gray-200;
+@layer components {
 
-		text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
+	@responsive {
+        .text-shadow {
+        	text-shadow: 0 0 0.25rem rgb(0 0 0 / 60%);
+        }
+
+        .text-shadow-md {
+        	text-shadow: 0 0 0.5rem rgb(0 0 0 / 60%);
+        }
+
+        .text-shadow-lg {
+        	text-shadow: 0 0 1rem rgb(0 0 0 / 60%);
+        }
+
+        .text-shadow-none {
+        	text-shadow: none;
+        }
+    }
+
+	.k-button {
+		@apply py-1.5 px-5
+			rounded-md shadow-lg
+			text-base text-gray-900
+			bg-gray-400
+			hover:bg-gray-300
+			active:bg-gray-200;
+
+			text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
+	}
+
+	.k-button.outlined {
+		@apply bg-transparent
+			border border-gray-400
+			text-text
+			hover:bg-white hover:bg-opacity-10
+			active:bg-white active:bg-opacity-20;
+
+		text-shadow: none;
+	}
+
+
+	.k-button.flat {
+		@apply bg-transparent
+			border-0
+			shadow-none
+			text-shadow-none
+			text-text
+			hover:bg-white hover:bg-opacity-10
+			active:bg-white active:bg-opacity-20;
+	}
+
+	.k-button.small {
+		@apply py-1 px-2;
+	}
+
+	.k-button.primary {
+		@apply bg-primary-500 hover:bg-primary-400 active:bg-primary-300;
+	}
+	.k-button.danger {
+		@apply bg-red-800 hover:bg-red-700 active:bg-red-600 text-white text-shadow-none;
+	}
+
+	.k-button.loading {
+		@apply text-transparent pointer-events-none relative text-shadow-none;
+	}
+
+	.k-button.loading::after {
+		@apply rounded-full block absolute
+			w-4 h-4 -ml-2 -mt-2 left-1/2 top-1/2
+			animate-spin;
+
+		content: "";
+		border: 2px solid #1D2124;
+		border-right-color: transparent;
+		border-top-color: transparent;
+	}
+
+	.k-button[disabled] {
+		@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
+	}
+
+	.k-input {
+		@apply w-full px-2 py-1
+			border border-neutral-600 bg-neutral-800 rounded-md
+			placeholder-neutral-500
+			outline-none
+			focus:ring-1 focus:ring-primary-600;
+	}
+
+	.k-alert {
+		@apply bg-neutral-500 text-white
+			px-2 py-1 rounded
+			shadow-md
+			text-shadow
+			text-sm;
+	}
+	.k-alert.warning {
+		@apply bg-yellow-500;
+	}
+
+	.k-alert.error {
+		@apply bg-red-500;
+	}
+
+	.k-alert.success {
+		@apply bg-green-600;
+	}
+
 }
 
-.k-button.outlined {
-	@apply bg-transparent
-		border border-gray-400
-		text-text
-		hover:bg-white hover:bg-opacity-10
-		active:bg-white active:bg-opacity-20;
 
-	text-shadow: none;
-}
-
-
-.k-button.flat {
-	@apply bg-transparent
-		border-0
-		shadow-none
-		text-text
-		hover:bg-white hover:bg-opacity-10
-		active:bg-white active:bg-opacity-20;
-
-	text-shadow: none;
-}
-
-.k-button.small {
-	@apply py-1 px-2;
-}
-
-.k-button.primary {
-	@apply bg-primary-500 hover:bg-primary-400 active:bg-primary-300;
-}
-.k-button.danger {
-	@apply bg-red-800 hover:bg-red-700 active:bg-red-600 text-white;
-	text-shadow: none;
-}
-
-.k-input {
-	@apply w-full px-2 py-1
-		border border-neutral-600 bg-neutral-800 rounded-md
-		placeholder-neutral-500
-		outline-none
-		focus:ring-1 focus:ring-primary-600;
+/* ---------------------------------- */
+@keyframes progress-bar-stripes {
+	from  { background-position: 40px 0; }
+	to    { background-position: 0 0; }
 }
 
 /* ---------------------------------- */

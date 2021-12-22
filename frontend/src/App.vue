@@ -1,6 +1,6 @@
 <template>
-	<div id="app">
-		<header class="flex align-center p-5">
+	<div class="absolute w-full h-full left-0 top-0 right-0 bottom-0">
+		<header v-if="user" class="flex align-center p-5">
 			<Logo class="mr-2" />
 			<div class="flex-auto"></div>
 			<div class="font-title text-xl">
@@ -37,15 +37,23 @@
 
 <script>
 import Logo from "./components/account/partials/Logo.vue";
-import store from "./store/index";
+import { mapState, mapActions } from "vuex";
 
 export default {
 	components: {
 		Logo
 	},
 
+	computed: {
+		...mapState(["user"])
+	},
+
 	created() {
-		store.dispatch("init");
+		this.init();
+	},
+
+	methods: {
+		...mapActions(["init"])
 	}
 };
 </script>

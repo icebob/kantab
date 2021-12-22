@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="m-5">
-			<h4 class="text-3xl mb-2 text-center font-title">{{ $t("MyBoards") }}</h4>
+			<h3 class="mb-2 text-center">{{ $t("MyBoards") }}</h3>
 			<div v-if="boards" class="flex justify-center flex-wrap">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
