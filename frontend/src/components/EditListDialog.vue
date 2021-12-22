@@ -4,11 +4,11 @@
 			<div class="">
 				<div>
 					<label class="block mb-1">{{ $t("Title") }}</label>
-					<input ref="mainInput" v-model="entity.title" type="text" class="k-input" />
+					<input ref="mainInput" v-model="entity.title" type="text" class="form-input" />
 				</div>
 				<div class="mt-3">
 					<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
-					<input v-model="entity.description" type="text" class="k-input" />
+					<input v-model="entity.description" type="text" class="form-input" />
 				</div>
 				<div class="mt-3">
 					<label class="block select-none">
@@ -30,15 +30,15 @@
 		<template #actions>
 			<div class="flex justify-between items-center my-4">
 				<div class="space-x-3">
-					<button class="k-button primary" @click="save()">
+					<button class="button primary" @click="save()">
 						{{ $t("Ok") }}
 					</button>
-					<button class="k-button flat" @click="close()">
+					<button class="button flat" @click="close()">
 						{{ $t("Cancel") }}
 					</button>
 				</div>
 				<div v-if="entity.id">
-					<button class="k-button danger" :title="$t('Remove')" @click="removeEntity()">
+					<button class="button danger" :title="$t('Remove')" @click="removeEntity()">
 						<i class="fa fa-trash"></i>
 					</button>
 				</div>

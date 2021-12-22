@@ -61,6 +61,10 @@ export default {
 		};
 	},
 
+	mounted() {
+		this.$nextTick(() => (this.loaded = true));
+	},
+
 	methods: {
 		getTypographyInfo(elType) {
 			if (this.loaded && this.$el) {
@@ -77,10 +81,10 @@ export default {
 				}
 			}
 		}
-	},
-
-	mounted() {
-		this.$nextTick(() => (this.loaded = true));
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+@import "../../styles/style.scss";
+</style>

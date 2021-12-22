@@ -7,14 +7,14 @@
 			@submit.prevent="$authenticator.loginApollo(username, password)"
 		>
 			<div>
-				<input v-model="username" name="username" id="username" placeholder="Email" />
+				<input id="username" v-model="username" name="username" placeholder="Email" />
 			</div>
 			<div>
 				<input
-					type="password"
-					v-model="password"
-					name="password"
 					id="password"
+					v-model="password"
+					type="password"
+					name="password"
 					placeholder="Enter password"
 				/>
 			</div>
@@ -27,7 +27,7 @@
 	</div>
 </template>
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapActions } from "vuex";
 export default {
 	data() {
 		return {

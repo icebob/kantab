@@ -381,6 +381,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "../../styles/style.scss";
+
 .panels {
 	align-items: flex-start;
 	.panel,

@@ -58,7 +58,7 @@ html, body {
         }
     }
 
-	.k-button {
+	.button {
 		@apply py-1.5 px-5
 			rounded-md shadow-lg
 			text-base text-gray-900
@@ -69,7 +69,7 @@ html, body {
 			text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
 	}
 
-	.k-button.outlined {
+	.button.outlined {
 		@apply bg-transparent
 			border border-gray-400
 			text-text
@@ -80,7 +80,7 @@ html, body {
 	}
 
 
-	.k-button.flat {
+	.button.flat {
 		@apply bg-transparent
 			border-0
 			shadow-none
@@ -90,22 +90,22 @@ html, body {
 			active:bg-white active:bg-opacity-20;
 	}
 
-	.k-button.small {
+	.button.small {
 		@apply py-1 px-2;
 	}
 
-	.k-button.primary {
+	.button.primary {
 		@apply bg-primary-500 hover:bg-primary-400 active:bg-primary-300;
 	}
-	.k-button.danger {
+	.button.danger {
 		@apply bg-red-800 hover:bg-red-700 active:bg-red-600 text-white text-shadow-none;
 	}
 
-	.k-button.loading {
+	.button.loading {
 		@apply text-transparent pointer-events-none relative text-shadow-none;
 	}
 
-	.k-button.loading::after {
+	.button.loading::after {
 		@apply rounded-full block absolute
 			w-4 h-4 -ml-2 -mt-2 left-1/2 top-1/2
 			animate-spin;
@@ -116,11 +116,11 @@ html, body {
 		border-top-color: transparent;
 	}
 
-	.k-button[disabled] {
+	.button[disabled] {
 		@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
 	}
 
-	.k-input {
+	.form-input {
 		@apply w-full px-2 py-1
 			border border-neutral-600 bg-neutral-800 rounded-md
 			placeholder-neutral-500
@@ -128,22 +128,22 @@ html, body {
 			focus:ring-1 focus:ring-primary-600;
 	}
 
-	.k-alert {
+	.alert {
 		@apply bg-neutral-500 text-white
 			px-2 py-1 rounded
 			shadow-md
 			text-shadow
 			text-sm;
 	}
-	.k-alert.warning {
+	.alert.warning {
 		@apply bg-yellow-500;
 	}
 
-	.k-alert.error {
+	.alert.error {
 		@apply bg-red-500;
 	}
 
-	.k-alert.success {
+	.alert.success {
 		@apply bg-green-600;
 	}
 

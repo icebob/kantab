@@ -17,7 +17,7 @@
 							class="w-list min-w-list mx-2 bg-panel rounded-md shadow-panel border border-neutral-600"
 						>
 							<div
-								class="flex items-center bg-primary-550 rounded-t-md py-2 px-4 font-title text-lg text-shadow"
+								class="flex items-center bg-primary-600 rounded-t-md py-2 px-4 font-title text-lg text-shadow"
 								:style="getListHeaderStyle(list)"
 							>
 								<span v-if="user" class="list-drag-handle cursor-grab"
@@ -28,14 +28,14 @@
 								>
 								<button
 									v-if="user"
-									class="k-button flat small"
+									class="button flat small"
 									@click="addingCardEditMode(list)"
 								>
 									<i class="fa fa-plus"></i>
 								</button>
 								<button
 									v-if="user"
-									class="k-button flat small"
+									class="button flat small"
 									@click="showDialog(list)"
 								>
 									<i class="fa fa-pencil"></i>
@@ -73,7 +73,7 @@
 									<textarea
 										ref="addingCardTextarea"
 										v-model="addingCardTitle"
-										class="k-input"
+										class="form-input"
 										placeholder="Enter card title"
 										@keydown.enter.stop.prevent="addCard(list)"
 										@keydown.esc.stop.prevent="cancelAddingCard"

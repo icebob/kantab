@@ -2,7 +2,7 @@
 	<div>
 		<div class="m-5">
 			<h3 class="mb-2 text-center">{{ $t("MyBoards") }}</h3>
-			<div v-if="boards" class="flex justify-center flex-wrap">
+			<div v-if="boards && boards.length > 0" class="flex justify-center flex-wrap">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
 						:to="{ name: 'Board', params: { id: board.id, slug: board.slug } }"
@@ -20,6 +20,9 @@
 						/>
 					</router-link>
 				</div>
+			</div>
+			<div v-else class="mt-8 text-center text-muted">
+				You have no boards. Click to the <i class="fa fa-plus" /> button to create one.
 			</div>
 		</div>
 

@@ -2,8 +2,8 @@
 	<div>
 		<h3 class="my-4">Reset Password</h3>
 		<form @submit.prevent="submit">
-			<div v-if="error" class="k-alert error mb-2">{{ error }}</div>
-			<div v-if="success" class="k-alert success mb-2">{{ success }}</div>
+			<div v-if="error" class="alert error mb-2">{{ error }}</div>
+			<div v-if="success" class="alert success mb-2">{{ success }}</div>
 			<template v-if="$route.query.token">
 				<div class="flex relative items-center mt-2">
 					<input
@@ -11,7 +11,7 @@
 						type="password"
 						name="password"
 						placeholder="New password"
-						class="k-input p-2 pr-5"
+						class="form-input p-2 pr-5"
 					/>
 					<div class="absolute right-3 text-muted">
 						<i class="fa fa-key text-lg"></i>
@@ -20,7 +20,7 @@
 				<div class="mt-4 w-full">
 					<button
 						type="submit"
-						class="k-button primary w-full"
+						class="button primary w-full"
 						:class="{ loading: processing }"
 					>
 						Reset Password
