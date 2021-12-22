@@ -1,23 +1,18 @@
 <template>
-	<page-content>
-		<page-center>
-			<div class="auth-panel">
-				<logo />
-				<h4>Sign In</h4>
-				<form @submit.prevent="submit">
-					<div v-if="error" class="alert error">{{ error }}</div>
-					<div v-if="success" class="alert success">{{ success }}</div>
-				</form>
-			</div>
-		</page-center>
-	</page-content>
+	<div>
+		<h3 class="my-4">Sign In</h3>
+		<form @submit.prevent="submit">
+			<div v-if="error" class="k-alert error mb-2">{{ error }}</div>
+			<div v-if="success" class="k-alert success mb-2">{{ success }}</div>
+		</form>
+	</div>
 </template>
 
 <script>
-import AuthPanel from "../../mixins/auth.mixin";
+import AuthMixin from "../../mixins/auth.mixin";
 
 export default {
-	mixins: [AuthPanel],
+	mixins: [AuthMixin],
 
 	mounted() {
 		if (!this.$route.query.token) this.error = "Missing token.";

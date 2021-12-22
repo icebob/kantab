@@ -7,7 +7,7 @@
 			<div class="flex relative items-center">
 				<input
 					v-model="email"
-					type="text"
+					type="email"
 					name="email"
 					placeholder="E-mail or username"
 					class="k-input p-2 pr-5"

@@ -1,40 +1,41 @@
 <template>
-	<page-content>
-		<page-center>
-			<div class="auth-panel">
-				<logo />
-				<h4>Reset Password</h4>
-				<form @submit.prevent="submit">
-					<div v-if="error" class="alert error">{{ error }}</div>
-					<div v-if="success" class="alert success">{{ success }}</div>
-					<fieldset class="password">
-						<input
-							v-model="password"
-							type="password"
-							name="password"
-							placeholder="New Password"
-						/>
-						<i class="fa fa-lock"></i>
-					</fieldset>
-					<fieldset>
-						<submit-button
-							:loading="processing"
-							size="large"
-							color="primary"
-							caption="Reset Password"
-						/>
-					</fieldset>
-				</form>
-			</div>
-		</page-center>
-	</page-content>
+	<div>
+		<h3 class="my-4">Reset Password</h3>
+		<form @submit.prevent="submit">
+			<div v-if="error" class="k-alert error mb-2">{{ error }}</div>
+			<div v-if="success" class="k-alert success mb-2">{{ success }}</div>
+			<template v-if="$route.query.token">
+				<div class="flex relative items-center mt-2">
+					<input
+						v-model="password"
+						type="password"
+						name="password"
+						placeholder="New password"
+						class="k-input p-2 pr-5"
+					/>
+					<div class="absolute right-3 text-muted">
+						<i class="fa fa-key text-lg"></i>
+					</div>
+				</div>
+				<div class="mt-4 w-full">
+					<button
+						type="submit"
+						class="k-button primary w-full"
+						:class="{ loading: processing }"
+					>
+						Reset Password
+					</button>
+				</div>
+			</template>
+		</form>
+	</div>
 </template>
 
 <script>
-import AuthPanel from "../../mixins/auth.mixin";
+import AuthMixin from "../../mixins/auth.mixin";
 
 export default {
-	mixins: [AuthPanel],
+	mixins: [AuthMixin],
 
 	mounted() {
 		if (!this.$route.query.token) this.error = "Missing token.";

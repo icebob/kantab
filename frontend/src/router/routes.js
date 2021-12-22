@@ -49,14 +49,6 @@ export default [
 				}
 			},
 			{
-				path: "/loginApollo",
-				name: "loginApollo",
-				component: () => import("../pages/auth/LoginApollo.vue")
-				/* 		meta: {
-			redirectAuth: "home"
-		} */
-			},
-			{
 				path: "/signup",
 				name: "signup",
 				component: () => import("../pages/auth/SignUp.vue"),
