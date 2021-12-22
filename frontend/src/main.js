@@ -30,7 +30,7 @@ import iziToast from "./toast";
 import { apolloProvider, apolloClient } from "./apollo";
 
 // KanTab styles
-import "./styles/style.scss";
+//import "./styles/style.scss";
 
 // TailwindCSS
 import "./index.css";

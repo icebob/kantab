@@ -15,11 +15,4 @@
 		</page-center>
 	</page-content>
 </template>
-
-<script>
-import AuthPanel from "./mixins/AuthPanel";
-
-export default {
-	mixins: [AuthPanel]
-};
-</script>
+../../mixins/auth.mixin ../components/account/mixins/auth.mixin

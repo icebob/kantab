@@ -1,8 +1,8 @@
 <template>
-	<div>
+	<div class="w-full">
 		<template v-if="providers.length > 0">
-			<hr />
-			<div class="social-icons">
+			<hr class="w-full" />
+			<div class="flex my-4 justify-between">
 				<a v-if="isSupported('google')" class="google" href="/auth/google" title="Google">
 					<svg
 						aria-labelledby="simpleicons-google-icon"
@@ -48,7 +48,7 @@
 					</svg>
 				</a>
 			</div>
-			<hr />
+			<hr class="w-full" />
 		</template>
 	</div>
 </template>
@@ -70,39 +70,32 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.social-icons {
-	margin: 1em 0;
-	text-align: center;
+a {
+	svg {
+		width: 48px;
+		height: 48px;
+		transform: scale(1);
+		transition: transform 0.2s ease-in-out;
 
-	a {
-		margin: 0 1em;
-
-		svg {
-			width: 48px;
-			height: 48px;
-			transform: scale(1);
-
-			&:hover {
-				transform: scale(1.2);
-				transition: transform 0.2s ease-in-out;
-			}
+		&:hover {
+			transform: scale(1.2);
 		}
+	}
 
-		&.google svg path {
-			fill: #dc4e41;
-		}
+	&.google svg path {
+		fill: #dc4e41;
+	}
 
-		&.facebook svg path {
-			fill: #3b5998;
-		}
+	&.facebook svg path {
+		fill: #3b5998;
+	}
 
-		&.twitter svg path {
-			fill: #1da1f2;
-		}
+	&.twitter svg path {
+		fill: #1da1f2;
+	}
 
-		&.github svg path {
-			fill: white;
-		}
+	&.github svg path {
+		fill: white;
 	}
 }
 </style>

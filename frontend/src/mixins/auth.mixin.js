@@ -1,13 +1,9 @@
 "use strict";
 
-import Logo from "../partials/Logo.vue";
-import SubmitButton from "../partials/SubmitButton.vue";
-import SocialAuth from "../partials/SocialAuth.vue";
+import SocialAuth from "../components/SocialAuth.vue";
 
 export default {
 	components: {
-		Logo,
-		SubmitButton,
 		SocialAuth
 	},
 	data() {

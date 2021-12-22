@@ -3,31 +3,26 @@
 		<page-center>
 			<div class="auth-panel">
 				<logo />
-				<h4>Forgot Password</h4>
+				<h4>Reset Password</h4>
 				<form @submit.prevent="submit">
 					<div v-if="error" class="alert error">{{ error }}</div>
 					<div v-if="success" class="alert success">{{ success }}</div>
-					<fieldset class="email">
+					<fieldset class="password">
 						<input
-							type="email"
-							name="email"
-							v-model="email"
-							placeholder="E-mail"
-							required
+							v-model="password"
+							type="password"
+							name="password"
+							placeholder="New Password"
 						/>
-						<i class="fa fa-envelope"></i>
+						<i class="fa fa-lock"></i>
 					</fieldset>
 					<fieldset>
 						<submit-button
 							:loading="processing"
 							size="large"
 							color="primary"
-							caption="Send reset e-mail"
+							caption="Reset Password"
 						/>
-					</fieldset>
-					<fieldset class="already">
-						<span>Already have an account?</span>
-						<router-link to="/login">Sign In</router-link>
 					</fieldset>
 				</form>
 			</div>
@@ -36,16 +31,20 @@
 </template>
 
 <script>
-import AuthPanel from "./mixins/AuthPanel";
+import AuthPanel from "../../mixins/auth.mixin";
 
 export default {
 	mixins: [AuthPanel],
 
+	mounted() {
+		if (!this.$route.query.token) this.error = "Missing token.";
+	},
+
 	methods: {
 		async process() {
-			await this.$authenticator.forgotPassword(this.email);
-			this.success = "E-mail sent.";
-			this.email = "";
+			await this.$authenticator.resetPassword(this.$route.query.token, this.password);
+			this.success = "Password changed. Logging in...";
+			setTimeout(() => this.$router.push({ name: "home" }), 1000);
 		}
 	}
 };
