@@ -1,32 +1,45 @@
 <template>
-	<div class="m-4 w-64 border border-neutral-500 rounded-md bg-panel shadow-lg relative">
+	<div class="m-4 w-64 border border-gray-500 rounded-md bg-panel shadow-lg relative">
 		<div v-if="ribbon" :class="'ribbon ' + ribbonDirection + ' ' + ribbonColor">
 			<span>{{ ribbon }}</span>
 		</div>
-		<div class="px-5 pt-5">
-			<div>
-				<span class="font-title text-2xl font-light">{{ title }}</span>
+		<img v-if="coverImage" class="w-full rounded-t shadow-lg" :src="coverImage" />
+		<slot>
+			<div class="p-5">
+				<div>
+					<span class="font-title text-2xl font-light text-white">{{ title }}</span>
+				</div>
+				<div class="mt-4 text-sm text-text">
+					<span v-if="description">{{ description }}</span
+					><span v-else class="italic">{{ $t("noDescription") }}</span>
+				</div>
+				<div v-if="footer" class="pt-5">
+					<small class="text-xs text-muted">{{ footer }}</small>
+				</div>
+				<div v-if="hasFooterSlot" class="pt-5">
+					<slot name="footer" />
+				</div>
 			</div>
-			<div class="text-sm text-muted">
-				<span v-if="description">{{ description }}</span
-				><span v-else class="italic">{{ $t("noDescription") }}</span>
-			</div>
-		</div>
-		<div v-if="footer" class="p-5">
-			<small class="text-xs text-neutral-500">{{ footer }}</small>
-		</div>
+		</slot>
 	</div>
 </template>
 
 <script>
 export default {
 	props: {
+		coverImage: { type: String, default: null },
 		title: { type: String, default: null },
 		description: { type: String, default: null },
 		footer: { type: String, default: null },
 		ribbon: { type: String, default: null },
 		ribbonDirection: { type: String, default: "right" },
 		ribbonColor: { type: String, default: "blue" }
+	},
+
+	computed: {
+		hasFooterSlot() {
+			return !!this.$slots.footer;
+		}
 	}
 };
 </script>

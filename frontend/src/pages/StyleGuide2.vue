@@ -1,163 +1,443 @@
 <template>
 	<div class="p-5">
-		<h3 class="mb-2">Style guide</h3>
+		<h2 class="mb-8">Style guide</h2>
 
-		<h4 class="bg-neutral-900 border border-black p-2 px-4 rounded-lg">
-			<span class="text-gray-500">2</span>
-			<span class="ml-2 uppercase">Typography</span>
-		</h4>
-		<div class="m-4 flex flex-col gap-2">
-			<h1>
-				Heading #1 - <span class="text-neutral-400">{{ getTypographyInfo("h1") }}</span>
-			</h1>
-			<h2>
-				Heading #2 - <span class="text-neutral-400">{{ getTypographyInfo("h2") }}</span>
-			</h2>
-			<h3>
-				Heading #3 - <span class="text-neutral-400">{{ getTypographyInfo("h3") }}</span>
-			</h3>
-			<h4>
-				Heading #4 - <span class="text-neutral-400">{{ getTypographyInfo("h4") }}</span>
-			</h4>
-			<h5>
-				Heading #5 - <span class="text-neutral-400">{{ getTypographyInfo("h5") }}</span>
-			</h5>
+		<guide-section number="2" label="Colors">
+			<div class="flex flex-col gap-2">
+				<div>
+					<h5>Primary</h5>
+					<div class="border border-neutral-900 rounded flex p-2">
+						<div class="w-16 text-center">
+							<div class="h-16 bg-primary"></div>
+							<div class="pt-1 text-xs font-mono">#8CAD26</div>
+						</div>
+						<div class="ml-4 flex-1 flex text-center">
+							<div
+								class="hidden bg-primary bg-primary-100 bg-primary-200 bg-primary-300 bg-primary-400 bg-primary-500 bg-primary-600 bg-primary-700 bg-primary-800 bg-primary-900"
+							></div>
+							<div v-for="i of paletteRange" :key="i" class="flex-1">
+								<div :class="'h-16 bg-primary-' + i"></div>
+								<div class="pt-1 text-xs font-mono">{{ i }}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="mt-2">
+					<h5>Secondary</h5>
+					<div class="border border-neutral-900 rounded flex p-2">
+						<div class="w-16 text-center">
+							<div class="h-16 bg-secondary"></div>
+							<div class="pt-1 text-xs font-mono">#8CAD26</div>
+						</div>
+						<div class="ml-4 flex-1 flex text-center">
+							<div
+								class="hidden bg-secondary bg-secondary-100 bg-secondary-200 bg-secondary-300 bg-secondary-400 bg-secondary-500 bg-secondary-600 bg-secondary-700 bg-secondary-800 bg-secondary-900"
+							></div>
+							<div v-for="i of paletteRange" :key="i" class="flex-1">
+								<div :class="'h-16 bg-secondary-' + i"></div>
+								<div class="pt-1 text-xs font-mono">{{ i }}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="mt-2">
+					<h5>Other colors</h5>
+					<div class="border border-neutral-900 rounded flex p-2">
+						<div class="flex-1 text-center">
+							<div class="font-title">panel</div>
+							<div
+								class="m-auto w-20 h-16 bg-panel border border-black rounded"
+							></div>
+							<div class="pt-1 text-xs font-mono">#2e353a</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">card</div>
+							<div class="m-auto w-20 h-16 bg-card border border-black rounded"></div>
+							<div class="pt-1 text-xs font-mono">#22272b</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">muted</div>
+							<div
+								class="m-auto w-20 h-16 bg-muted border border-black rounded"
+							></div>
+							<div class="pt-1 text-xs font-mono">#929292</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">input</div>
+							<div
+								class="m-auto w-20 h-16 bg-input border border-black rounded"
+							></div>
+							<div class="pt-1 text-xs font-mono">#1D2124</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">text</div>
+							<div class="m-auto w-20 h-16 bg-text border border-black rounded"></div>
+							<div class="pt-1 text-xs font-mono">#dedede</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</guide-section>
 
-			<p>
-				Paragraph - <span class="text-neutral-400">{{ getTypographyInfo("p") }}</span>
-			</p>
-			<p>
-				ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 éáűőúöüóí ÉÁŰŐÚÖÜÓÍ
-			</p>
-			<hr class="border-neutral-600" />
-			<p>
-				An example paragraph with <strong>strong text</strong> and <em>emphasized text</em>,
-				spanning <br />multiple lines so you can see the line-height.
-			</p>
-			<p class="text-justify">
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec varius ipsum tortor,
-				eget convallis ante sagittis ac. Nulla eget bibendum dolor. Praesent at ipsum
-				bibendum, malesuada quam tincidunt, lobortis purus. Donec vel mi mollis, sagittis
-				libero non, ultrices elit. Nulla non mauris in sapien mattis scelerisque. Vivamus
-				maximus tincidunt mi, interdum pellentesque urna feugiat sed. Suspendisse vulputate
-				metus leo, nec hendrerit sapien tincidunt ac. Vivamus non libero luctus, suscipit
-				libero ut, elementum enim.
-				<a class="link" href="#">Read more</a>
-			</p>
-			<p>
-				Fusce aliquam sem lorem, in porttitor orci dignissim at. Sed non dolor at orci
-				dignissim bibendum a non nibh. Duis nec vestibulum dui, sit amet lobortis ligula.
-				Sed aliquam mauris nunc, eu sodales est faucibus vitae. Ut sed accumsan lectus.
-				Interdum et <a class="link" href="#">malesuada</a> fames ac ante ipsum primis in
-				faucibus. Aenean dignissim odio vehicula ligula varius, ac ullamcorper tortor
-				molestie. Phasellus dolor dui, egestas id ornare in, suscipit et dolor.
-			</p>
-		</div>
+		<guide-section number="2" label="Typography">
+			<div class="flex flex-col gap-2">
+				<h1>
+					Heading #1 - <span class="text-neutral-400">{{ getTypographyInfo("h1") }}</span>
+				</h1>
+				<h2>
+					Heading #2 - <span class="text-neutral-400">{{ getTypographyInfo("h2") }}</span>
+				</h2>
+				<h3>
+					Heading #3 - <span class="text-neutral-400">{{ getTypographyInfo("h3") }}</span>
+				</h3>
+				<h4>
+					Heading #4 - <span class="text-neutral-400">{{ getTypographyInfo("h4") }}</span>
+				</h4>
+				<h5>
+					Heading #5 - <span class="text-neutral-400">{{ getTypographyInfo("h5") }}</span>
+				</h5>
 
-		<h4 class="bg-neutral-900 border border-black p-2 px-4 rounded-lg">
-			<span class="text-gray-500">3</span>
-			<span class="ml-2 uppercase">Buttons</span>
-		</h4>
-		<div class="m-4 flex flex-col gap-2">
-			<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
-				Normal buttons
-			</h5>
-			<div class="flex gap-4 items-center justify-center flex-wrap">
-				<button class="button">Normal</button>
-				<button class="button primary">Primary</button>
-				<button class="button secondary">Secondary</button>
-				<button class="button success icon"><i class="fa fa-check"></i>Success</button>
-				<button class="button warning">Warning</button>
-				<button class="button danger">Danger</button>
-				<button class="button flat">Flat</button>
-				<button class="button outlined">Outlined</button>
-				<button class="button loading">Loading</button>
-				<button class="button" disabled>Disabled</button>
+				<p>
+					Paragraph - <span class="text-neutral-400">{{ getTypographyInfo("p") }}</span>
+				</p>
+				<p>
+					ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 éáűőúöüóí
+					ÉÁŰŐÚÖÜÓÍ
+				</p>
+				<hr class="border-neutral-600" />
+				<p>
+					An example paragraph with <strong>strong text</strong> and
+					<em>emphasized text</em>, spanning <br />multiple lines so you can see the
+					line-height.
+				</p>
+				<p class="text-justify">
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec varius ipsum
+					tortor, eget convallis ante sagittis ac. Nulla eget bibendum dolor. Praesent at
+					ipsum bibendum, malesuada quam tincidunt, lobortis purus. Donec vel mi mollis,
+					sagittis libero non, ultrices elit. Nulla non mauris in sapien mattis
+					scelerisque. Vivamus maximus tincidunt mi, interdum pellentesque urna feugiat
+					sed. Suspendisse vulputate metus leo, nec hendrerit sapien tincidunt ac. Vivamus
+					non libero luctus, suscipit libero ut, elementum enim.
+					<a class="link" href="#">Read more</a>
+				</p>
+				<p>
+					Fusce aliquam sem lorem, in porttitor orci dignissim at. Sed non dolor at orci
+					dignissim bibendum a non nibh. Duis nec vestibulum dui, sit amet lobortis
+					ligula. Sed aliquam mauris nunc, eu sodales est faucibus vitae. Ut sed accumsan
+					lectus. Interdum et <a class="link" href="#">malesuada</a> fames ac ante ipsum
+					primis in faucibus. Aenean dignissim odio vehicula ligula varius, ac ullamcorper
+					tortor molestie. Phasellus dolor dui, egestas id ornare in, suscipit et dolor.
+				</p>
 			</div>
-		</div>
-		<div class="m-4 flex flex-col gap-2">
-			<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Large buttons</h5>
-			<div class="flex gap-4 items-center justify-center flex-wrap">
-				<button class="button large">Normal</button>
-				<button class="button large primary">Primary</button>
-				<button class="button large secondary">Secondary</button>
-				<button class="button large success icon">
-					<i class="fa fa-check"></i>Success
-				</button>
-				<button class="button large warning">Warning</button>
-				<button class="button large danger">Danger</button>
-				<button class="button large flat">Flat</button>
-				<button class="button large outlined">Outlined</button>
-				<button class="button large loading">Loading</button>
-				<button class="button large" disabled>Disabled</button>
+		</guide-section>
+
+		<guide-section number="3" label="Buttons">
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Normal buttons
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<button class="button">Normal</button>
+					<button class="button primary">Primary</button>
+					<button class="button secondary">Secondary</button>
+					<button class="button success icon"><i class="fa fa-check" />Success</button>
+					<button class="button warning">Warning</button>
+					<button class="button danger">Danger</button>
+					<button class="button flat">Flat</button>
+					<button class="button outlined">Outlined</button>
+					<button class="button loading">Loading</button>
+					<button class="button icon" disabled><i class="fa fa-ban" />Disabled</button>
+				</div>
 			</div>
-		</div>
-		<div class="m-4 flex flex-col gap-2">
-			<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Small buttons</h5>
-			<div class="flex gap-4 items-center justify-center flex-wrap">
-				<button class="button small">Normal</button>
-				<button class="button small primary">Primary</button>
-				<button class="button small secondary">Secondary</button>
-				<button class="button small success icon">
-					<i class="fa fa-check"></i>Success
-				</button>
-				<button class="button small warning">Warning</button>
-				<button class="button small danger">Danger</button>
-				<button class="button small flat">Flat</button>
-				<button class="button small outlined">Outlined</button>
-				<button class="button small loading">Loading</button>
-				<button class="button small" disabled>Disabled</button>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Large buttons
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<button class="button large">Normal</button>
+					<button class="button large primary">Primary</button>
+					<button class="button large secondary">Secondary</button>
+					<button class="button large success icon">
+						<i class="fa fa-check" />Success
+					</button>
+					<button class="button large warning">Warning</button>
+					<button class="button large danger">Danger</button>
+					<button class="button large flat">Flat</button>
+					<button class="button large outlined">Outlined</button>
+					<button class="button large loading">Loading</button>
+					<button class="button large icon" disabled>
+						<i class="fa fa-ban" />Disabled
+					</button>
+				</div>
 			</div>
-		</div>
-		<div class="m-4 flex flex-col gap-2">
-			<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Icon buttons</h5>
-			<div class="flex gap-4 items-center justify-center flex-wrap">
-				<button class="button"><i class="fa fa-home"></i></button>
-				<button class="button large primary"><i class="fa fa-tasks"></i></button>
-				<button class="button small success"><i class="fa fa-cogs"></i></button>
-				<button class="button warning"><i class="fa fa-comments"></i></button>
-				<button class="button danger"><i class="fa fa-trash"></i></button>
-				<button class="button outline"><i class="fa fa-pencil"></i></button>
-				<button class="button flat"><i class="fa fa-bar-chart"></i></button>
-				<button class="button outlined"><i class="fa fa-gear"></i></button>
-				<button class="button" disabled><i class="fa fa-warning"></i></button>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Small buttons
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<button class="button small">Normal</button>
+					<button class="button small primary">Primary</button>
+					<button class="button small secondary">Secondary</button>
+					<button class="button small success icon">
+						<i class="fa fa-check" />Success
+					</button>
+					<button class="button small warning">Warning</button>
+					<button class="button small danger">Danger</button>
+					<button class="button small flat">Flat</button>
+					<button class="button small outlined">Outlined</button>
+					<button class="button small loading">Loading</button>
+					<button class="button small icon" disabled>
+						<i class="fa fa-ban" />Disabled
+					</button>
+				</div>
 			</div>
-		</div>
-		<div class="m-4 flex flex-col gap-2">
-			<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
-				Floating buttons
-			</h5>
-			<div class="flex gap-4 items-center justify-center flex-wrap">
-				<button class="button floating large"><i class="fa fa-plus"></i></button>
-				<button class="button floating small primary">
-					<i class="fa fa-plus"></i>
-				</button>
-				<button class="button floating success">
-					<i class="fa fa-check"></i>
-				</button>
-				<button class="button floating warning" disabled>
-					<i class="fa fa-comments"></i>
-				</button>
-				<button class="button floating danger">
-					<i class="fa fa-trash"></i>
-				</button>
-				<button class="button floating flat">
-					<i class="fa fa-bar-chart"></i>
-				</button>
-				<button class="button floating outlined">
-					<i class="fa fa-bars"></i>
-				</button>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Icon buttons
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<button class="button"><i class="fa fa-home" /></button>
+					<button class="button large primary"><i class="fa fa-tasks" /></button>
+					<button class="button small success"><i class="fa fa-cogs" /></button>
+					<button class="button warning"><i class="fa fa-comments" /></button>
+					<button class="button danger"><i class="fa fa-trash" /></button>
+					<button class="button outlined"><i class="fa fa-pencil" /></button>
+					<button class="button flat"><i class="fa fa-bar-chart" /></button>
+					<button class="button" disabled><i class="fa fa-ban" /></button>
+				</div>
 			</div>
-		</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Floating buttons
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<button class="button floating large"><i class="fa fa-plus" /></button>
+					<button class="button floating small primary">
+						<i class="fa fa-plus" />
+					</button>
+					<button class="button floating success">
+						<i class="fa fa-check" />
+					</button>
+					<button class="button floating warning" disabled>
+						<i class="fa fa-comments" />
+					</button>
+					<button class="button floating danger">
+						<i class="fa fa-trash" />
+					</button>
+					<button class="button floating flat">
+						<i class="fa fa-bar-chart" />
+					</button>
+					<button class="button floating outlined">
+						<i class="fa fa-bars" />
+					</button>
+					<button class="button floating" disabled><i class="fa fa-ban" /></button>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Button group
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<div class="button-group">
+						<button class="button icon"><i class="fa fa-align-left"></i>Left</button>
+						<button class="button icon">
+							<i class="fa fa-align-center"></i>Middle
+						</button>
+						<button class="button icon active">
+							<i class="fa fa-align-right"></i>Right
+						</button>
+					</div>
+				</div>
+			</div>
+		</guide-section>
+
+		<guide-section number="4" label="Forms">
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Input fields
+				</h5>
+				<div class="flex flex-col gap-4">
+					<div class="form-element">
+						<label>Label</label>
+						<input type="text" placeholder="Placeholder" />
+					</div>
+					<div class="form-element">
+						<label>Label with hint</label>
+						<input type="text" placeholder="Placeholder" />
+						<div class="hint">Maximum 100 characters</div>
+					</div>
+					<div class="form-element">
+						<label>Label with icon</label>
+						<input type="text" placeholder="Placeholder" />
+						<i class="icon fa fa-search" />
+					</div>
+					<div class="form-element valid">
+						<label>Label for valid input</label>
+						<input type="text" placeholder="Placeholder" />
+						<i class="icon fa fa-check" />
+					</div>
+					<div class="form-element error">
+						<label>Label for invalid input with error messages</label>
+						<input type="text" placeholder="Placeholder" />
+						<i class="icon fa fa-exclamation-triangle" />
+						<div class="errors">
+							<div>Too short!</div>
+							<div>Invalid text content!</div>
+						</div>
+					</div>
+					<div class="form-element">
+						<label for="text5">Label for textarea</label>
+						<textarea type="text" placeholder="Placeholder" rows="5"></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Select</h5>
+				<div class="flex flex-col gap-4">
+					<div class="form-element">
+						<label>Label for select</label>
+						<select id="select1" class="form-control">
+							<option>Option 1</option>
+							<option>Option 2</option>
+							<option>Option 3</option>
+							<option>Option 4</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</guide-section>
+		<guide-section number="5" label="Alerts">
+			<div class="flex flex-col gap-4">
+				<div class="alert">This is a neutral alert.</div>
+				<div class="alert">
+					<i class="icon fa fa-info-circle" />This is a neutral alert with icon.
+				</div>
+				<div class="alert flex items-center">
+					<i class="icon fa fa-info-circle" />
+					<span class="flex-1">This is a neutral alert with icon and close button.</span>
+					<i class="close fa fa-times" />
+				</div>
+				<div class="alert bg-primary">This is a primary alert.</div>
+				<div class="alert bg-secondary">This is a secondary alert.</div>
+				<div class="alert bg-green-600">
+					<i class="icon fa fa-check-circle" />This is a success alert.
+				</div>
+				<div class="alert bg-yellow-600">
+					<i class="icon fa fa-exclamation-triangle" />This is a warning alert.
+				</div>
+				<div class="alert bg-red-500">
+					<i class="icon fa fa-times-circle" />This is an error alert.
+				</div>
+				<div class="alert py-3">
+					<h4 class="mb-2">Well done!</h4>
+					<p>
+						Aww yeah, you successfully read this important alert message. This example
+						text is going to run a bit longer so that you can see how spacing within an
+						alert works with this kind of content.
+					</p>
+				</div>
+			</div>
+		</guide-section>
+		<guide-section number="6" label="Badges">
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Badges</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<div class="badge">Normal</div>
+					<div class="badge bg-primary">Primary</div>
+					<div class="badge bg-green-600">Success</div>
+					<div class="badge bg-yellow-600">Warning</div>
+					<div class="badge bg-red-500">Danger</div>
+					<div class="badge outlined">Outlined</div>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Rounded badges
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<div class="badge pill">15</div>
+					<div class="badge pill bg-primary">5</div>
+					<div class="badge pill bg-green-600">100+</div>
+					<div class="badge pill bg-yellow-600">45</div>
+					<div class="badge pill bg-red-500">0</div>
+					<div class="badge pill outlined">8</div>
+				</div>
+			</div>
+		</guide-section>
+		<guide-section number="7" label="Tables">TODO</guide-section>
+		<guide-section number="8" label="Progress">TODO</guide-section>
+		<guide-section number="9" label="Panels & Cards">
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Normal cards
+				</h5>
+				<div class="flex gap-4 items-start justify-center flex-wrap">
+					<card
+						title="Simple card"
+						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
+						footer="Last updated 5 mins ago"
+					/>
+					<card
+						title="Card with image"
+						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
+						ribbon="Public"
+					>
+						<template #footer>
+							<button class="button primary">Checkout</button>
+						</template>
+					</card>
+					<card
+						cover-image="https://picsum.photos/350/150"
+						title="Card with image and ribbon"
+						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
+						ribbon="Brand new"
+						ribbon-color="primary"
+						ribbon-direction="left"
+					/>
+					<card ribbon="Customize" ribbon-color="red">
+						<div class="p-5">
+							<h4 class="text-primary">Customizable content</h4>
+							<div class="py-5">
+								<div class="form-element">
+									<label>Label</label>
+									<input type="text" placeholder="Placeholder" />
+								</div>
+							</div>
+							<div class="alert bg-yellow-600 text-xs">
+								Something awesome happened!
+							</div>
+							<div class="pt-5 flex justify-center items-center">
+								<button class="button icon"><i class="fa fa-cloud" />Upload</button>
+								<button class="button flat">Cancel</button>
+							</div>
+						</div>
+					</card>
+				</div>
+			</div>
+		</guide-section>
 	</div>
 </template>
 
 <script>
+import GuideSection from "../components/GuideSection.vue";
+import Card from "../components/Card.vue";
+
 export default {
+	components: {
+		GuideSection,
+		Card
+	},
+
 	data() {
 		return {
 			loaded: false
 		};
+	},
+
+	computed: {
+		paletteRange() {
+			return [100, 200, 300, 400, 500, 600, 700, 800, 900];
+		}
 	},
 
 	mounted() {

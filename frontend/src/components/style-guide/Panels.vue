@@ -210,7 +210,7 @@
 				</div>
 				<div class="card">
 					<div class="ribbon right blue"><span>-20%</span></div>
-					<img class="img" src="http://lorempixel.com/350/150/city" />
+					<img class="img" src="https://picsum.photos/350/150" />
 					<div class="block">
 						<div class="title">Card with image</div>
 						<p>
@@ -226,7 +226,7 @@
 				</div>
 				<div class="card">
 					<div class="ribbon left primary"><span>Brand new</span></div>
-					<img class="img" src="http://placehold.it/350x150" />
+					<img class="img" src="https://picsum.photos/350/150" />
 					<div class="block">
 						<div class="title">Card Title wih ribbon</div>
 						<p>
@@ -292,7 +292,7 @@
 					</div>
 				</div>
 				<div class="card">
-					<img class="img" src="http://lorempixel.com/600/300/city" />
+					<img class="img" src="https://picsum.photos/600/300" />
 					<div class="block">
 						<div class="title">Small Card 4</div>
 						<p>

@@ -8,7 +8,7 @@
 					<div class="media-left">
 						<img
 							class="avatar"
-							src="https://s3.amazonaws.com/uifaces/faces/twitter/kolage/73.jpg"
+							src="https://faces-img.xcdn.link/thumb-lorem-face-6272_thumb.jpg"
 						/>
 					</div>
 					<div class="media-content">
@@ -44,7 +44,7 @@
 					<div class="media-left">
 						<img
 							class="avatar"
-							src="https://s3.amazonaws.com/uifaces/faces/twitter/kolage/73.jpg"
+							src="https://faces-img.xcdn.link/thumb-lorem-face-6272_thumb.jpg"
 						/>
 					</div>
 					<div class="media-content">
@@ -69,7 +69,7 @@
 					<div class="media-left">
 						<img
 							class="avatar"
-							src="https://s3.amazonaws.com/uifaces/faces/twitter/kolage/73.jpg"
+							src="https://faces-img.xcdn.link/thumb-lorem-face-6272_thumb.jpg"
 						/>
 					</div>
 					<div class="media-content">
@@ -94,7 +94,7 @@
 					<div class="media-left">
 						<img
 							class="avatar"
-							src="https://s3.amazonaws.com/uifaces/faces/twitter/kolage/73.jpg"
+							src="https://faces-img.xcdn.link/thumb-lorem-face-6272_thumb.jpg"
 						/>
 					</div>
 					<div class="media-content">
@@ -119,7 +119,7 @@
 					<div class="media-left">
 						<img
 							class="avatar"
-							src="https://s3.amazonaws.com/uifaces/faces/twitter/kolage/73.jpg"
+							src="https://faces-img.xcdn.link/thumb-lorem-face-6272_thumb.jpg"
 						/>
 					</div>
 					<div class="media-content">
@@ -144,7 +144,7 @@
 					<div class="media-left">
 						<img
 							class="avatar"
-							src="https://s3.amazonaws.com/uifaces/faces/twitter/kolage/73.jpg"
+							src="https://faces-img.xcdn.link/thumb-lorem-face-6272_thumb.jpg"
 						/>
 					</div>
 					<div class="media-content">

@@ -15,6 +15,16 @@ module.exports = {
 				"Roboto",
 				'"Helvetica Neue"',
 				"Arial"
+			],
+			mono: [
+				"ui-monospace",
+				"SFMono-Regular",
+				"Menlo",
+				"Monaco",
+				"Consolas",
+				'"Liberation Mono"',
+				'"Courier New"',
+				"monospace"
 			]
 		},
 		extend: {
@@ -49,7 +59,8 @@ module.exports = {
 				panel: "#2e353a",
 				card: "#22272b",
 				muted: "#929292",
-				text: "#dedede"
+				text: "#dedede",
+				input: "#1D2124"
 			},
 
 			fontFamily: {
@@ -68,7 +79,8 @@ module.exports = {
 			},
 
 			boxShadow: {
-				panel: "2px 5px 5px 0 rgb(0 0 0 / 25%)"
+				panel: "2px 5px 5px 0 rgb(0 0 0 / 25%)",
+				primary: "0 0 10px rgba(#8CAD26 / 80%)"
 			},
 
 			width: {

@@ -178,24 +178,95 @@ html, body {
 		}
 	}
 
+	.button-group {
+		@apply inline-flex items-center;
 
-	.form-input {
-		@apply w-full px-2 py-1
-			border border-neutral-600 bg-neutral-800 rounded-md
-			placeholder-neutral-500
-			outline-none
-			focus:ring-1 focus:ring-primary-600;
+		.button:first-child:not(:last-child) {
+			@apply rounded-r-none;
+		}
+
+		.button:last-child:not(:first-child) {
+			@apply rounded-l-none;
+		}
+
+		.button:not(:first-child):not(:last-child) {
+			@apply rounded-none;
+		}
 	}
 
+	.form-element {
+		@apply relative;
+
+		label {
+			@apply block mb-1
+		}
+
+		input, textarea, select {
+			@apply w-full px-2 py-1
+				border border-gray-600 bg-input rounded-md
+				placeholder-neutral-500
+				outline-none
+				focus:shadow-primary;
+		}
+
+		.icon {
+			@apply absolute block text-muted text-lg right-3 top-8;
+		}
+
+		&[disabled] {
+			cursor: not-allowed;
+		}
+
+		.hint {
+			@apply text-xs text-neutral-400 mt-1;
+		}
+
+		&.valid {
+			label {
+				@apply text-green-500;
+			}
+
+			input, textarea, select {
+				@apply border-green-500 bg-green-900 bg-opacity-50 focus:shadow-green-500;
+			}
+
+		}
+
+		&.error {
+			label {
+				@apply text-red-300;
+			}
+
+			input, textarea, select {
+				@apply border-red-400 bg-red-900 bg-opacity-50 focus:shadow-red-400;
+			}
+		}
+
+		.errors {
+			@apply ml-1 mt-2 text-red-300 text-xs;
+			> div {
+				@apply mt-1;
+
+				&::before {
+					content: "\f071";
+					font-family: FontAwesome;
+					@apply pr-2;
+				}
+			}
+		}
+
+	}
+
+
 	.alert {
-		@apply bg-neutral-500 text-white
-			px-2 py-1 rounded
+		@apply bg-input text-text
+			px-4 py-1 rounded
 			shadow-md
 			text-shadow
-			text-sm;
+			text-base;
 
 		&.warning {
-			@apply bg-yellow-500;
+			@apply bg-yellow-600;
 		}
 
 		&.error {
@@ -204,6 +275,27 @@ html, body {
 
 		&.success {
 			@apply bg-green-600;
+		}
+
+		.icon {
+			@apply mr-2;
+		}
+
+		.close {
+			@apply cursor-pointer border-l border-l-neutral-600 ml-2 pl-3;
+		}
+	}
+
+	.badge {
+		@apply bg-input text-text rounded px-2 py-1 text-xs text-shadow;
+
+		&.pill {
+			@apply rounded-full text-center;
+			min-width: 1.65rem;
+		}
+
+		&.outlined {
+			@apply bg-transparent border border-text
 		}
 	}
 
