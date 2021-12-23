@@ -1,5 +1,6 @@
-// Default: https://github.com/tailwindlabs/tailwindcss/blob/master/stubs/defaultConfig.stub.js
+const colors = require("tailwindcss/colors");
 
+// Default: https://github.com/tailwindlabs/tailwindcss/blob/master/stubs/defaultConfig.stub.js
 module.exports = {
 	important: "#app",
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
@@ -60,7 +61,11 @@ module.exports = {
 				card: "#22272b",
 				muted: "#929292",
 				text: "#dedede",
-				input: "#1D2124"
+				input: "#1D2124",
+
+				warning: colors.yellow[600],
+				negative: colors.red[500],
+				positive: colors.green[600]
 			},
 
 			fontFamily: {
@@ -75,7 +80,8 @@ module.exports = {
 					"Roboto",
 					'"Helvetica Neue"',
 					"Arial"
-				]
+				],
+				awesome: ["FontAwesome"]
 			},
 
 			boxShadow: {

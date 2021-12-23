@@ -249,12 +249,81 @@ html, body {
 
 				&::before {
 					content: "\f071";
-					font-family: FontAwesome;
-					@apply pr-2;
+					@apply pr-2 font-awesome;
 				}
 			}
 		}
 
+	}
+
+	.form-option {
+		@apply relative;
+
+		label {
+			@apply inline-block ml-7;
+		}
+
+		input {
+			@apply hidden;
+		}
+
+		/* checkbox aspect */
+		[type="checkbox"]:not(:checked) + label:before,
+		[type="checkbox"]:checked + label:before {
+			content: '';
+			@apply absolute left-1 top-1 w-4 h-4 border border-neutral-500 bg-input rounded transition-all;
+		}
+
+		/* checked mark aspect */
+		[type="checkbox"]:not(:checked) + label:after,
+		[type="checkbox"]:checked + label:after {
+			content: "\f00c";
+			@apply absolute text-xs text-white left-1.5 top-1 transition-all font-awesome;
+		}
+
+		/* checkbox aspect */
+		[type="radio"]:not(:checked) + label:before,
+		[type="radio"]:checked + label:before {
+			content: '';
+			@apply absolute left-1 top-1 w-4 h-4 border border-neutral-500 bg-input rounded-full transition-all;
+		}
+
+		/* checked mark aspect */
+		[type="radio"]:not(:checked) + label:after,
+		[type="radio"]:checked + label:after {
+			content: '';
+			@apply absolute w-2 h-2 left-2 top-2 rounded-full bg-white transition-all;
+		}
+
+		/* checked mark aspect changes */
+		[type="checkbox"]:not(:checked) + label:after,
+		[type="radio"]:not(:checked) + label:after
+		{
+			@apply opacity-0 scale-0 rotate-45;
+		}
+
+		[type="checkbox"]:checked + label:after,
+		[type="radio"]:checked + label:after {
+			@apply opacity-100 scale-100 rotate-0;
+		}
+
+		/* Disabled checkbox */
+		[type="checkbox"]:disabled:not(:checked) + label:before,
+		[type="checkbox"]:disabled:checked + label:before,
+		[type="radio"]:disabled:not(:checked) + label:before,
+		[type="radio"]:disabled:checked + label:before {
+			@apply bg-neutral-700;
+		}
+
+		[type="checkbox"]:disabled:checked + label:after,
+		[type="radio"]:disabled:checked + label:after {
+			@apply text-neutral-400;
+		}
+
+		[type="checkbox"]:disabled + label,
+		[type="radio"]:disabled + label {
+			@apply text-muted;
+		}
 	}
 
 
@@ -264,18 +333,6 @@ html, body {
 			shadow-md
 			text-shadow
 			text-base;
-
-		&.warning {
-			@apply bg-yellow-600;
-		}
-
-		&.error {
-			@apply bg-red-500;
-		}
-
-		&.success {
-			@apply bg-green-600;
-		}
 
 		.icon {
 			@apply mr-2;
@@ -298,6 +355,59 @@ html, body {
 			@apply bg-transparent border border-text
 		}
 	}
+
+	/*
+.switch {
+  position: relative;
+  display: inline-block;
+}
+.switch-input {
+  display: none;
+}
+.switch-label {
+  display: block;
+  width: 48px;
+  height: 24px;
+  text-indent: -150%;
+  clip: rect(0 0 0 0);
+  color: transparent;
+  user-select: none;
+}
+.switch-label::before,
+.switch-label::after {
+  content: "";
+  display: block;
+  position: absolute;
+  cursor: pointer;
+}
+.switch-label::before {
+  width: 100%;
+  height: 100%;
+  background-color: #dedede;
+  border-radius: 9999em;
+  -webkit-transition: background-color 0.25s ease;
+  transition: background-color 0.25s ease;
+}
+.switch-label::after {
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.45);
+  -webkit-transition: left 0.25s ease;
+  transition: left 0.25s ease;
+}
+.switch-input:checked + .switch-label::before {
+  background-color: #89c12d;
+}
+.switch-input:checked + .switch-label::after {
+  left: 24px;
+}
+
+
+	*/
 
 }
 

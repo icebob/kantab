@@ -9,7 +9,9 @@
 					<div class="border border-neutral-900 rounded flex p-2">
 						<div class="w-16 text-center">
 							<div class="h-16 bg-primary"></div>
-							<div class="pt-1 text-xs font-mono">#8CAD26</div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-primary") }}
+							</div>
 						</div>
 						<div class="ml-4 flex-1 flex text-center">
 							<div
@@ -27,7 +29,9 @@
 					<div class="border border-neutral-900 rounded flex p-2">
 						<div class="w-16 text-center">
 							<div class="h-16 bg-secondary"></div>
-							<div class="pt-1 text-xs font-mono">#8CAD26</div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-secondary") }}
+							</div>
 						</div>
 						<div class="ml-4 flex-1 flex text-center">
 							<div
@@ -42,7 +46,7 @@
 				</div>
 				<div class="mt-2">
 					<h5>Other colors</h5>
-					<div class="border border-neutral-900 rounded flex p-2">
+					<div class="border border-neutral-900 rounded flex flex-wrap p-2">
 						<div class="flex-1 text-center">
 							<div class="font-title">panel</div>
 							<div
@@ -53,26 +57,61 @@
 						<div class="flex-1 text-center">
 							<div class="font-title">card</div>
 							<div class="m-auto w-20 h-16 bg-card border border-black rounded"></div>
-							<div class="pt-1 text-xs font-mono">#22272b</div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-card") }}
+							</div>
 						</div>
 						<div class="flex-1 text-center">
 							<div class="font-title">muted</div>
 							<div
 								class="m-auto w-20 h-16 bg-muted border border-black rounded"
 							></div>
-							<div class="pt-1 text-xs font-mono">#929292</div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-muted") }}
+							</div>
 						</div>
 						<div class="flex-1 text-center">
 							<div class="font-title">input</div>
 							<div
 								class="m-auto w-20 h-16 bg-input border border-black rounded"
 							></div>
-							<div class="pt-1 text-xs font-mono">#1D2124</div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-input") }}
+							</div>
 						</div>
 						<div class="flex-1 text-center">
 							<div class="font-title">text</div>
 							<div class="m-auto w-20 h-16 bg-text border border-black rounded"></div>
-							<div class="pt-1 text-xs font-mono">#dedede</div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-text") }}
+							</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">warning</div>
+							<div
+								class="m-auto w-20 h-16 bg-warning border border-black rounded"
+							></div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-warning") }}
+							</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">negative</div>
+							<div
+								class="m-auto w-20 h-16 bg-negative border border-black rounded"
+							></div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-negative") }}
+							</div>
+						</div>
+						<div class="flex-1 text-center">
+							<div class="font-title">positive</div>
+							<div
+								class="m-auto w-20 h-16 bg-positive border border-black rounded"
+							></div>
+							<div class="pt-1 text-xs font-mono">
+								{{ getColorInfo(".bg-positive") }}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -305,6 +344,48 @@
 					</div>
 				</div>
 			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Radio buttons
+				</h5>
+				<div class="flex flex-col gap-4">
+					<div class="form-option">
+						<input id="radio1" type="radio" name="radio" />
+						<label for="radio1">Option one</label>
+					</div>
+					<div class="form-option">
+						<input id="radio2" type="radio" name="radio" />
+						<label for="radio2">Option two</label>
+					</div>
+					<div class="form-option">
+						<input id="radio2" type="radio" name="radio" disabled />
+						<label for="radio2">Option three (disabled)</label>
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Checkboxes
+				</h5>
+				<div class="flex flex-col gap-4">
+					<div class="form-option">
+						<input id="check1" type="checkbox" />
+						<label for="check1">Option one</label>
+					</div>
+					<div class="form-option">
+						<input id="check2" type="checkbox" checked />
+						<label for="check2">Option two</label>
+					</div>
+					<div class="form-option">
+						<input id="check3" type="checkbox" disabled />
+						<label for="check3">Option three (disabled)</label>
+					</div>
+					<div class="form-option">
+						<input id="check4" type="checkbox" checked disabled />
+						<label for="check4">Option three (disabled & checked)</label>
+					</div>
+				</div>
+			</div>
 		</guide-section>
 		<guide-section number="5" label="Alerts">
 			<div class="flex flex-col gap-4">
@@ -319,13 +400,13 @@
 				</div>
 				<div class="alert bg-primary">This is a primary alert.</div>
 				<div class="alert bg-secondary">This is a secondary alert.</div>
-				<div class="alert bg-green-600">
+				<div class="alert bg-positive">
 					<i class="icon fa fa-check-circle" />This is a success alert.
 				</div>
-				<div class="alert bg-yellow-600">
+				<div class="alert bg-warning">
 					<i class="icon fa fa-exclamation-triangle" />This is a warning alert.
 				</div>
-				<div class="alert bg-red-500">
+				<div class="alert bg-negative">
 					<i class="icon fa fa-times-circle" />This is an error alert.
 				</div>
 				<div class="alert py-3">
@@ -341,12 +422,12 @@
 		<guide-section number="6" label="Badges">
 			<div class="flex flex-col gap-2">
 				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Badges</h5>
-				<div class="flex gap-4 items-center justify-center flex-wrap">
+				<div class="flex gap-8 items-center justify-center flex-wrap">
 					<div class="badge">Normal</div>
 					<div class="badge bg-primary">Primary</div>
-					<div class="badge bg-green-600">Success</div>
-					<div class="badge bg-yellow-600">Warning</div>
-					<div class="badge bg-red-500">Danger</div>
+					<div class="badge bg-positive">Success</div>
+					<div class="badge bg-warning">Warning</div>
+					<div class="badge bg-negative">Danger</div>
 					<div class="badge outlined">Outlined</div>
 				</div>
 			</div>
@@ -354,18 +435,20 @@
 				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
 					Rounded badges
 				</h5>
-				<div class="flex gap-4 items-center justify-center flex-wrap">
+				<div class="flex gap-8 items-center justify-center flex-wrap">
 					<div class="badge pill">15</div>
 					<div class="badge pill bg-primary">5</div>
-					<div class="badge pill bg-green-600">100+</div>
-					<div class="badge pill bg-yellow-600">45</div>
-					<div class="badge pill bg-red-500">0</div>
+					<div class="badge pill bg-positive">100+</div>
+					<div class="badge pill bg-warning">45</div>
+					<div class="badge pill bg-negative">0</div>
 					<div class="badge pill outlined">8</div>
 				</div>
 			</div>
 		</guide-section>
 		<guide-section number="7" label="Tables">TODO</guide-section>
+
 		<guide-section number="8" label="Progress">TODO</guide-section>
+
 		<guide-section number="9" label="Panels & Cards">
 			<div class="flex flex-col gap-2">
 				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
@@ -457,6 +540,27 @@ export default {
 						", " +
 						style.fontSize
 					);
+				}
+			}
+		},
+
+		// Credits: https://github.com/sindresorhus/rgb-hex/blob/main/index.js
+		getColorInfo(selector) {
+			if (this.loaded && this.$el) {
+				let element = this.$el.querySelector(selector);
+				if (element) {
+					let style = window.getComputedStyle(element, null);
+					const c = style.backgroundColor;
+					if (c) {
+						const [red, green, blue, alpha = ""] = c
+							.match(/(0?\.?\d{1,3})%?\b/g)
+							.map(component => Number(component));
+						return (
+							"#" +
+							((blue | (green << 8) | (red << 16) | (1 << 24)).toString(16).slice(1) +
+								alpha)
+						);
+					}
 				}
 			}
 		}
