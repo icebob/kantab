@@ -386,6 +386,27 @@
 					</div>
 				</div>
 			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Switches</h5>
+				<div class="flex flex-col gap-4">
+					<div class="form-switch">
+						<input id="switch1" type="checkbox" />
+						<label for="switch1">Switch one</label>
+					</div>
+					<div class="form-switch">
+						<input id="switch2" type="checkbox" checked />
+						<label for="switch2">Switch two</label>
+					</div>
+					<div class="form-switch">
+						<input id="switch3" type="checkbox" disabled />
+						<label for="switch3">Switch three (disabled)</label>
+					</div>
+					<div class="form-switch">
+						<input id="switch4" type="checkbox" checked disabled />
+						<label for="switch4">Switch three (disabled & checked)</label>
+					</div>
+				</div>
+			</div>
 		</guide-section>
 		<guide-section number="5" label="Alerts">
 			<div class="flex flex-col gap-4">
@@ -447,7 +468,54 @@
 		</guide-section>
 		<guide-section number="7" label="Tables">TODO</guide-section>
 
-		<guide-section number="8" label="Progress">TODO</guide-section>
+		<guide-section number="8" label="Progress">
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Normal</h5>
+				<div class="flex flex-col gap-4 justify-center">
+					<div class="progressbar">
+						<div class="progress" style="width: 15%"></div>
+					</div>
+					<div class="progressbar">
+						<div class="progress bg-positive" style="width: 40%">40% complete...</div>
+					</div>
+					<div class="progressbar">
+						<div class="progress bg-warning" style="width: 60%">60%</div>
+					</div>
+					<div class="progressbar">
+						<div class="progress bg-negative" style="width: 70%"></div>
+					</div>
+					<div class="progressbar small">
+						<div class="progress" style="width: 80%">Small progress</div>
+					</div>
+					<div class="progressbar large">
+						<div class="progress" style="width: 90%">Large progress</div>
+					</div>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">Normal</h5>
+				<div class="flex flex-col gap-4 justify-center">
+					<div class="progressbar stripped">
+						<div class="progress" style="width: 15%"></div>
+					</div>
+					<div class="progressbar stripped">
+						<div class="progress bg-positive" style="width: 40%">40% complete...</div>
+					</div>
+					<div class="progressbar stripped">
+						<div class="progress bg-warning" style="width: 60%">60%</div>
+					</div>
+					<div class="progressbar stripped">
+						<div class="progress bg-negative" style="width: 70%"></div>
+					</div>
+					<div class="progressbar stripped small">
+						<div class="progress" style="width: 80%">Small progress</div>
+					</div>
+					<div class="progressbar stripped large">
+						<div class="progress" style="width: 90%">Large progress</div>
+					</div>
+				</div>
+			</div>
+		</guide-section>
 
 		<guide-section number="9" label="Panels & Cards">
 			<div class="flex flex-col gap-2">
