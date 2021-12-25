@@ -1,21 +1,17 @@
 <template>
 	<k-dialog v-model="visible" :title="pageTitle">
 		<template #default>
-			<div class="">
-				<div>
-					<label class="block mb-1">{{ $t("Title") }}</label>
-					<input ref="mainInput" v-model="entity.title" type="text" class="form-input" />
-				</div>
-				<div class="mt-3">
-					<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
-					<input v-model="entity.description" type="text" class="form-input" />
-				</div>
-				<div class="mt-3">
-					<label class="block select-none">
-						<input v-model="entity.public" class="mr-2 leading-tight" type="checkbox" />
-						<span class="">{{ $t("Public") }}</span>
-					</label>
-				</div>
+			<div class="form-element">
+				<label class="block mb-1">{{ $t("Title") }}</label>
+				<input ref="mainInput" v-model="entity.title" type="text" />
+			</div>
+			<div class="mt-3 form-element">
+				<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
+				<input v-model="entity.description" type="text" />
+			</div>
+			<div class="mt-3 form-option">
+				<input id="public-checkbox" v-model="entity.public" type="checkbox" />
+				<label for="public-checkbox">{{ $t("Public") }}</label>
 			</div>
 		</template>
 

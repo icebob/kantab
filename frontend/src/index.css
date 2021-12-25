@@ -260,7 +260,7 @@ html, body {
 		@apply relative;
 
 		label {
-			@apply inline-block ml-7;
+			@apply inline-block ml-7 select-none;
 		}
 
 		input {

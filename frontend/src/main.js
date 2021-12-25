@@ -29,9 +29,6 @@ import iziToast from "./toast";
 // --- VUE APOLLO CLIENT ---
 import { apolloProvider, apolloClient } from "./apollo";
 
-// KanTab styles
-//import "./styles/style.scss";
-
 // TailwindCSS
 import "./index.css";
 

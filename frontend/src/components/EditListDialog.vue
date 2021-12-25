@@ -1,29 +1,25 @@
 <template>
 	<k-dialog v-model="visible" :title="pageTitle">
 		<template #default>
-			<div class="">
-				<div>
-					<label class="block mb-1">{{ $t("Title") }}</label>
-					<input ref="mainInput" v-model="entity.title" type="text" class="form-input" />
-				</div>
-				<div class="mt-3">
-					<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
-					<input v-model="entity.description" type="text" class="form-input" />
-				</div>
-				<div class="mt-3">
-					<label class="block select-none">
-						<input
-							class="mr-2 leading-tight"
-							type="checkbox"
-							:value="entity.color != null"
-							@input="colorCheckboxInput($event)"
-						/>
-						<span class="">{{ $t("UseCustomColor") }}</span>
-						<div v-if="entity.color != null" class="ml-5 mt-2">
-							<input v-model="entity.color" type="color" class="h-8 w-16" />
-						</div>
-					</label>
-				</div>
+			<div class="form-element">
+				<label class="block mb-1">{{ $t("Title") }}</label>
+				<input ref="mainInput" v-model="entity.title" type="text" class="form-input" />
+			</div>
+			<div class="mt-3 form-element">
+				<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
+				<input v-model="entity.description" type="text" class="form-input" />
+			</div>
+			<div class="mt-3 form-option">
+				<input
+					id="custom-color-checkbox"
+					:value="entity.color != null"
+					type="checkbox"
+					@input="colorCheckboxInput($event)"
+				/>
+				<label for="custom-color-checkbox">{{ $t("UseCustomColor") }}</label>
+			</div>
+			<div v-if="entity.color != null" class="ml-5 mt-2">
+				<input v-model="entity.color" type="color" class="h-8 w-16 rounded" />
 			</div>
 		</template>
 

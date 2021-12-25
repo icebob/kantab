@@ -16,11 +16,6 @@ export default [
 				component: () => import("../pages/StyleGuide.vue")
 			},
 			{
-				path: "/style-guide2",
-				name: "style-guide2",
-				component: () => import("../pages/StyleGuide2.vue")
-			},
-			{
 				path: "/protected",
 				name: "protected",
 				component: () => import("../pages/Protected.vue"),
