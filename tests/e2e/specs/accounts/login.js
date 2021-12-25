@@ -12,13 +12,13 @@ describe("Test login page with username & password", () => {
 	it("Try to login with wrong username", () => {
 		cy.login("unknow", "test");
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.error").should("contain", "Account is not registered.");
+		cy.get(".alert.bg-negative").should("contain", "Account is not registered.");
 	});
 
 	it("Try to login with wrong password", () => {
 		cy.login("test", "wrongpass");
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.error").should("contain", "Wrong password");
+		cy.get(".alert.bg-negative").should("contain", "Wrong password");
 	});
 
 	it("Login with correct data", () => {
@@ -40,10 +40,10 @@ describe("Test login page with passwordless", () => {
 	it("Login without password", () => {
 		cy.login("test");
 		cy.url().should("equal", `${baseUrl}/login`);
-		cy.get(".alert.success").should("contain", "Magic link has been sent to 'test@kantab.io'. Use it to sign in.");
+		cy.get(".alert.bg-positive").should("contain", "Magic link has been sent to 'test@kantab.io'. Use it to sign in.");
 
 		cy.wait(2000);
-		cy.get(".alert.success").then(() => {
+		cy.get(".alert.bg-positive").then(() => {
 
 			cy.request("POST", `${baseUrl}/api/maildev/getTokenFromMessage`, {
 				recipient: "test@kantab.io",
