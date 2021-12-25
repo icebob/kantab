@@ -4,29 +4,27 @@
 			<h3>{{ board.title }}</h3>
 		</div>
 		<Container
-			class="flex-1 mx-4 h-full pb-4 flex overflow-x-auto gap-x-4"
-			group-name="list"
+			class="flex-1 mx-4 h-full flex overflow-x-auto gap-4 p-4"
+			group-name="cols"
+			tag="div"
 			orientation="horizontal"
-			:drop-placeholder="listDropPlaceholderOptions"
 			:get-child-payload="idx => board.lists.rows[idx]"
 			@drop="onListDrop($event)"
 		>
 			<Draggable
 				v-for="list in board.lists.rows"
 				:key="list.id"
-				class="w-list min-w-list h-full flex-shrink-0 bg-panel rounded-md border border-neutral-600"
+				class="w-list min-w-list h-full flex-shrink-0 mx-2 bg-panel rounded-md shadow-panel border border-neutral-600"
 			>
 				<div class="h-full flex flex-col">
+					<!-- header-->
 					<div
-						class="flex items-center bg-primary-600 rounded-t-md p-2 font-title text-lg text-shadow"
+						class="flex items-center bg-primary-600 rounded-t-md py-2 px-2 font-title text-lg text-shadow"
 						:style="getListHeaderStyle(list)"
 					>
 						<span class="ml-2 flex-1">{{ list.title }}</span>
 						<template v-if="user">
-							<button
-								class="button flat small"
-								@click="addingCardEditMode('top', list)"
-							>
+							<button class="button flat small" @click="addingCardEditMode(list)">
 								<i class="fa fa-plus" />
 							</button>
 							<button class="button flat small" @click="showDialog(list)">
@@ -34,32 +32,32 @@
 							</button>
 						</template>
 					</div>
+					<!-- column -->
 					<Container
 						class="p-2 flex-grow overflow-y-auto overflow-x-hidden"
 						orientation="vertical"
-						group-name="card"
-						drag-class="card-ghost"
-						drop-class="card-ghost-drop"
-						:drop-placeholder="cardDropPlaceholderOptions"
+						group-name="col-items"
 						:get-child-payload="idx => list.cards.rows[idx]"
+						:drop-placeholder="{
+							className: `bg-primary bg-opacity-20
+            border-dotted border-2
+            border-primary rounded-lg mx-4 my-2`,
+							animationDuration: '200',
+							showOnTop: true
+						}"
+						drag-class="bg-primary dark:bg-primary
+            border-2 border-primary-hover text-white
+            transition duration-100 ease-in z-50
+            transform rotate-6 scale-110"
+						drop-class="transition duration-100
+            ease-in z-50 transform
+            -rotate-2 scale-90"
 						@drop="e => onCardDrop(list, e)"
 					>
-						<div
-							v-if="addingCard == 'top' && addingCardList == list.id"
-							class="form-element"
-						>
-							<textarea
-								ref="addingCardTextarea"
-								v-model="addingCardTitle"
-								class="form-input"
-								placeholder="Enter card title"
-								@keydown.enter.stop.prevent="addCard(list)"
-								@keydown.esc.stop.prevent="cancelAddingCard"
-							></textarea>
-						</div>
+						<!-- Items -->
 						<Draggable v-for="card in list.cards.rows" :key="card.id">
 							<div
-								class="my-1 border border-neutral-700 bg-card shadow rounded-md transition-transform"
+								class="my-2 border border-neutral-700 bg-card shadow rounded-md transition-transform"
 							>
 								<div class="p-5">
 									<div>{{ card.title }} ({{ card.position }})</div>
@@ -69,14 +67,14 @@
 						<div
 							v-if="!addingCard || addingCardList != list.id"
 							class="my-2 border-2 border-neutral-600 border-dashed text-neutral-500 rounded-md flex justify-center items-center h-16"
-							@click="addingCardEditMode('bottom', list)"
+							@click="addingCardEditMode(list)"
 						>
 							<div class="flex-1 text-center">
-								<i class="fa fa-plus text-2xl"></i>
-								<div class="text-sm">{{ $t("NewCard") }}</div>
+								<i class="fa fa-plus text-3xl"></i>
+								<div class="text-md">{{ $t("NewCard") }}</div>
 							</div>
 						</div>
-						<div v-else-if="addingCard == 'bottom'" class="form-element">
+						<div v-else class="form-element">
 							<textarea
 								ref="addingCardTextarea"
 								v-model="addingCardTitle"
@@ -99,11 +97,12 @@
 				</div>
 			</div>
 		</Container>
-		<edit-list-dialog ref="editDialog" />
 	</div>
 </template>
+
 <script>
 import { Container, Draggable } from "vue3-smooth-dnd";
+import KanbanItem from "../components/KanbanItem.vue";
 
 import { mapState, mapActions } from "vuex";
 import dateFormatter from "../mixins/dateFormatter";
@@ -112,6 +111,7 @@ import { getTextColorByBackgroundColor } from "../utils";
 
 export default {
 	components: {
+		KanbanItem,
 		EditListDialog,
 		Container,
 		Draggable
@@ -126,7 +126,7 @@ export default {
 
 	data() {
 		return {
-			addingCard: null,
+			addingCard: false,
 			addingCardList: null,
 			addingCardTitle: "",
 
@@ -169,10 +169,10 @@ export default {
 			this.$refs.editDialog.show({ boardId: this.id, list: list });
 		},
 
-		addingCardEditMode(type, list) {
+		addingCardEditMode(list) {
 			this.addingCardList = list.id;
 			this.addingCardTitle = "";
-			this.addingCard = type;
+			this.addingCard = true;
 
 			this.$nextTick(() => {
 				this.$refs.addingCardTextarea?.[0]?.focus();
@@ -180,7 +180,7 @@ export default {
 		},
 
 		cancelAddingCard() {
-			this.addingCard = null;
+			this.addingCard = false;
 			this.addingCardList = null;
 			this.addingCardTitle = "";
 		},
@@ -190,21 +190,11 @@ export default {
 				return this.cancelAddingCard();
 			}
 
-			let position;
-			if (this.addingCard == "top") {
-				position = list.cards?.rows?.length ? list.cards.rows[0].position - 1 : 1;
-			} else {
-				position = list.cards?.rows?.length
-					? list.cards.rows[list.cards.rows.length - 1].position + 1
-					: 1;
-			}
-
 			await this.createCard({
 				list,
 				input: {
 					title: this.addingCardTitle,
-					list: list.id,
-					position
+					list: list.id
 				}
 			});
 
@@ -245,15 +235,12 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.card-ghost {
-	transition: transform 0.18s ease;
-	transform: rotateZ(5deg);
-}
-
-.card-ghost-drop {
-	transition: transform 0.18s ease-in-out;
-	transform: rotateZ(0deg);
+<style>
+/** NB: dont remove,
+* When using orientation="horizontal" it auto sets "display: table"
+* In this case we need flex and not display table
+*/
+.smooth-dnd-container.horizontal {
+	display: flex !important;
 }
 </style>

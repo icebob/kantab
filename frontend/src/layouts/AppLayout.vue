@@ -1,5 +1,5 @@
 <template>
-	<div class="absolute w-full h-full left-0 top-0 right-0 bottom-0">
+	<div class="absolute w-full h-full left-0 top-0 right-0 bottom-0 flex flex-col">
 		<header class="flex align-center p-5">
 			<Logo class="mr-2" />
 			<div class="flex-auto"></div>

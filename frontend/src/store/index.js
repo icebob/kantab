@@ -582,7 +582,19 @@ export default createStore({
 		},
 
 		ADD_CARD(state, { list, card }) {
-			list.cards.rows.push(card);
+			// Find the correct position
+			let pos = null;
+			for (let i = 0; i < list.cards.rows.length; i++) {
+				if (list.cards.rows[i].position > card.position) {
+					pos = i;
+					break;
+				}
+			}
+			if (pos === null) {
+				list.cards.rows.push(card);
+			} else {
+				list.cards.rows.splice(pos, 0, card);
+			}
 		},
 
 		UPDATE_CARD(state, { list, card }) {
