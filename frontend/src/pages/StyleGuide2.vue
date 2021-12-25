@@ -522,7 +522,7 @@
 				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
 					Normal cards
 				</h5>
-				<div class="flex gap-4 items-start justify-center flex-wrap">
+				<div class="flex gap-8 items-start justify-center flex-wrap">
 					<card
 						title="Simple card"
 						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
@@ -565,6 +565,80 @@
 					</card>
 				</div>
 			</div>
+
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Normal panels
+				</h5>
+				<div class="flex gap-4 items-start justify-center flex-wrap">
+					<panel class="w-80" title="Panel normal">
+						<p>
+							Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur
+							dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas
+							eligendi sapiente enim debitis, illo dolore facilis, in, nihil
+							perspiciatis, et perferendis.
+						</p>
+					</panel>
+					<panel
+						class="w-80"
+						title="Panel with footer"
+						footer="Panel footer"
+						color="bg-primary"
+					>
+						<p>
+							Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur
+							dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas
+							eligendi sapiente enim debitis, illo dolore facilis, in, nihil
+							perspiciatis, et perferendis.
+						</p>
+					</panel>
+					<panel
+						class="w-80 h-96"
+						title="Panel with scroll"
+						footer="Panel footer"
+						color="bg-secondary"
+					>
+						<p>
+							Duis ex nulla eu ex quis consectetur amet voluptate qui ipsum aliqua
+							nisi commodo cupidatat. Reprehenderit aliqua sint magna ad eiusmod magna
+							non esse. Ex tempor ex duis dolore commodo labore aliquip ad dolor nulla
+							est. Ex eiusmod labore deserunt velit ad consequat elit. Quis elit
+							cupidatat culpa pariatur excepteur. Elit nulla nisi ut nulla cupidatat
+							ipsum officia sint consectetur in laboris. Voluptate anim in et esse.
+							Voluptate ad est irure eiusmod sit enim pariatur adipisicing. Dolore
+							officia nulla reprehenderit ipsum do aliquip incididunt eiusmod
+							cupidatat exercitation consectetur incididunt.
+						</p>
+					</panel>
+					<panel
+						class="w-80 bg-neutral-800"
+						color="bg-neutral-900"
+						ribbon="Customize"
+						ribbon-color="red"
+					>
+						<template #header>
+							<h4 class="text-primary">Customizable content</h4>
+						</template>
+						<template #default>
+							<div class="pb-5">
+								<div class="form-element">
+									<label>Label</label>
+									<input type="text" placeholder="Placeholder" />
+								</div>
+							</div>
+							<div class="mb-2 alert bg-yellow-600 text-xs">
+								Something awesome happened!
+							</div>
+						</template>
+						<template #footer>
+							<div class="flex justify-between items-center">
+								<button class="button icon"><i class="fa fa-cloud" />Upload</button>
+								<button class="button flat">Cancel</button>
+							</div>
+						</template>
+					</panel>
+				</div>
+			</div>
 		</guide-section>
 	</div>
 </template>
@@ -572,11 +646,13 @@
 <script>
 import GuideSection from "../components/GuideSection.vue";
 import Card from "../components/Card.vue";
+import Panel from "../components/Panel.vue";
 
 export default {
 	components: {
 		GuideSection,
-		Card
+		Card,
+		Panel
 	},
 
 	data() {

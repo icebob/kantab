@@ -1,35 +1,31 @@
 <template>
-	<div class="w-64 border border-gray-500 rounded-md bg-panel shadow-lg relative">
+	<div class="flex flex-col border border-gray-500 rounded-md bg-panel shadow-lg relative">
 		<div v-if="ribbon" :class="'ribbon ' + ribbonDirection + ' ' + ribbonColor">
 			<span>{{ ribbon }}</span>
 		</div>
-		<img v-if="coverImage" class="w-full rounded-t shadow-lg" :src="coverImage" />
-		<slot>
-			<div class="p-5">
-				<div>
-					<span class="font-title text-2xl font-light text-white">{{ title }}</span>
+		<div class="px-5 py-3 rounded-t-md" :class="bgColor">
+			<slot name="header">
+				<div class="font-title text-xl font-light text-white text-shadow">{{ title }}</div>
+			</slot>
+		</div>
+		<div class="flex-1 px-5 py-3 overflow-y-auto">
+			<slot />
+		</div>
+		<div v-if="hasFooterSlot || footer" class="px-5 py-3 rounded-b-md" :class="bgColor">
+			<slot name="footer">
+				<div v-if="footer" class="font-title text-xl font-light text-white text-shadow">
+					{{ footer }}
 				</div>
-				<div class="mt-4 text-sm text-text">
-					<span v-if="description">{{ description }}</span
-					><span v-else class="italic">{{ $t("noDescription") }}</span>
-				</div>
-				<div v-if="footer" class="pt-5">
-					<small class="text-xs text-muted">{{ footer }}</small>
-				</div>
-				<div v-if="hasFooterSlot" class="pt-5">
-					<slot name="footer" />
-				</div>
-			</div>
-		</slot>
+			</slot>
+		</div>
 	</div>
 </template>
 
 <script>
 export default {
 	props: {
-		coverImage: { type: String, default: null },
 		title: { type: String, default: null },
-		description: { type: String, default: null },
+		color: { type: String, default: "bg-gray-500" },
 		footer: { type: String, default: null },
 		ribbon: { type: String, default: null },
 		ribbonDirection: { type: String, default: "right" },
@@ -37,6 +33,10 @@ export default {
 	},
 
 	computed: {
+		bgColor() {
+			return this.color ? this.color : "";
+		},
+
 		hasFooterSlot() {
 			return !!this.$slots.footer;
 		}
