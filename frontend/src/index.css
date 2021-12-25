@@ -75,7 +75,7 @@ html, body {
 
 			text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
 
-		&.icon > i {
+		&.icon i {
 			@apply mr-2;
 		}
 
@@ -211,6 +211,16 @@ html, body {
 
 		.icon {
 			@apply absolute block text-muted text-lg right-3 top-8;
+		}
+
+		&.no-label {
+			input, textarea, select {
+				@apply w-full px-2 py-2;
+			}
+
+			.icon {
+				@apply top-2;
+			}
 		}
 
 		&[disabled] {

@@ -2,19 +2,17 @@
 	<div>
 		<h3 class="my-4">Forgot Password</h3>
 		<form @submit.prevent="submit">
-			<div v-if="error" class="alert error mb-2">{{ error }}</div>
-			<div v-if="success" class="alert success mb-2">{{ success }}</div>
-			<div class="flex relative items-center">
+			<div v-if="error" class="alert bg-negative mb-2">{{ error }}</div>
+			<div v-if="success" class="alert bg-positive mb-2">{{ success }}</div>
+			<div class="form-element no-label">
 				<input
 					v-model="email"
 					type="email"
 					name="email"
 					placeholder="E-mail"
-					class="form-input p-2 pr-5"
+					class="pr-5"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-user text-lg"></i>
-				</div>
+				<i class="icon fa fa-envelope"></i>
 			</div>
 			<div class="mt-4 w-full">
 				<button

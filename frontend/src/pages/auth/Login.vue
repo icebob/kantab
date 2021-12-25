@@ -2,31 +2,27 @@
 	<div>
 		<h3 class="my-4">Sign In</h3>
 		<form @submit.prevent="submit">
-			<div v-if="error" class="alert error mb-2">{{ error }}</div>
-			<div v-if="success" class="alert success mb-2">{{ success }}</div>
-			<div class="flex relative items-center">
+			<div v-if="error" class="alert bg-negative mb-2">{{ error }}</div>
+			<div v-if="success" class="alert bg-positive mb-2">{{ success }}</div>
+			<div class="form-element no-label">
 				<input
 					v-model="email"
 					type="text"
 					name="email"
 					placeholder="E-mail or username"
-					class="form-input p-2 pr-5"
+					class="pr-8"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-user text-lg"></i>
-				</div>
+				<i class="icon fa fa-user"></i>
 			</div>
-			<div class="flex relative items-center mt-2">
+			<div class="form-element no-label mt-2">
 				<input
 					v-model="password"
 					type="password"
 					name="password"
 					placeholder="Password"
-					class="form-input p-2 pr-5"
+					class="pr-8"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-key text-lg"></i>
-				</div>
+				<i class="icon fa fa-key"></i>
 			</div>
 			<div class="text-right text-xs mt-1 text-gray-400">
 				<router-link class="hover:underline" to="/forgot-password"
@@ -34,18 +30,16 @@
 				>
 			</div>
 
-			<div v-if="need2FAToken" class="flex relative items-center mt-2">
+			<div v-if="need2FAToken" class="form-element no-label mt-2">
 				<input
 					ref="token"
 					v-model="token"
 					type="text"
 					name="token"
 					placeholder="Two-factor code"
-					class="form-input p-2 pr-5"
+					class="pr-8"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-lock"></i>
-				</div>
+				<i class="icon fa fa-lock"></i>
 			</div>
 			<div class="mt-4 w-full">
 				<button

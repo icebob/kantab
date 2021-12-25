@@ -2,55 +2,52 @@
 	<div>
 		<h3 class="my-4">Sign Up</h3>
 		<form @submit.prevent="submit">
-			<div v-if="error" class="alert error mb-2">{{ error }}</div>
-			<div v-if="success" class="alert success mb-2">{{ success }}</div>
-			<div class="flex relative items-center">
+			<div v-if="error" class="alert bg-negative mb-2">{{ error }}</div>
+			<div v-if="success" class="alert bg-positive mb-2">{{ success }}</div>
+			<div class="form-element no-label">
 				<input
 					v-model="fullName"
 					type="text"
 					name="fullName"
 					placeholder="Full name"
 					required
-					class="form-input p-2"
+					class=""
 				/>
 			</div>
-			<div class="flex relative items-center mt-2">
+			<div class="form-element no-label mt-2">
 				<input
 					v-model="email"
 					type="email"
 					name="email"
 					placeholder="E-mail"
 					required
-					class="form-input p-2 pr-5"
+					class="pr-8"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-envelope text-lg"></i>
-				</div>
+
+				<i class="icon fa fa-envelope"></i>
 			</div>
-			<div class="flex relative items-center mt-2">
+			<div class="form-element no-label mt-2">
 				<input
 					v-model="username"
 					type="text"
 					name="username"
 					placeholder="Username"
 					required
-					class="form-input p-2 pr-5"
+					class="pr-8"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-user text-lg"></i>
-				</div>
+
+				<i class="icon fa fa-user"></i>
 			</div>
-			<div class="flex relative items-center mt-2">
+			<div class="form-element no-label mt-2">
 				<input
 					v-model="password"
 					type="password"
 					name="password"
 					placeholder="Password"
-					class="form-input p-2 pr-5"
+					class="pr-8"
 				/>
-				<div class="absolute right-3 text-muted">
-					<i class="fa fa-key text-lg"></i>
-				</div>
+
+				<i class="icon fa fa-key"></i>
 			</div>
 			<span class="text-xs text-muted">Leave empty for passwordless account</span>
 			<div class="mt-4 w-full">

@@ -1,5 +1,12 @@
 doctype html
 html(lang="en")
 body
-	h1 Welcome, #{user.fullName}!
-	p Your password changed.
+	p(style='font-weight: bold;') Hi #{user.fullName},
+	p This is a quick note to let you know that your password has been changed. You may now login to
+	a(href=site.url) #{site.url}
+	|  with your new credentials.
+	br
+	p If you have any questions or encounter any problems logging in, please contact us.
+	p If you did not change your password, please reply to this email immediately and let us know.
+	p Thanks,
+	p The #{site.name} Team

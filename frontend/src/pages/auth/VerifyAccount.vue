@@ -2,8 +2,8 @@
 	<div>
 		<h3 class="my-4">Verify Account</h3>
 		<form @submit.prevent="submit">
-			<div v-if="error" class="alert error mb-2">{{ error }}</div>
-			<div v-if="success" class="alert success mb-2">{{ success }}</div>
+			<div v-if="error" class="alert bg-negative mb-2">{{ error }}</div>
+			<div v-if="success" class="alert bg-positive mb-2">{{ success }}</div>
 		</form>
 	</div>
 </template>
