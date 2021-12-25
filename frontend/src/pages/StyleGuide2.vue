@@ -466,7 +466,192 @@
 				</div>
 			</div>
 		</guide-section>
-		<guide-section number="7" label="Tables">TODO</guide-section>
+		<guide-section number="7" label="Tables">
+			<div class="flex flex-col gap-2">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Normal table
+				</h5>
+				<div class="">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th class="sortable sorted">Name</th>
+								<th class="sortable"><i class="fa fa-envelope"></i>Mail</th>
+								<th class="sortable"><i class="fa fa-phone"></i>Phone</th>
+								<th class="sortable text-right">Outstanding</th>
+								<th class="text-right">Functions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>1</td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">
+											<i class="fa fa-edit"></i>
+										</button>
+										<button class="button small danger">
+											<i class="fa fa-trash"></i>
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td>2</td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">Edit</button>
+										<button class="button small danger icon">
+											<i class="fa fa-trash"></i>Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr class="selected">
+								<td>3</td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">Edit</button>
+										<button class="button small danger icon">
+											<i class="fa fa-trash"></i>Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr class="inactive">
+								<td>4</td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">Edit</button>
+										<button class="button small danger icon">
+											<i class="fa fa-trash"></i>Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+						<tfoot>
+							<tr>
+								<td>4</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td class="text-right">$15,500.00</td>
+								<td class="text-right"></td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase mt-8">
+					Stripped and bordered table
+				</h5>
+				<div class="">
+					<table class="table stripped bordered">
+						<thead>
+							<tr>
+								<th></th>
+								<th class="sortable sorted desc">Name</th>
+								<th class="sortable"><i class="fa fa-envelope"></i>Mail</th>
+								<th class="sortable"><i class="fa fa-phone"></i>Phone</th>
+								<th class="sortable text-right">Outstanding</th>
+								<th class="text-right"></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="selector"></td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">
+											<i class="fa fa-edit"></i>
+										</button>
+										<button class="button small danger">
+											<i class="fa fa-trash"></i>
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td class="selector"></td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">Edit</button>
+										<button class="button small danger icon">
+											<i class="fa fa-trash"></i>Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr class="">
+								<td class="selector"></td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">Edit</button>
+										<button class="button small danger icon">
+											<i class="fa fa-trash"></i>Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr class="selected inactive">
+								<td class="selector"></td>
+								<td>Johnny Avlony</td>
+								<td>info@johnnyavlony.com</td>
+								<td>(740) 841-7566</td>
+								<td class="text-right">$2,400.00</td>
+								<td>
+									<div class="flex justify-end gap-2">
+										<button class="button small">Edit</button>
+										<button class="button small danger icon">
+											<i class="fa fa-trash"></i>Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+						<tfoot>
+							<tr>
+								<td class="selector"></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td class="text-right">$15,500.00</td>
+								<td class="text-right"></td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+		</guide-section>
 
 		<guide-section number="8" label="Progress">
 			<div class="flex flex-col gap-2">
