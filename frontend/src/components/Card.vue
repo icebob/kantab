@@ -1,9 +1,9 @@
 <template>
-	<div class="w-64 border border-gray-500 rounded-md bg-panel shadow-lg relative">
+	<div class="border border-gray-500 rounded-md bg-panel shadow-lg relative">
 		<div v-if="ribbon" :class="'ribbon ' + ribbonDirection + ' ' + ribbonColor">
 			<span>{{ ribbon }}</span>
 		</div>
-		<img v-if="coverImage" class="w-full rounded-t shadow-lg" :src="coverImage" />
+		<img v-if="coverImage" class="w-full object-cover rounded-t shadow-lg" :src="coverImage" />
 		<slot>
 			<div class="p-5">
 				<div>

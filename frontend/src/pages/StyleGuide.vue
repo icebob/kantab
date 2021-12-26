@@ -8,7 +8,7 @@
 					<h5>Primary</h5>
 					<div class="border border-neutral-900 rounded flex p-2">
 						<div class="w-16 text-center">
-							<div class="h-16 bg-primary"></div>
+							<div class="h-16 bg-primary border border-black rounded"></div>
 							<div class="pt-1 text-xs font-mono">
 								{{ getColorInfo(".bg-primary") }}
 							</div>
@@ -28,7 +28,7 @@
 					<h5>Secondary</h5>
 					<div class="border border-neutral-900 rounded flex p-2">
 						<div class="w-16 text-center">
-							<div class="h-16 bg-secondary"></div>
+							<div class="h-16 bg-secondary border border-black rounded"></div>
 							<div class="pt-1 text-xs font-mono">
 								{{ getColorInfo(".bg-secondary") }}
 							</div>
@@ -687,6 +687,9 @@
 					<div class="progressbar">
 						<div class="progress bg-negative" style="width: 70%"></div>
 					</div>
+					<div class="progressbar extra-small">
+						<div class="progress" style="width: 75%"></div>
+					</div>
 					<div class="progressbar small">
 						<div class="progress" style="width: 80%">Small progress</div>
 					</div>
@@ -730,11 +733,13 @@
 						title="Simple card"
 						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
 						footer="Last updated 5 mins ago"
+						class="w-64"
 					/>
 					<card
-						title="Card with image"
+						title="Card with ribbon and footer"
 						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
 						ribbon="Public"
+						class="w-64"
 					>
 						<template #footer>
 							<button class="button primary">Checkout</button>
@@ -742,11 +747,12 @@
 					</card>
 					<card
 						cover-image="https://picsum.photos/350/150"
-						title="Card with image and ribbon"
+						title="Card with image"
 						description="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequuntur dicta cumque assumenda culpa maiores omnis totam obcaecati voluptas eligendi sapiente enim debitis, illo dolore facilis, in, nihil perspiciatis, et perferendis."
 						ribbon="Brand new"
 						ribbon-color="primary"
 						ribbon-direction="left"
+						class="w-96"
 					/>
 					<card ribbon="Customize" ribbon-color="red">
 						<div class="p-5">

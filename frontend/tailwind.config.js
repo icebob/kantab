@@ -6,10 +6,6 @@ module.exports = {
 	important: "#app",
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
 	theme: {
-		fontFamily: {
-			sans: ["Open Sans", ...defaultTheme.fontFamily.sans]
-			//mono: ["ui-monospace", ...defaultTheme.fontFamily.mono]
-		},
 		extend: {
 			colors: {
 				// https://www.tailwindshades.com/#color=74.70967741935483%2C63.78600823045269%2C47.647058823529406&step-up=8&step-down=11&hue-shift=0&name=atlantis&overrides=e30%3D
@@ -51,8 +47,13 @@ module.exports = {
 			},
 
 			fontFamily: {
-				title: ["Roboto Condensed", "Open Sans", ...defaultTheme.fontFamily.sans],
+				title: ["Roboto Condensed", ...defaultTheme.fontFamily.sans],
+				sans: [/*'"Open Sans"', */ ...defaultTheme.fontFamily.sans],
 				awesome: ["FontAwesome"]
+			},
+
+			fontSize: {
+				xxs: ["0.6rem", { lineHeight: "0.8rem" }]
 			},
 
 			boxShadow: {

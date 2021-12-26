@@ -99,6 +99,7 @@ module.exports = {
 				trim: true,
 				openapi: { example: "My card description" }
 			},
+			color: { type: "string", required: false, trim: true },
 			position: {
 				type: "number",
 				graphql: { type: "Float" },

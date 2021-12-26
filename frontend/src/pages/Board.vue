@@ -9,6 +9,21 @@
 			>
 				<i class="fa fa-pencil" />
 			</button>
+			<div class="flex-1"></div>
+			<div class="flex flex-row-reverse">
+				<div
+					v-for="member of board.members"
+					:key="member.id"
+					class="-ml-5 hover:ml-0 transition-all"
+				>
+					<img
+						class="w-10 h-10 rounded-full border-2 border-panel drop-shadow"
+						:src="member.avatar"
+						:title="member.fullName + ' (' + member.username + ')'"
+						:alt="member.fullName"
+					/>
+				</div>
+			</div>
 		</div>
 
 		<Board :board="board" />

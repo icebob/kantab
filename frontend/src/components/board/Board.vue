@@ -7,12 +7,7 @@
 		:get-child-payload="idx => board.lists.rows[idx]"
 		@drop="onListDrop"
 	>
-		<component
-			:is="listComponentType"
-			v-for="list in board.lists.rows"
-			:key="list.id"
-			class="w-list min-w-list h-full flex-shrink-0 bg-panel rounded-md border border-neutral-600"
-		>
+		<component :is="listComponentType" v-for="list in board.lists.rows" :key="list.id" class="">
 			<BoardList :list="list" :board="board" />
 		</component>
 		<div

@@ -137,6 +137,8 @@ export default createStore({
 											rows {
 												id
 												title
+												description
+												color
 												position
 											}
 											total
@@ -380,6 +382,7 @@ export default createStore({
 								title
 								description
 								position
+								color
 							}
 						}
 					`,
@@ -404,6 +407,7 @@ export default createStore({
 								title
 								description
 								position
+								color
 							}
 						}
 					`,

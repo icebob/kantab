@@ -4,8 +4,55 @@
 		:style="cardStyle"
 		@click="editCard"
 	>
-		<div class="p-5">
-			<div>{{ card.title }}</div>
+		<img
+			v-if="coverImage"
+			class="w-full h-24 rounded-t-md shadow-lg object-cover"
+			:src="coverImage"
+		/>
+		<div class="px-4 py-2">
+			<div class="flex gap-2">
+				<div class="bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm">
+					Frontend
+				</div>
+				<div class="bg-negative rounded px-2 py-0.5 text-xs text-white text-shadow-sm">
+					High priority
+				</div>
+			</div>
+			<div class="my-2 font-bold text-shadow-sm">{{ card.title }}</div>
+			<div class="flex items-center">
+				<div class="flex-1 flex-col text-xs opacity-75">
+					<div class="flex items-baseline">
+						<i class="fa fa-calendar mr-1" />
+						<span>Dec 31</span>
+					</div>
+					<div class="flex items-baseline">
+						<i class="fa fa-check-square-o mr-1" />
+						<span>Jan 10</span>
+					</div>
+				</div>
+				<div class="flex items-center">
+					<div class="flex">
+						<img
+							class="h-8 w-8 rounded-full border-2 border-panel"
+							:style="{ borderColor: cardBgColor }"
+							src="https://faces-img.xcdn.link/image-lorem-face-1128.jpg"
+							alt=""
+						/>
+						<img
+							class="-ml-3 h-8 w-8 rounded-full border-2 border-panel"
+							:style="{ borderColor: cardBgColor }"
+							src="https://faces-img.xcdn.link/image-lorem-face-5026.jpg"
+							alt=""
+						/>
+					</div>
+				</div>
+			</div>
+			<div class="mt-2 flex items-baseline">
+				<div class="flex-1 progressbar extra-small">
+					<div class="progress" style="width: 75%"></div>
+				</div>
+				<div class="ml-1 text-xxs">7/10</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -29,6 +76,10 @@ export default {
 	computed: {
 		...mapGetters(["userIsMember"]),
 
+		coverImage() {
+			return Math.random() > 0.7 ? "https://picsum.photos/id/1041/300/100" : null;
+		},
+
 		cardStyle() {
 			if (this.card.color) {
 				return {
@@ -37,6 +88,13 @@ export default {
 				};
 			}
 			return {};
+		},
+
+		cardBgColor() {
+			if (this.card.color) {
+				return this.card.color;
+			}
+			return "rgb(34,39,34)";
 		}
 	},
 	methods: {

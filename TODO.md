@@ -17,7 +17,7 @@
 
 
 ## Cards
-
+- [ ] Generate a unique number for the cards.
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
