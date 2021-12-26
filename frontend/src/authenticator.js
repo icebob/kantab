@@ -12,9 +12,9 @@ import { isFunction } from "lodash";
 
 const COOKIE_TOKEN_NAME = "jwt-token";
 
-export default new (class Authenticator {
+class Authenticator {
 	constructor() {
-		bus.$on("expiredToken", () => this.logout());
+		bus.on("expiredToken", () => this.logout());
 
 		this.protectRouter();
 	}
@@ -195,4 +195,6 @@ export default new (class Authenticator {
 
 		return await this.getMe();
 	}
-})();
+}
+
+export default new Authenticator();

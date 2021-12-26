@@ -1,4 +1,5 @@
 const colors = require("tailwindcss/colors");
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 // Default: https://github.com/tailwindlabs/tailwindcss/blob/master/stubs/defaultConfig.stub.js
 module.exports = {
@@ -6,27 +7,8 @@ module.exports = {
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
 	theme: {
 		fontFamily: {
-			sans: [
-				"Open Sans",
-				"ui-sans-serif",
-				"system-ui",
-				"-apple-system",
-				"BlinkMacSystemFont",
-				'"Segoe UI"',
-				"Roboto",
-				'"Helvetica Neue"',
-				"Arial"
-			],
-			mono: [
-				"ui-monospace",
-				"SFMono-Regular",
-				"Menlo",
-				"Monaco",
-				"Consolas",
-				'"Liberation Mono"',
-				'"Courier New"',
-				"monospace"
-			]
+			sans: ["Open Sans", ...defaultTheme.fontFamily.sans]
+			//mono: ["ui-monospace", ...defaultTheme.fontFamily.mono]
 		},
 		extend: {
 			colors: {
@@ -69,18 +51,7 @@ module.exports = {
 			},
 
 			fontFamily: {
-				title: [
-					"Roboto Condensed",
-					"Open Sans",
-					"ui-sans-serif",
-					"system-ui",
-					"-apple-system",
-					"BlinkMacSystemFont",
-					'"Segoe UI"',
-					"Roboto",
-					'"Helvetica Neue"',
-					"Arial"
-				],
+				title: ["Roboto Condensed", "Open Sans", ...defaultTheme.fontFamily.sans],
 				awesome: ["FontAwesome"]
 			},
 

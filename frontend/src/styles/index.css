@@ -1,10 +1,5 @@
-@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700|Lato:300,400,600,700|Roboto+Condensed:300,700|);
-@import url(https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css);
-
 @tailwind base;
-
 @tailwind components;
-
 @tailwind utilities;
 
 html, body {

@@ -148,17 +148,17 @@ export default {
 
 	watch: {
 		async id() {
-			await this.getBoardById(this.id);
+			await this.selectBoardById(this.id);
 		}
 	},
 
 	async mounted() {
-		await this.getBoardById(this.id);
+		await this.selectBoardById(this.id);
 	},
 
 	methods: {
 		...mapActions([
-			"getBoardById",
+			"selectBoardById",
 			"createCard",
 			"updateList",
 			"changeListPosition",

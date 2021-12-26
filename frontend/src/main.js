@@ -3,6 +3,9 @@ import { createApp, h } from "vue";
 // --- I18NEXT ---
 import VueI18Next from "./i18next";
 
+// --- EVENT BUS ---
+import eventBus from "./bus";
+
 // --- VUE-ROUTER ---
 import router from "./router";
 
@@ -30,7 +33,7 @@ import iziToast from "./toast";
 import { apolloProvider, apolloClient } from "./apollo";
 
 // TailwindCSS
-import "./index.css";
+import "./styles/index.css";
 
 // Authenticator
 import authenticator from "./authenticator";
@@ -43,6 +46,7 @@ VueI18Next().then(i18n => {
 	const app = createApp({
 		render: () => h(App)
 	});
+	app.use(eventBus);
 	app.use(store);
 	app.use(router);
 	app.use(i18n);

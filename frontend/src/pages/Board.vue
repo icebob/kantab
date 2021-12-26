@@ -1,259 +1,77 @@
 <template>
 	<div v-if="board" class="flex-1 h-full flex flex-col overflow-y-hidden">
-		<div class="m-4">
+		<div class="m-4 flex">
 			<h3>{{ board.title }}</h3>
+			<button class="button flat text-neutral-500 hover:text-text" @click="editBoard()">
+				<i class="fa fa-pencil" />
+			</button>
 		</div>
-		<Container
-			class="flex-1 mx-4 h-full pb-4 flex overflow-x-auto gap-x-4"
-			group-name="list"
-			orientation="horizontal"
-			:drop-placeholder="listDropPlaceholderOptions"
-			:get-child-payload="idx => board.lists.rows[idx]"
-			@drop="onListDrop($event)"
-		>
-			<Draggable
-				v-for="list in board.lists.rows"
-				:key="list.id"
-				class="w-list min-w-list h-full flex-shrink-0 bg-panel rounded-md border border-neutral-600"
-			>
-				<div class="h-full flex flex-col">
-					<div
-						class="flex items-center bg-primary-600 rounded-t-md p-2 font-title text-lg text-shadow"
-						:style="getListHeaderStyle(list)"
-					>
-						<span class="ml-2 flex-1">{{ list.title }}</span>
-						<template v-if="user">
-							<button
-								class="button flat small"
-								@click="addingCardEditMode('top', list)"
-							>
-								<i class="fa fa-plus" />
-							</button>
-							<button class="button flat small" @click="showDialog(list)">
-								<i class="fa fa-pencil" />
-							</button>
-						</template>
-					</div>
-					<Container
-						class="p-2 flex-grow overflow-y-auto overflow-x-hidden"
-						orientation="vertical"
-						group-name="card"
-						drag-class="card-ghost"
-						drop-class="card-ghost-drop"
-						:drop-placeholder="cardDropPlaceholderOptions"
-						:get-child-payload="idx => list.cards.rows[idx]"
-						@drop="e => onCardDrop(list, e)"
-					>
-						<div
-							v-if="addingCard == 'top' && addingCardList == list.id"
-							class="form-element"
-						>
-							<textarea
-								ref="addingCardTextarea"
-								v-model="addingCardTitle"
-								class="form-input"
-								placeholder="Enter card title"
-								@keydown.enter.stop.prevent="addCard(list)"
-								@keydown.esc.stop.prevent="cancelAddingCard"
-							></textarea>
-						</div>
-						<Draggable v-for="card in list.cards.rows" :key="card.id">
-							<div
-								class="my-1 border border-neutral-700 bg-card shadow rounded-md transition-transform"
-							>
-								<div class="p-5">
-									<div>{{ card.title }} ({{ card.position }})</div>
-								</div>
-							</div>
-						</Draggable>
-						<div
-							v-if="!addingCard || addingCardList != list.id"
-							class="my-2 border-2 border-neutral-600 border-dashed text-neutral-500 rounded-md flex justify-center items-center h-16"
-							@click="addingCardEditMode('bottom', list)"
-						>
-							<div class="flex-1 text-center">
-								<i class="fa fa-plus text-2xl"></i>
-								<div class="text-sm">{{ $t("NewCard") }}</div>
-							</div>
-						</div>
-						<div v-else-if="addingCard == 'bottom'" class="form-element">
-							<textarea
-								ref="addingCardTextarea"
-								v-model="addingCardTitle"
-								class="form-input"
-								placeholder="Enter card title"
-								@keydown.enter.stop.prevent="addCard(list)"
-								@keydown.esc.stop.prevent="cancelAddingCard"
-							></textarea>
-						</div>
-					</Container>
-				</div>
-			</Draggable>
-			<div
-				class="w-list min-w-list mx-2 border-2 border-neutral-500 border-dashed text-neutral-500 rounded-md flex justify-center items-center h-20"
-				@click="showDialog()"
-			>
-				<div class="flex-1 text-center">
-					<i class="fa fa-plus text-3xl"></i>
-					<div class="text-md">{{ $t("NewList") }}</div>
-				</div>
-			</div>
-		</Container>
-		<edit-list-dialog ref="editDialog" />
+
+		<Board :board="board" />
+		<edit-board-dialog ref="editBoardDialog" />
+		<edit-list-dialog ref="editListDialog" />
+		<edit-card-dialog ref="editCardDialog" />
 	</div>
 </template>
-<script>
-import { Container, Draggable } from "vue3-smooth-dnd";
 
+<script>
 import { mapState, mapActions } from "vuex";
-import dateFormatter from "../mixins/dateFormatter";
+
+import Board from "../components/board/Board.vue";
+
+import EditBoardDialog from "../components/EditBoardDialog.vue";
 import EditListDialog from "../components/EditListDialog.vue";
-import { getTextColorByBackgroundColor } from "../utils";
+import EditCardDialog from "../components/EditCardDialog.vue";
 
 export default {
 	components: {
+		EditBoardDialog,
 		EditListDialog,
-		Container,
-		Draggable
+		EditCardDialog,
+		Board
 	},
-	mixins: [dateFormatter],
 	props: {
-		id: {
-			required: true,
-			type: String
-		}
+		id: { type: String, default: null }
 	},
 
-	data() {
-		return {
-			addingCard: null,
-			addingCardList: null,
-			addingCardTitle: "",
-
-			listDropPlaceholderOptions: {
-				className: "cards-drop-preview",
-				animationDuration: "150",
-				showOnTop: true
-			},
-			cardDropPlaceholderOptions: {
-				className: "drop-preview",
-				animationDuration: "150",
-				showOnTop: true
-			}
-		};
-	},
 	computed: {
 		...mapState(["user", "board"])
 	},
 
 	watch: {
 		async id() {
-			await this.getBoardById(this.id);
+			if (this.id) await this.selectBoardById(this.id);
 		}
 	},
 
 	async mounted() {
-		await this.getBoardById(this.id);
+		if (this.id) await this.selectBoardById(this.id);
+	},
+
+	events: {
+		newList() {
+			this.$refs.editListDialog?.show();
+		},
+
+		editList({ list }) {
+			this.$refs.editListDialog?.show({ list });
+		},
+
+		editCard({ list, card }) {
+			this.$refs.editCardDialog?.show({ list, card });
+		}
 	},
 
 	methods: {
-		...mapActions([
-			"getBoardById",
-			"createCard",
-			"updateList",
-			"changeListPosition",
-			"changeCardPosition"
-		]),
+		...mapActions(["selectBoardById"]),
 
-		showDialog(list) {
-			this.$refs.editDialog.show({ boardId: this.id, list: list });
+		editBoard() {
+			this.$refs.editBoardDialog.show(this.board);
 		},
 
-		addingCardEditMode(type, list) {
-			this.addingCardList = list.id;
-			this.addingCardTitle = "";
-			this.addingCard = type;
-
-			this.$nextTick(() => {
-				this.$refs.addingCardTextarea?.[0]?.focus();
-			});
-		},
-
-		cancelAddingCard() {
-			this.addingCard = null;
-			this.addingCardList = null;
-			this.addingCardTitle = "";
-		},
-
-		async addCard(list) {
-			if (this.addingCardTitle.trim() === "") {
-				return this.cancelAddingCard();
-			}
-
-			let position;
-			if (this.addingCard == "top") {
-				position = list.cards?.rows?.length ? list.cards.rows[0].position - 1 : 1;
-			} else {
-				position = list.cards?.rows?.length
-					? list.cards.rows[list.cards.rows.length - 1].position + 1
-					: 1;
-			}
-
-			await this.createCard({
-				list,
-				input: {
-					title: this.addingCardTitle,
-					list: list.id,
-					position
-				}
-			});
-
-			this.addingCardTitle = "";
-		},
-
-		async onListDrop(dropResult) {
-			const { removedIndex, addedIndex } = dropResult;
-			if ((removedIndex == null && addedIndex == null) || removedIndex == addedIndex) return;
-
-			await this.changeListPosition({
-				fromIndex: removedIndex,
-				toIndex: addedIndex
-			});
-		},
-
-		async onCardDrop(list, dropResult) {
-			const { removedIndex, addedIndex, payload } = dropResult;
-			if ((removedIndex == null && addedIndex == null) || removedIndex == addedIndex) return;
-
-			console.log("dropResult", list.title, dropResult);
-			await this.changeCardPosition({
-				list,
-				fromIndex: removedIndex,
-				toIndex: addedIndex,
-				card: payload
-			});
-		},
-
-		getListHeaderStyle(list) {
-			if (list.color) {
-				return {
-					backgroundColor: list.color,
-					color: getTextColorByBackgroundColor(list.color)
-				};
-			}
+		showListDialog(list) {
+			this.$refs.editListDialog.show({ boardId: this.id, list: list });
 		}
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.card-ghost {
-	transition: transform 0.18s ease;
-	transform: rotateZ(5deg);
-}
-
-.card-ghost-drop {
-	transition: transform 0.18s ease-in-out;
-	transform: rotateZ(0deg);
-}
-</style>

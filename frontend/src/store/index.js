@@ -40,13 +40,20 @@ export default createStore({
 	state: {
 		// Logged in user entity
 		user: null,
+		// Social login providers
 		providers: [],
+		// Selected board
 		board: null,
-		boards: [],
-		lists: []
+		// All boards
+		boards: []
 	},
 
-	getters: {},
+	getters: {
+		isPublicBoard: state => !!state.board?.public,
+		userIsOwner: state => state.user && state.board && state.board.owner?.id == state.user.id,
+		userIsMember: state =>
+			state.user && state.board && state.board.members.find(m => m.id == state.user.id)
+	},
 
 	actions: {
 		async init({ dispatch }) {
@@ -86,19 +93,18 @@ export default createStore({
 								id
 								username
 								fullName
-								email
+								avatar
 							}
 						}
 					`
 				});
-				return user.data.me;
+				commit("SET_LOGGED_IN_USER", user.data.me);
 			} catch (err) {
-				console.log("error", err);
+				console.log("Unable to get current user", err);
 			}
-			//commit("SET_LOGGED_IN_USER", user.data.me);
 		},
 
-		async getBoardById({ commit }, id) {
+		async selectBoardById({ commit }, id) {
 			try {
 				const res = await apolloClient.query({
 					query: gql`
@@ -113,6 +119,7 @@ export default createStore({
 								createdAt
 								updatedAt
 								owner {
+									id
 									username
 									fullName
 									avatar
@@ -137,6 +144,12 @@ export default createStore({
 									}
 									total
 								}
+								members {
+									id
+									username
+									fullName
+									avatar
+								}
 							}
 						}
 					`,
@@ -145,7 +158,7 @@ export default createStore({
 				commit("SET_BOARD", res.data.boardById);
 				return res.data.boardById;
 			} catch (err) {
-				console.log("getBoardById error", err);
+				console.log("selectBoardById error", err);
 				showInfoToast("Could not load board: " + err.message);
 			}
 		},
@@ -208,8 +221,10 @@ export default createStore({
 					variables: { input }
 				});
 
-				commit("ADD_BOARD", res.data.boardCreate);
-				showInfoToast("Board created");
+				const created = res.data.boardCreate;
+
+				commit("ADD_BOARD", created);
+				showInfoToast(`Board '${created.title}' created`);
 			} catch (err) {
 				console.error("createBoard err", err);
 				showErrorToast("Could not create board: " + err.message);
@@ -241,8 +256,9 @@ export default createStore({
 					variables: { input }
 				});
 
-				commit("UPDATE_BOARD", res.data.boardUpdate);
-				showInfoToast("Board updated");
+				const updated = res.data.boardUpdate;
+				commit("UPDATE_BOARD", updated);
+				showInfoToast(`Board '${updated.title}' updated`);
 			} catch (err) {
 				console.error("updateBoard error: ", err);
 				showErrorToast("Could not update board: " + err.message);
@@ -279,7 +295,7 @@ export default createStore({
 								title
 								description
 								position
-								cards {
+								cards(page: 1, pageSize: 20, sort: "position") {
 									rows {
 										id
 										title
@@ -312,7 +328,7 @@ export default createStore({
 								title
 								description
 								position
-								cards {
+								cards(page: 1, pageSize: 20, sort: "position") {
 									rows {
 										id
 										title
@@ -369,9 +385,9 @@ export default createStore({
 					`,
 					variables: { input }
 				});
-				console.log("res", res);
-				commit("ADD_CARD", { list, card: res.data.cardCreate });
-				showInfoToast("Card created");
+				const created = res.data.cardCreate;
+				commit("ADD_CARD", { list, card: created });
+				showInfoToast(`Card '${created.title}' created`);
 			} catch (err) {
 				console.error("createCard err", err);
 				showErrorToast("Could not create card: " + err.message);
@@ -394,8 +410,9 @@ export default createStore({
 					variables: { input }
 				});
 
-				commit("UPDATE_CARD", { list, card: res.data.cardUpdate });
-				showInfoToast("Card updated");
+				const updated = res.data.cardUpdate;
+				commit("UPDATE_CARD", { list, card: updated });
+				showInfoToast(`Card '${updated.title}' updated`);
 			} catch (err) {
 				console.error("updateCard error: ", err);
 				showErrorToast("Could not update card: " + err.message);
@@ -534,7 +551,7 @@ export default createStore({
 		},
 
 		SET_BOARD(state, board) {
-			console.log(board, Object.isFrozen(board));
+			//console.log(board, Object.isFrozen(board));
 			// TODO: Apollo client set it to frozen, so vuex can't update it.
 			if (Object.isFrozen(board)) {
 				state.board = JSON.parse(JSON.stringify(board));
@@ -544,7 +561,12 @@ export default createStore({
 		},
 
 		SET_BOARDS(state, boards) {
-			state.boards = boards;
+			// TODO: Apollo client set it to frozen, so vuex can't update it.
+			if (Object.isFrozen(boards)) {
+				state.boards = JSON.parse(JSON.stringify(boards));
+			} else {
+				state.boards = boards;
+			}
 		},
 
 		ADD_BOARD(state, board) {
@@ -557,6 +579,11 @@ export default createStore({
 				Object.assign(found, board);
 			} else {
 				state.boards = [...state.boards, board];
+			}
+
+			// Update the selected board
+			if (state.board?.id == board.id) {
+				Object.assign(state.board, board);
 			}
 		},
 

@@ -33,12 +33,6 @@ export default [
 				name: "Board",
 				component: () => import("../pages/Board.vue"),
 				props: true
-			},
-			{
-				path: "/board2/:id-:slug",
-				name: "Board2",
-				component: () => import("../pages/Board2.vue"),
-				props: true
 			}
 		]
 	},
