@@ -3,6 +3,7 @@
 		<div
 			class="flex items-center bg-primary-600 rounded-t-md p-2 font-title text-lg text-shadow"
 			:style="headerStyle"
+			@dblclick="editList"
 		>
 			<span class="ml-2 flex-1"
 				>{{ list.title }}
@@ -14,7 +15,7 @@
 				<button class="button flat small" @click="newCardEditMode('top', list)">
 					<i class="fa fa-plus" />
 				</button>
-				<button class="button flat small" @click="$bus.emit('editList', { list })">
+				<button class="button flat small" @click="editList">
 					<i class="fa fa-bars" />
 				</button>
 			</template>
@@ -29,7 +30,7 @@
 			:get-child-payload="idx => list.cards.rows[idx]"
 			@drop="onCardDrop"
 		>
-			<div v-if="newCard == 'top'" class="form-element">
+			<div v-if="userIsMember && newCard == 'top'" class="form-element">
 				<textarea
 					ref="newCardTextarea"
 					v-model="newCardTitle"
@@ -39,29 +40,31 @@
 					@keydown.esc.stop.prevent="cancelNewCard"
 				></textarea>
 			</div>
-			<Draggable v-for="card in list.cards.rows" :key="card.id">
+			<component :is="cardComponentType" v-for="card in list.cards.rows" :key="card.id">
 				<BoardCard :card="card" :list="list" :board="board" />
-			</Draggable>
-			<div
-				v-if="!newCard"
-				class="h-16 my-2 border-2 border-neutral-600 border-dashed text-neutral-500 rounded-md flex justify-center items-center hover:border-neutral-400 hover:text-neutral-400 transition-colors"
-				@click="newCardEditMode('bottom', list)"
-			>
-				<div class="flex-1 text-center">
-					<i class="fa fa-plus text-2xl"></i>
-					<div class="text-sm">{{ $t("NewCard") }}</div>
+			</component>
+			<template v-if="userIsMember">
+				<div
+					v-if="!newCard"
+					class="h-16 my-2 border-2 border-neutral-600 border-dashed text-neutral-500 rounded-md flex justify-center items-center hover:border-neutral-400 hover:text-neutral-400 transition-colors"
+					@click="newCardEditMode('bottom', list)"
+				>
+					<div class="flex-1 text-center">
+						<i class="fa fa-plus text-2xl"></i>
+						<div class="text-sm">{{ $t("NewCard") }}</div>
+					</div>
 				</div>
-			</div>
-			<div v-else-if="newCard == 'bottom'" class="form-element">
-				<textarea
-					ref="newCardTextarea"
-					v-model="newCardTitle"
-					class="form-input"
-					placeholder="Enter card title"
-					@keydown.enter.stop.prevent="addCard(list)"
-					@keydown.esc.stop.prevent="cancelNewCard"
-				></textarea>
-			</div>
+				<div v-else-if="newCard == 'bottom'" class="form-element">
+					<textarea
+						ref="newCardTextarea"
+						v-model="newCardTitle"
+						class="form-input"
+						placeholder="Enter card title"
+						@keydown.enter.stop.prevent="addCard(list)"
+						@keydown.esc.stop.prevent="cancelNewCard"
+					></textarea>
+				</div>
+			</template>
 		</Container>
 	</div>
 </template>
@@ -102,6 +105,10 @@ export default {
 	computed: {
 		...mapGetters(["userIsMember"]),
 
+		cardComponentType() {
+			return this.userIsMember ? "Draggable" : "div";
+		},
+
 		headerStyle() {
 			if (this.list.color) {
 				return {
@@ -115,6 +122,12 @@ export default {
 
 	methods: {
 		...mapActions(["createCard", "changeCardPosition"]),
+
+		editList() {
+			if (this.userIsMember) {
+				this.$bus.emit("editList", { list: this.list });
+			}
+		},
 
 		newCardEditMode(type) {
 			if (this.newCard == type) return this.cancelNewCard();

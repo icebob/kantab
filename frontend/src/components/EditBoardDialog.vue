@@ -2,21 +2,38 @@
 	<k-dialog v-model="visible" :title="pageTitle">
 		<template #default>
 			<div class="form-element">
-				<label class="block mb-1">{{ $t("Title") }}</label>
+				<label class="block mb-1 text-primary">{{ $t("Title") }}</label>
 				<input ref="mainInput" v-model="board.title" type="text" @keydown.enter="save" />
 			</div>
 			<div class="mt-3 form-element">
-				<label class="block mt-2 mb-1">{{ $t("Description") }}</label>
+				<label class="block mt-2 mb-1 text-primary">{{ $t("Description") }}</label>
 				<input v-model="board.description" type="text" />
 			</div>
 			<div class="mt-3 form-option">
 				<input id="public-checkbox" v-model="board.public" type="checkbox" />
 				<label for="public-checkbox">{{ $t("Public") }}</label>
 			</div>
+			<div class="mt-3">
+				<label class="block mt-2 mb-1 text-primary">Owner</label>
+				<div class="ml-4 flex items-center">
+					<img
+						:src="board.owner.avatar"
+						class="w-12 h-12 rounded-full"
+						alt="Owner's avatar"
+					/>
+					<div class="flex-1 ml-4">
+						<div class="">{{ board.owner.fullName }}</div>
+						<div class="text-muted">{{ board.owner.username }}</div>
+					</div>
+					<button class="button secondary small outlined w-32">Change ownership</button>
+				</div>
+			</div>
 		</template>
 
 		<template #actions>
-			<div class="flex justify-between items-center my-4">
+			<div
+				class="flex justify-between items-center my-4 pt-4 border-t-2 border-t-primary-600"
+			>
 				<div class="space-x-3">
 					<button class="button primary" @click="save()">
 						{{ $t("Ok") }}

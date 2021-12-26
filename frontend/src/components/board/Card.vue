@@ -2,7 +2,7 @@
 	<div
 		class="my-1 border border-neutral-700 bg-card shadow rounded-md transition-transform"
 		:style="cardStyle"
-		@click="$bus.emit('editCard', { list, card })"
+		@click="editCard"
 	>
 		<div class="p-5">
 			<div>{{ card.title }}</div>
@@ -37,6 +37,13 @@ export default {
 				};
 			}
 			return {};
+		}
+	},
+	methods: {
+		editCard() {
+			if (this.userIsMember) {
+				this.$bus.emit("editCard", { list: this.list, card: this.card });
+			}
 		}
 	}
 };

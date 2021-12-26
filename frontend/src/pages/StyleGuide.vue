@@ -183,9 +183,27 @@
 					<button class="button warning">Warning</button>
 					<button class="button danger">Danger</button>
 					<button class="button flat">Flat</button>
-					<button class="button outlined">Outlined</button>
 					<button class="button loading">Loading</button>
 					<button class="button icon" disabled><i class="fa fa-ban" />Disabled</button>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2 mt-8">
+				<h5 class="block border-b-2 border-b-neutral-600 mb-2 pb-1 uppercase">
+					Outlined buttons
+				</h5>
+				<div class="flex gap-4 items-center justify-center flex-wrap">
+					<button class="button outlined">Normal</button>
+					<button class="button outlined primary">Primary</button>
+					<button class="button outlined secondary">Secondary</button>
+					<button class="button outlined success icon">
+						<i class="fa fa-check" />Success
+					</button>
+					<button class="button outlined warning">Warning</button>
+					<button class="button outlined danger">Danger</button>
+					<button class="button outlined loading">Loading</button>
+					<button class="button outlined icon" disabled>
+						<i class="fa fa-ban" />Disabled
+					</button>
 				</div>
 			</div>
 			<div class="flex flex-col gap-2 mt-8">
@@ -201,7 +219,7 @@
 					</button>
 					<button class="button large warning">Warning</button>
 					<button class="button large danger">Danger</button>
-					<button class="button large flat">Flat</button>
+					<button class="button large primary flat">Flat</button>
 					<button class="button large outlined">Outlined</button>
 					<button class="button large loading">Loading</button>
 					<button class="button large icon" disabled>

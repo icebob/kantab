@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="m-5">
-			<h3 class="mb-8 text-center">{{ $t("MyBoards") }}</h3>
+			<h3 class="mb-8 text-center">{{ user ? $t("MyBoards") : $t("PublicBoards") }}</h3>
 			<div v-if="boards && boards.length > 0" class="flex justify-center flex-wrap gap-8">
 				<div v-for="board in boards" :key="board.id">
 					<router-link
@@ -29,7 +29,7 @@
 		<div class="fixed right-8 bottom-8">
 			<div
 				class="w-12 h-12 rounded-full bg-primary hover:bg-primary-400 active:bg-primary-600 shadow-lg text-black text-2xl flex justify-center items-center"
-				@click="showDialog()"
+				@click="newBoardDialog()"
 			>
 				<i class="fa fa-plus"></i>
 			</div>
@@ -57,8 +57,11 @@ export default {
 	},
 
 	methods: {
-		showDialog(board) {
-			this.$refs.editDialog.show(board);
+		newBoardDialog() {
+			if (!this.user) {
+				return this.$router.push({ name: "login" });
+			}
+			this.$refs.editDialog.show();
 		}
 	}
 };

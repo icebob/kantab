@@ -16,17 +16,12 @@ export default [
 				component: () => import("../pages/StyleGuide.vue")
 			},
 			{
-				path: "/protected",
-				name: "protected",
-				component: () => import("../pages/Protected.vue"),
+				path: "/about",
+				name: "about",
+				component: () => import("../pages/About.vue"),
 				meta: {
 					requiresAuth: true
 				}
-			},
-			{
-				path: "/about",
-				name: "about",
-				component: () => import("../pages/About.vue")
 			},
 			{
 				path: "/board/:id-:slug",

@@ -106,28 +106,6 @@ html, body {
 				text-white text-shadow-none;
 		}
 
-		&.outlined {
-			@apply bg-none bg-transparent
-				border border-text
-				text-text
-				hover:bg-white hover:bg-opacity-10
-				active:bg-white active:bg-opacity-20
-				text-shadow-none;
-
-			&.large {
-				@apply border-2;
-			}
-		}
-
-		&.flat {
-			@apply bg-none bg-transparent
-				border-0
-				shadow-none
-				text-shadow-none
-				text-text
-				hover:bg-white hover:bg-opacity-10
-				active:bg-white active:bg-opacity-20;
-		}
 
 		&[disabled] {
 			@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
@@ -150,6 +128,74 @@ html, body {
 
 		&.floating {
 			@apply w-10 h-10 p-0 rounded-full text-center;
+		}
+
+		&.outlined {
+			@apply bg-none bg-transparent
+				border border-text
+				text-text
+				hover:bg-white hover:bg-opacity-10
+				active:bg-white active:bg-opacity-20
+				text-shadow-none;
+
+			&.large {
+				@apply border-2;
+			}
+
+			&.primary {
+				@apply border-primary-500 text-primary-500;
+			}
+			&.secondary {
+				@apply border-secondary-400 text-secondary-400;
+			}
+			&.success {
+				@apply border-green-400 text-green-400;
+			}
+			&.warning {
+				@apply border-yellow-500 text-yellow-500;
+			}
+			&.danger {
+				@apply border-red-500 text-red-500;
+			}
+
+			&.loading {
+				@apply text-transparent;
+
+				&::after {
+					@apply border-b-text border-l-text;
+				}
+			}
+
+			&[disabled] {
+				@apply opacity-30;
+			}
+		}
+
+		&.flat {
+			@apply bg-none bg-transparent
+				border-0
+				shadow-none
+				text-shadow-none
+				text-text
+				hover:bg-white hover:bg-opacity-10
+				active:bg-white active:bg-opacity-20;
+
+			&.primary {
+				@apply text-primary-500;
+			}
+			&.secondary {
+				@apply text-secondary-400;
+			}
+			&.success {
+				@apply text-green-400;
+			}
+			&.warning {
+				@apply text-yellow-500;
+			}
+			&.danger {
+				@apply text-red-500;
+			}
+
 		}
 
 		&.small {

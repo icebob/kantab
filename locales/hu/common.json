@@ -21,5 +21,7 @@
     "Remove": "Eltávolítás",
 	"EditList": "Lista szerkesztése",
     "NewList": "Új lista",
-	"NewCard": "Új kártya"
+	"NewCard": "Új kártya",
+	"EditCard": "Kártya szerkesztése",
+    "PublicBoards": "Nyilvános táblák",
 }

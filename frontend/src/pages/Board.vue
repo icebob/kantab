@@ -2,7 +2,11 @@
 	<div v-if="board" class="flex-1 h-full flex flex-col overflow-y-hidden">
 		<div class="m-4 flex">
 			<h3>{{ board.title }}</h3>
-			<button class="button flat text-neutral-500 hover:text-text" @click="editBoard()">
+			<button
+				v-if="userIsMember"
+				class="button flat text-neutral-500 hover:text-text"
+				@click="editBoard()"
+			>
 				<i class="fa fa-pencil" />
 			</button>
 		</div>
@@ -15,7 +19,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Board from "../components/board/Board.vue";
 
@@ -35,7 +39,8 @@ export default {
 	},
 
 	computed: {
-		...mapState(["user", "board"])
+		...mapState(["user", "board"]),
+		...mapGetters(["userIsMember"])
 	},
 
 	watch: {

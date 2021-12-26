@@ -7,13 +7,14 @@
 		:get-child-payload="idx => board.lists.rows[idx]"
 		@drop="onListDrop"
 	>
-		<Draggable
+		<component
+			:is="listComponentType"
 			v-for="list in board.lists.rows"
 			:key="list.id"
 			class="w-list min-w-list h-full flex-shrink-0 bg-panel rounded-md border border-neutral-600"
 		>
 			<BoardList :list="list" :board="board" />
-		</Draggable>
+		</component>
 		<div
 			v-if="userIsMember"
 			class="w-list min-w-list h-20 mx-2 border-2 border-neutral-500 border-dashed text-neutral-500 rounded-md flex justify-center items-center hover:border-neutral-400 hover:text-neutral-400 transition-colors"
@@ -57,7 +58,11 @@ export default {
 		};
 	},
 	computed: {
-		...mapGetters(["userIsMember"])
+		...mapGetters(["userIsMember"]),
+
+		listComponentType() {
+			return this.userIsMember ? "Draggable" : "div";
+		}
 	},
 
 	methods: {

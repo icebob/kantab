@@ -21,6 +21,7 @@
     "Remove": "Remove",
 	"EditList": "Edit list",
     "NewList": "New list",
-	"NewCard": "Add card"
-
+	"NewCard": "Add card",
+    "EditCard": "Edit card",
+    "PublicBoards": "Nyilvános táblák"
 }
