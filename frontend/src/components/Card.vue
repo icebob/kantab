@@ -9,9 +9,9 @@
 				<div>
 					<span class="font-title text-2xl font-light text-white">{{ title }}</span>
 				</div>
-				<div class="mt-4 text-sm text-text">
+				<div class="mt-2 text-sm text-gray-300">
 					<span v-if="description">{{ description }}</span
-					><span v-else class="italic">{{ $t("noDescription") }}</span>
+					><span v-else class="text-muted italic">{{ $t("noDescription") }}</span>
 				</div>
 				<div v-if="footer" class="pt-5">
 					<small class="text-xs text-muted">{{ footer }}</small>

@@ -9,6 +9,7 @@
 						class="div text-nodec"
 					>
 						<card
+							class="w-64"
 							:title="board.title"
 							:description="board.description"
 							:footer="

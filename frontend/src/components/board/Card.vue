@@ -10,12 +10,20 @@
 			:src="coverImage"
 		/>
 		<div class="px-4 py-2">
-			<div class="flex gap-2">
-				<div class="bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm">
-					Frontend
+			<div class="flex items-center">
+				<div class="flex-1 flex gap-2">
+					<div class="bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm">
+						Frontend
+					</div>
+					<div class="bg-negative rounded px-2 py-0.5 text-xs text-white text-shadow-sm">
+						High priority
+					</div>
 				</div>
-				<div class="bg-negative rounded px-2 py-0.5 text-xs text-white text-shadow-sm">
-					High priority
+				<div>
+					<div class="flex items-baseline text-xs opacity-80">
+						<i class="fa fa-comments-o mr-1" />
+						<span>3</span>
+					</div>
 				</div>
 			</div>
 			<div class="my-2 font-bold text-shadow-sm">{{ card.title }}</div>
