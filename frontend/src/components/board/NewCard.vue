@@ -11,7 +11,7 @@
 				ref="textarea"
 				v-model="title"
 				class="form-input"
-				placeholder="What is your task?"
+				placeholder="What is the task?"
 				@keydown.enter.stop.prevent="create()"
 				@keydown.esc.stop.prevent="cancel"
 			></textarea>

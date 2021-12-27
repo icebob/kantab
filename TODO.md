@@ -41,6 +41,7 @@
 
 
 ## Frontend
+- [ ] Avatar component, if you user's avatar create one with initials and hashed bg color of name
 
 ## Lists
 - [ ] collapsible lists

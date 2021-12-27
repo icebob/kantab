@@ -466,7 +466,9 @@
 					<div class="badge bg-primary">Primary</div>
 					<div class="badge bg-positive">Success</div>
 					<div class="badge bg-warning">Warning</div>
-					<div class="badge bg-negative">Danger</div>
+					<div class="badge bg-negative">
+						<i class="fa fa-exclamation-triangle mr-1" />Danger
+					</div>
 					<div class="badge outlined">Outlined</div>
 				</div>
 			</div>

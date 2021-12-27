@@ -8,7 +8,7 @@
 			text-base;
 
 		.icon {
-			@apply mr-2;
+			@apply mr-2 leading-none;
 		}
 
 		.close {
@@ -20,7 +20,7 @@
 		@apply bg-input text-text rounded px-2 py-1 text-xs text-shadow;
 
 		&.pill {
-			@apply rounded-full text-center;
+			@apply rounded-full grid place-items-center;
 			min-width: 1.65rem;
 		}
 
@@ -45,7 +45,7 @@
 		}
 
 		.progress {
-			@apply bg-primary rounded-full text-center text-shadow text-ellipsis h-full transition-all;
+			@apply bg-primary rounded-full text-shadow text-ellipsis h-full transition-all grid place-items-center;
 		}
 
 		&.stripped .progress {
