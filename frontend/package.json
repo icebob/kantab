@@ -30,6 +30,7 @@
     "mitt": "^3.0.0",
     "npm-check": "^5.9.2",
     "postcss": "^8.4.5",
+    "postcss-import": "^14.0.2",
     "prettier": "^2.5.0",
     "pug": "^3.0.2",
     "register-service-worker": "^1.7.1",

@@ -1,0 +1,190 @@
+@layer components {
+
+	.form-element {
+		@apply relative;
+
+		label {
+			@apply block mb-1
+		}
+
+		input, textarea, select {
+			@apply w-full px-2 py-1
+				border border-gray-600 bg-input rounded-md
+				placeholder-neutral-500
+				outline-none
+				focus:shadow-primary;
+		}
+
+		.icon {
+			@apply absolute block text-muted text-lg right-3 top-8;
+		}
+
+		&.no-label {
+			input, textarea, select {
+				@apply w-full px-2 py-2;
+			}
+
+			.icon {
+				@apply top-2;
+			}
+		}
+
+		&[disabled] {
+			cursor: not-allowed;
+		}
+
+		.hint {
+			@apply text-xs text-neutral-400 mt-1;
+		}
+
+		&.valid {
+			label {
+				@apply text-green-500;
+			}
+
+			input, textarea, select {
+				@apply border-green-500 bg-green-900 bg-opacity-50 focus:shadow-green-500;
+			}
+
+		}
+
+		&.error {
+			label {
+				@apply text-red-300;
+			}
+
+			input, textarea, select {
+				@apply border-red-400 bg-red-900 bg-opacity-50 focus:shadow-red-400;
+			}
+		}
+
+		.errors {
+			@apply ml-1 mt-2 text-red-300 text-xs;
+			> div {
+				@apply mt-1;
+
+				&::before {
+					content: "\f071";
+					@apply pr-2 font-awesome;
+				}
+			}
+		}
+
+	}
+
+	.form-option {
+		@apply relative;
+
+		label {
+			@apply inline-block ml-7 select-none;
+		}
+
+		input {
+			@apply hidden;
+		}
+
+		/* checkbox aspect */
+		[type="checkbox"]:not(:checked) + label:before,
+		[type="checkbox"]:checked + label:before {
+			content: '';
+			@apply absolute left-1 top-1 w-4 h-4 border border-neutral-500 bg-input rounded transition-all;
+		}
+
+		/* checked mark aspect */
+		[type="checkbox"]:not(:checked) + label:after,
+		[type="checkbox"]:checked + label:after {
+			content: "\f00c";
+			@apply absolute text-xs text-white left-1.5 top-1 transition-all font-awesome;
+		}
+
+		/* checkbox aspect */
+		[type="radio"]:not(:checked) + label:before,
+		[type="radio"]:checked + label:before {
+			content: '';
+			@apply absolute left-1 top-1 w-4 h-4 border border-neutral-500 bg-input rounded-full transition-all;
+		}
+
+		/* checked mark aspect */
+		[type="radio"]:not(:checked) + label:after,
+		[type="radio"]:checked + label:after {
+			content: '';
+			@apply absolute w-2 h-2 left-2 top-2 rounded-full bg-white transition-all;
+		}
+
+		/* checked mark aspect changes */
+		[type="checkbox"]:not(:checked) + label:after,
+		[type="radio"]:not(:checked) + label:after
+		{
+			@apply opacity-0 scale-0 rotate-45;
+		}
+
+		[type="checkbox"]:checked + label:after,
+		[type="radio"]:checked + label:after {
+			@apply opacity-100 scale-100 rotate-0;
+		}
+
+		/* Disabled checkbox */
+		[type="checkbox"]:disabled:not(:checked) + label:before,
+		[type="checkbox"]:disabled:checked + label:before,
+		[type="radio"]:disabled:not(:checked) + label:before,
+		[type="radio"]:disabled:checked + label:before {
+			@apply bg-neutral-700;
+		}
+
+		[type="checkbox"]:disabled:checked + label:after,
+		[type="radio"]:disabled:checked + label:after {
+			@apply text-neutral-400;
+		}
+
+		[type="checkbox"]:disabled + label,
+		[type="radio"]:disabled + label {
+			@apply text-muted;
+		}
+	}
+
+	.form-switch {
+		@apply relative;
+
+		label {
+			@apply inline-block ml-14;
+		}
+
+		input {
+			@apply hidden;
+		}
+
+		label:before {
+			content: '';
+			@apply absolute left-0 top-0 w-11 h-6 border border-neutral-500 bg-input rounded-full transition-all ease-in-out;
+		}
+
+		label:after {
+			content: '';
+			@apply absolute w-4 h-4 left-1 top-1 rounded-full bg-white transition-all;
+		}
+
+		input:checked + label::before {
+			@apply bg-primary;
+		}
+		input:checked + label::after {
+			@apply left-6;
+		}
+
+		input:disabled:not(:checked) + label:before {
+			@apply bg-neutral-700;
+		}
+
+		input:disabled:checked + label:before {
+			@apply bg-primary-700;
+		}
+
+		input:disabled + label:after {
+			@apply bg-neutral-400;
+		}
+
+		input:disabled + label {
+			@apply text-muted;
+		}
+	}
+
+}

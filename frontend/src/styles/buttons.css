@@ -1,0 +1,182 @@
+@layer components {
+	.button {
+		@apply py-1.5 px-5
+			rounded-md shadow
+			text-gray-900
+
+			bg-gradient-to-b
+			from-gray-400 to-gray-500
+			hover:from-gray-300 hover:to-gray-400
+			active:from-gray-200 active:to-gray-300
+
+			hover:shadow-lg
+			active:shadow-none;
+
+			text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.5);
+
+		&.icon i {
+			@apply mr-2;
+		}
+
+		&.primary {
+			@apply bg-gradient-to-b
+				from-primary-400 to-primary-500
+				hover:from-primary-300 hover:to-primary-400
+				active:from-primary-200 active:to-primary-300;
+		}
+		&.secondary {
+			@apply bg-gradient-to-b
+				from-secondary-400 to-secondary-500
+				hover:from-secondary-300 hover:to-secondary-400
+				active:from-secondary-200 active:to-secondary-300;
+		}
+		&.success {
+			@apply bg-gradient-to-b
+				from-green-500 to-green-600
+				hover:from-green-400 hover:to-green-500
+				active:from-green-300 active:to-green-400;
+		}
+		&.warning {
+			@apply bg-gradient-to-b
+				from-yellow-500 to-yellow-600
+				hover:from-yellow-400 hover:to-yellow-500
+				active:from-yellow-300 active:to-yellow-400;
+		}
+		&.danger {
+			@apply bg-gradient-to-b
+				from-red-500 to-red-600
+				hover:from-red-400 hover:to-red-500
+				active:from-red-300 active:to-red-400
+				text-white text-shadow-none;
+		}
+
+
+		&[disabled] {
+			@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
+		}
+
+		&.loading {
+			@apply text-transparent pointer-events-none relative text-shadow-none;
+		}
+
+		&.loading::after {
+			@apply rounded-full block absolute
+				w-4 h-4 -ml-2 -mt-2 left-1/2 top-1/2
+				animate-spin;
+
+			content: "";
+			border: 2px solid #1D2124;
+			border-right-color: transparent;
+			border-top-color: transparent;
+		}
+
+		&.floating {
+			@apply w-10 h-10 p-0 rounded-full text-center;
+		}
+
+		&.outlined {
+			@apply bg-none bg-transparent
+				border border-text
+				text-text
+				hover:bg-white hover:bg-opacity-10
+				active:bg-white active:bg-opacity-20
+				text-shadow-none;
+
+			&.large {
+				@apply border-2;
+			}
+
+			&.primary {
+				@apply border-primary-500 text-primary-500;
+			}
+			&.secondary {
+				@apply border-secondary-400 text-secondary-400;
+			}
+			&.success {
+				@apply border-green-400 text-green-400;
+			}
+			&.warning {
+				@apply border-yellow-500 text-yellow-500;
+			}
+			&.danger {
+				@apply border-red-500 text-red-500;
+			}
+
+			&.loading {
+				@apply text-transparent;
+
+				&::after {
+					@apply border-b-text border-l-text;
+				}
+			}
+
+			&[disabled] {
+				@apply opacity-30;
+			}
+		}
+
+		&.flat {
+			@apply bg-none bg-transparent
+				border-0
+				shadow-none
+				text-shadow-none
+				text-text
+				hover:bg-white hover:bg-opacity-10
+				active:bg-white active:bg-opacity-20;
+
+			&.primary {
+				@apply text-primary-500;
+			}
+			&.secondary {
+				@apply text-secondary-400;
+			}
+			&.success {
+				@apply text-green-400;
+			}
+			&.warning {
+				@apply text-yellow-500;
+			}
+			&.danger {
+				@apply text-red-500;
+			}
+
+		}
+
+		&.small {
+			@apply py-1 px-3 text-sm;
+
+			&.floating {
+				@apply w-8 h-8 p-0 rounded-full text-sm;
+			}
+		}
+
+		&.large {
+			@apply py-2 px-8 text-lg;
+
+			&.loading::after {
+				@apply w-6 h-6 -mt-3;
+			}
+
+			&.floating {
+				@apply w-14 h-14 p-0 rounded-full text-2xl;
+			}
+		}
+	}
+
+	.button-group {
+		@apply inline-flex items-center;
+
+		.button:first-child:not(:last-child) {
+			@apply rounded-r-none;
+		}
+
+		.button:last-child:not(:first-child) {
+			@apply rounded-l-none;
+		}
+
+		.button:not(:first-child):not(:last-child) {
+			@apply rounded-none;
+		}
+	}
+
+}

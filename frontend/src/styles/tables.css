@@ -1,0 +1,120 @@
+@layer components {
+
+	table.table {
+		@apply w-full border-collapse border border-input rounded-md text-shadow;
+
+		th, td {
+			@apply px-3 py-2 text-center cursor-default;
+		}
+
+		thead th, tfoot td {
+			@apply bg-input font-bold uppercase;
+		}
+
+		thead th {
+			i.fa {
+				@apply mr-2;
+			}
+
+			&:first-child {
+				@apply rounded-tl-md;
+			}
+			&:last-child {
+				@apply rounded-tr-md;
+			}
+
+			&.sortable {
+				@apply px-6;
+
+				@apply relative;
+				&::after {
+					content: "\f0dc";
+					@apply absolute text-neutral-500 right-1.5 top-2 transition-all font-awesome;
+				}
+
+				&.sorted {
+					&::after {
+						content: "\f0dd";
+						@apply text-text;
+					}
+
+					&.desc::after {
+						content: "\f0de";
+					}
+
+				}
+			}
+		}
+
+		tbody {
+			tr {
+				@apply transition-colors;
+
+				td {
+					&.selector {
+						&::after {
+							content: "\f096";
+							@apply font-awesome text-xl;
+						}
+					}
+				}
+			}
+
+			/* If there is no tfoot add radius */
+			&:last-child {
+				tr:last-child td {
+						&:first-child {
+							border-radius: 0 0 0 8px;
+						}
+
+						&:last-child {
+							border-radius: 0 0 8px 0;
+						}
+				}
+			}
+
+		}
+
+		tfoot tr td {
+			&:first-child {
+				@apply rounded-bl-md;
+			}
+			&:last-child {
+				@apply rounded-br-md;
+			}
+		}
+
+		&.bordered {
+			tbody tr:not(:last-child) td {
+				@apply border-b border-b-neutral-600;
+			}
+		}
+
+		&.stripped {
+			tbody tr:nth-child(even) {
+				@apply bg-white bg-opacity-5;
+			}
+		}
+
+		/* Hover & Selected styles */
+		tbody tr:nth-child(even), tbody tr:nth-child(odd) {
+			@apply hover:bg-primary-600 hover:bg-opacity-50;
+
+			&.inactive td:not(.selector) {
+				@apply italic text-neutral-500;
+			}
+
+			&.selected {
+				@apply bg-primary-600;
+
+				td.selector::after {
+					content: "\f046";
+				}
+
+				&.inactive td {
+					@apply text-text text-opacity-60;
+				}
+			}
+		}
+	}
+}

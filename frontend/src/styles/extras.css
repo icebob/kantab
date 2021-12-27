@@ -1,0 +1,58 @@
+@layer components {
+
+	.alert {
+		@apply bg-input text-text
+			px-4 py-1 rounded-lg
+			shadow-md
+			text-shadow
+			text-base;
+
+		.icon {
+			@apply mr-2;
+		}
+
+		.close {
+			@apply cursor-pointer border-l border-l-neutral-600 ml-2 pl-3;
+		}
+	}
+
+	.badge {
+		@apply bg-input text-text rounded px-2 py-1 text-xs text-shadow;
+
+		&.pill {
+			@apply rounded-full text-center;
+			min-width: 1.65rem;
+		}
+
+		&.outlined {
+			@apply bg-transparent border border-text
+		}
+	}
+
+	.progressbar {
+		@apply bg-input text-text rounded-full h-5 text-sm;
+
+		&.small {
+			@apply h-4 text-xs;
+		}
+
+		&.extra-small {
+			@apply h-2 text-xs;
+		}
+
+		&.large {
+			@apply h-8 text-lg;
+		}
+
+		.progress {
+			@apply bg-primary rounded-full text-center text-shadow text-ellipsis h-full transition-all;
+		}
+
+		&.stripped .progress {
+			background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+			background-size: 40px 40px;
+			animation: progress-bar-stripes 1s linear infinite;
+		}
+	}
+}
+
