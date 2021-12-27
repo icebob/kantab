@@ -25,7 +25,6 @@ const htmlTplString = `
   <title><% title %></title>
   <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
   <% favIconString %>
-  <% customJs %>
   <style>
     html
     {

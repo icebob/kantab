@@ -7,7 +7,6 @@
   - [ ] https://github.com/yeojz/otplib
   - [ ] https://github.com/hectorm/otpauth
 - [ ] remove deleted boards, list, cards after 30 days
-- [x] openapi UI not working
 - [ ] configure cache dependencies better (if delete a card, it doesn't drop the boards cache)
 
 ## Accounts
@@ -21,6 +20,10 @@
 
 ## Lists
 
+## Uploads
+- [ ] Create file upload service with changeable adapter mixin (Local, S3, Azure...etc)
+- [ ] Avatars, card attachments, board cover images
+- [ ] Get files via service because we should check the permissions as well
 
 ## Cards
 - [ ] Generate a unique number for the cards. (too expensive to get the max number, maybe if will be aggregate in `database` module)
