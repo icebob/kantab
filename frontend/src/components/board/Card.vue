@@ -11,11 +11,22 @@
 		/>
 		<div class="px-4 py-2">
 			<div class="flex items-center">
-				<div class="flex-1 flex gap-2">
+				<!-- <div class="flex-1 flex gap-2">
+					<div
+						class="w-8 bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm"
+						title="Frontend"
+					></div>
+					<div
+						class="w-8 bg-negative rounded px-2 py-0.5 text-xs text-white text-shadow-sm"
+						title="High priority"
+					></div>
+				</div> -->
+				<div class="flex-1 flex gap-2 flex-wrap">
 					<div class="bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm">
 						Frontend
 					</div>
 					<div class="bg-negative rounded px-2 py-0.5 text-xs text-white text-shadow-sm">
+						<i class="fa fa-exclamation-circle"></i>
 						High priority
 					</div>
 				</div>
@@ -28,13 +39,13 @@
 			</div>
 			<div class="my-2 font-bold text-shadow-sm">{{ card.title }}</div>
 			<div class="flex items-center">
-				<div class="flex-1 flex-col text-xs opacity-75">
+				<div class="flex-1 flex-col text-xxs opacity-75">
 					<div class="flex items-baseline">
-						<i class="fa fa-calendar mr-1" />
+						<i class="fa fa-calendar-o mr-1" />
 						<span>Dec 31</span>
 					</div>
-					<div class="flex items-baseline">
-						<i class="fa fa-check-square-o mr-1" />
+					<div class="flex mt-0.5 items-baseline">
+						<i class="fa fa-flag mr-1" />
 						<span>Jan 10</span>
 					</div>
 				</div>
@@ -59,7 +70,7 @@
 				<div class="flex-1 progressbar extra-small">
 					<div class="progress" style="width: 75%"></div>
 				</div>
-				<div class="ml-1 text-xxs">7/10</div>
+				<div class="ml-1 text-xxs"><i class="fa fa-check-square-o mr-1" />7/10</div>
 			</div>
 		</div>
 	</div>

@@ -10,7 +10,12 @@
 				<i class="fa fa-pencil" />
 			</button>
 			<div class="flex-1"></div>
-			<div class="flex flex-row-reverse">
+			<div
+				class="w-10 h-10 rounded-full border-2 border-panel drop-shadow flex justify-center items-center transition-colors hover:border-text text-neutral-500 hover:text-text cursor-pointer"
+			>
+				<i class="fa fa-user-plus" />
+			</div>
+			<div class="ml-6 flex flex-row-reverse">
 				<div
 					v-for="member of board.members"
 					:key="member.id"

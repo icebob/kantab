@@ -18,6 +18,11 @@
 
 ## Cards
 - [ ] Generate a unique number for the cards.
+- [ ] Multi-level view
+  - [ ] Minimal: Only the title and tags without name
+  - [ ] Basic: Title, tags, members
+  - [ ] Detailed: Cover image, Title, tags, comments, dates, members, progress
+  - [ ] Expanded: + Description
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.

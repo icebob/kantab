@@ -427,7 +427,7 @@ html, body {
 		}
 
 		.progress {
-			@apply bg-primary rounded-full text-center text-shadow text-ellipsis h-full;
+			@apply bg-primary rounded-full text-center text-shadow text-ellipsis h-full transition-all;
 		}
 
 		&.stripped .progress {
