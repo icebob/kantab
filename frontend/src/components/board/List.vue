@@ -9,7 +9,7 @@
 		}"
 	>
 		<div
-			class="flex items-center bg-primary-600 rounded-t-md p-2 font-title text-lg text-shadow"
+			class="list-header flex items-center bg-primary-600 rounded-t-md p-2 font-title text-lg text-shadow"
 			:style="headerStyle"
 			@dblclick="editList"
 		>
@@ -47,15 +47,8 @@
 				:get-child-payload="idx => list.cards.rows[idx]"
 				@drop="onCardDrop"
 			>
-				<div v-if="userIsMember && newCard == 'top'" class="form-element">
-					<textarea
-						ref="newCardTextarea"
-						v-model="newCardTitle"
-						class="form-input"
-						placeholder="Enter card title"
-						@keydown.enter.stop.prevent="addCard(list)"
-						@keydown.esc.stop.prevent="cancelNewCard"
-					></textarea>
+				<div v-if="userIsMember && newCard == 'top'">
+					<new-card :list="list" :position-type="newCard" @cancel="cancelNewCard" />
 				</div>
 				<component :is="cardComponentType" v-for="card in list.cards.rows" :key="card.id">
 					<BoardCard :card="card" :list="list" :board="board" />
@@ -63,29 +56,27 @@
 				<template v-if="userIsMember">
 					<div
 						v-if="!newCard"
-						class="h-16 my-2 border-2 border-neutral-600 border-dashed text-neutral-500 rounded-md flex justify-center items-center hover:border-neutral-400 hover:text-neutral-400 transition-colors"
+						class="h-10 my-2 text-neutral-500 rounded-md flex justify-center items-center hover:text-neutral-400 transition-colors cursor-pointer"
 						@click="newCardEditMode('bottom', list)"
 					>
-						<div class="flex-1 text-center">
-							<i class="fa fa-plus text-2xl"></i>
-							<div class="text-sm">{{ $t("NewCard") }}</div>
+						<div class="flex-1 flex justify-center items-center">
+							<i class="fa fa-plus mr-2"></i>
+							<span class="text-sm">{{ $t("NewCard") }}</span>
 						</div>
 					</div>
-					<div v-else-if="newCard == 'bottom'" class="form-element">
-						<textarea
-							ref="newCardTextarea"
-							v-model="newCardTitle"
-							class="form-input"
-							placeholder="Enter card title"
-							@keydown.enter.stop.prevent="addCard(list)"
-							@keydown.esc.stop.prevent="cancelNewCard"
-						></textarea>
+					<div v-else-if="newCard == 'bottom'">
+						<new-card :list="list" :position-type="newCard" @cancel="cancelNewCard" />
 					</div>
 				</template>
 			</Container>
 		</template>
+
+		<!-- Collapsed list -->
 		<template v-else>
-			<div class="rotate-180 font-title text-lg text-shadow" style="writing-mode: tb-rl">
+			<div
+				class="list-header rotate-180 font-title text-lg text-shadow"
+				style="writing-mode: tb-rl"
+			>
 				<span class="mb-2 mr-1 flex flex-nowrap items-center cursor-default"
 					>{{ list.title }}
 					<span v-if="list.cards.total > 0" class="mt-2 text-sm opacity-75"
@@ -101,12 +92,14 @@
 import { mapGetters, mapActions } from "vuex";
 
 import BoardCard from "./Card.vue";
+import NewCard from "./NewCard.vue";
 import { Container, Draggable } from "vue3-smooth-dnd";
 import { getTextColorByBackgroundColor } from "../../utils";
 
 export default {
 	components: {
 		BoardCard,
+		NewCard,
 		Container,
 		Draggable
 	},
@@ -120,7 +113,6 @@ export default {
 		return {
 			collapsed: false,
 			newCard: null,
-			newCardTitle: "",
 
 			cardDropPlaceholderOptions: {
 				className:
@@ -150,7 +142,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["createCard", "changeCardPosition"]),
+		...mapActions(["changeCardPosition"]),
 
 		editList() {
 			if (this.userIsMember) {
@@ -160,44 +152,11 @@ export default {
 
 		newCardEditMode(type) {
 			if (this.newCard == type) return this.cancelNewCard();
-
-			this.newCardTitle = "";
 			this.newCard = type;
-
-			this.$nextTick(() => {
-				this.$refs.newCardTextarea?.[0]?.focus();
-			});
 		},
 
 		cancelNewCard() {
 			this.newCard = null;
-			this.newCardTitle = "";
-		},
-
-		async addCard() {
-			if (this.newCardTitle.trim() === "") {
-				return this.cancelNewCard();
-			}
-
-			let position;
-			if (this.newCard == "top") {
-				position = this.list.cards?.rows?.length ? this.list.cards.rows[0].position - 1 : 1;
-			} else {
-				position = this.list.cards?.rows?.length
-					? this.list.cards.rows[this.list.cards.rows.length - 1].position + 1
-					: 1;
-			}
-
-			await this.createCard({
-				list: this.list,
-				input: {
-					title: this.newCardTitle,
-					list: this.list.id,
-					position
-				}
-			});
-
-			this.newCardTitle = "";
 		},
 
 		async onCardDrop(dropResult) {

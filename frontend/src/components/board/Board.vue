@@ -3,6 +3,7 @@
 		class="flex-1 mx-4 h-full pb-4 flex overflow-x-auto gap-x-4"
 		group-name="list"
 		orientation="horizontal"
+		drag-handle-selector=".list-header"
 		:drop-placeholder="listDropPlaceholderOptions"
 		:get-child-payload="idx => board.lists.rows[idx]"
 		@drop="onListDrop"
@@ -16,8 +17,8 @@
 			@click="$bus.emit('newList')"
 		>
 			<div class="flex-1 text-center">
-				<i class="fa fa-plus text-3xl"></i>
-				<div class="text-md">{{ $t("NewList") }}</div>
+				<i class="fa fa-plus text-xl"></i>
+				<div class="text-sm">{{ $t("NewList") }}</div>
 			</div>
 		</div>
 	</Container>

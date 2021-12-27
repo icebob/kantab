@@ -19,12 +19,22 @@
 				<input
 					id="custom-color-checkbox"
 					:value="card.color != null"
+					:checked="card.color != null"
 					type="checkbox"
 					@input="colorCheckboxInput($event)"
 				/>
 				<label for="custom-color-checkbox">{{ $t("UseCustomColor") }}</label>
 			</div>
 			<div v-if="card.color != null" class="ml-5 mt-2">
+				<div class="mb-2 flex flex-wrap">
+					<div
+						v-for="c in predefinedColors"
+						:key="c"
+						class="rounded w-10 h-6 m-1 border border-neutral-900"
+						:style="'background: ' + c"
+						@click="card.color = c"
+					></div>
+				</div>
 				<input v-model="card.color" type="color" class="h-8 w-16 rounded" />
 			</div>
 		</template>
@@ -63,7 +73,32 @@ export default {
 		return {
 			visible: false,
 			list: null,
-			card: null
+			card: null,
+
+			predefinedColors: [
+				"#3cb500",
+				"#fad900",
+				"#ff9f19",
+				"#eb4646",
+				"#a632db",
+				"#0079bf",
+				"#00c2e0",
+				"#51e898",
+				"#ff78cb",
+				"#4d4d4d",
+				"silver",
+				"#ffdab9",
+				"#dc143c",
+				"plum",
+				"#006400",
+				"#6a5acd",
+				"gold",
+				"navy",
+				"#8b4513",
+				"#afeeee",
+				"#ffe4e1",
+				"indigo"
+			]
 		};
 	},
 

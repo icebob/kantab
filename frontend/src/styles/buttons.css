@@ -51,7 +51,7 @@
 		}
 
 
-		&[disabled] {
+		&:disabled {
 			@apply cursor-not-allowed pointer-events-none shadow-none opacity-60;
 		}
 

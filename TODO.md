@@ -7,7 +7,7 @@
   - [ ] https://github.com/yeojz/otplib
   - [ ] https://github.com/hectorm/otpauth
 - [ ] remove deleted boards, list, cards after 30 days
-- [ ] openapi UI not working
+- [x] openapi UI not working
 
 
 ## Boards
@@ -18,11 +18,6 @@
 
 ## Cards
 - [ ] Generate a unique number for the cards.
-- [ ] Multi-level view
-  - [ ] Minimal: Only the title and tags without name
-  - [ ] Basic: Title, tags, members
-  - [ ] Detailed: Cover image, Title, tags, comments, dates, members, progress
-  - [ ] Expanded: + Description
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
@@ -49,5 +44,11 @@
 
 ## Lists
 - [ ] collapsible lists
-- [x] editable color of list
 - [ ] scrolling at moving
+
+## Cards
+- [ ] Multi-level view
+  - [ ] Minimal: Only the title and tags without name
+  - [ ] Basic: Title, tags, members
+  - [ ] Detailed: Cover image, Title, tags, comments, dates, members, progress
+  - [ ] Expanded: + Description

@@ -52,13 +52,13 @@
 				<div class="flex items-center">
 					<div class="flex">
 						<img
-							class="h-8 w-8 rounded-full border-2 border-panel"
+							class="h-8 w-8 rounded-full border-2 border-panel object-cover"
 							:style="{ borderColor: cardBgColor }"
 							src="https://faces-img.xcdn.link/image-lorem-face-1128.jpg"
 							alt=""
 						/>
 						<img
-							class="-ml-3 h-8 w-8 rounded-full border-2 border-panel"
+							class="-ml-3 h-8 w-8 rounded-full border-2 border-panel object-cover"
 							:style="{ borderColor: cardBgColor }"
 							src="https://faces-img.xcdn.link/image-lorem-face-5026.jpg"
 							alt=""
