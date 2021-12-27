@@ -124,7 +124,7 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphql: { type: "[User]", inputType: "String" }
+				graphql: { type: "[Account]", inputType: "String" }
 			},
 			// attachments,
 			...C.ARCHIVED_FIELDS,

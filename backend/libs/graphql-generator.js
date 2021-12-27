@@ -58,6 +58,11 @@ function getGraphqlTypeFromField(res, fieldName, field, kind) {
 		} else {
 			type = `[${convertTypeToGraphQLType(gType || field.items.type)}]`;
 		}
+	} else if (field.type == "object") {
+		let subTypeName = gType || `${res.entityName}${capitalize(pluralize(fieldName, 1))}`;
+		if (kind) subTypeName = `${capitalize(kind)}${capitalize(subTypeName)}Input`;
+		generateEntityGraphQLType(res, subTypeName, field.properties, kind);
+		type = subTypeName;
 	}
 
 	// Required

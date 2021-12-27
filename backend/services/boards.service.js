@@ -71,7 +71,7 @@ module.exports = {
 				},
 				onCreate: ({ ctx }) => ctx.meta.userID,
 				validate: "validateOwner",
-				graphql: { type: "User", inputType: "String" }
+				graphql: { type: "Account", inputType: "String" }
 			},
 			title: {
 				type: "string",
@@ -128,7 +128,7 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphql: { type: "[User]", inputType: "String" }
+				graphql: { type: "[Account]", inputType: "String" }
 			},
 			lists: {
 				type: "array",

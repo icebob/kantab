@@ -8,22 +8,31 @@
   - [ ] https://github.com/hectorm/otpauth
 - [ ] remove deleted boards, list, cards after 30 days
 - [x] openapi UI not working
+- [ ] configure cache dependencies better (if delete a card, it doesn't drop the boards cache)
 
+## Accounts
+- [ ] Configure permissions for accounts actions
+- [ ] Don't publish enable/disable account actions
+- [ ] Separate the entity graphql type to `Profile` and `User`. The `User` is a type what other users can see (only id, username, fullName, avatar). The owner and members returns that type. The `Profile` is the current user's type what contains all available informations.
+- [ ] separate `enable2Fa` to `init2Fa` and `confirm2Fa`
 
 ## Boards
-- [ ] Only the owner can make a board to public/private
+- [ ] Only the owner can make a board to public/private and remove
 
 ## Lists
 
 
 ## Cards
-- [ ] Generate a unique number for the cards.
+- [ ] Generate a unique number for the cards. (too expensive to get the max number, maybe if will be aggregate in `database` module)
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
 
 ## Websocket
-- [ ] Need authorization via websocket
+- [ ] Token-based authorization via websocket, + generate an instanceID in the browser
+- [ ] WS rooms:
+  - [ ] userID - get all board-specific notifications
+  - [ ] boardID - get the given board notifications only
 
 ## Deployment
 - [ ] Update docker-compose file (Grafana, Prometheus)
@@ -41,11 +50,9 @@
 
 
 ## Frontend
-- [ ] Avatar component, if you user's avatar create one with initials and hashed bg color of name
+- [ ] Avatar component, if no user's avatar create one with initials and hashed bg color of name
 
 ## Lists
-- [ ] collapsible lists
-- [ ] scrolling at moving
 
 ## Cards
 - [ ] Multi-level view

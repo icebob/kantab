@@ -22,37 +22,45 @@ const FIELDS = {
 	id: { type: "string", primaryKey: true, secure: true, columnName: "_id" },
 	username: { type: "string", max: 50, empty: false, required: false, trim: true },
 	fullName: { type: "string", max: 100, empty: false, required: true, trim: true },
-	email: { type: "email", max: 254, empty: false, required: true, trim: true },
+	email: {
+		type: "email",
+		max: 254,
+		empty: false,
+		required: true,
+		trim: true,
+		graphql: { type: "String" }
+	},
 	password: { type: "string", min: 6, max: 60, hidden: true },
-	passwordless: { type: "boolean", default: false },
+	passwordless: { type: "boolean", readonly: true, default: false },
 	avatar: { type: "string", max: 255 },
 	roles: {
 		type: "array",
-		items: "string|no-empty",
+		items: { type: "string", empty: false },
 		default() {
 			return this.config["accounts.defaultRoles"];
 		}
 	},
-	socialLinks: { type: "object", default: () => ({}) },
-	status: { type: "number", default: 1 },
+	socialLinks: { type: "object", readonly: true, default: () => ({}), graphql: { type: "JSON" } },
+	status: { type: "number", readonly: true, default: 1 },
 	plan: {
 		type: "string",
+		readonly: true,
 		default() {
 			return this.config["accounts.defaultPlan"];
 		}
 	},
-	verified: { type: "boolean", default: false },
-	token: { type: "string", virtual: true }, // filled only in login response
+	verified: { type: "boolean", readonly: true, default: false },
+	token: { type: "string", readonly: true, virtual: true }, // filled only in login response
 	totp: {
 		type: "object",
+		readonly: true,
 		properties: {
 			enabled: { type: "boolean", default: false },
 			secret: { type: "string", hidden: true }
 		}
 	},
-	createdAt: { type: "number", readonly: true, onCreate: () => Date.now() },
-	updatedAt: { type: "number", readonly: true, onUpdate: () => Date.now() },
-	lastLoginAt: { type: "number", readonly: true }
+	...C.TIMESTAMP_FIELDS,
+	lastLoginAt: { type: "number", readonly: true, graphql: { type: "Long" } }
 };
 
 /**
@@ -91,24 +99,12 @@ module.exports = {
 
 		graphql: {
 			type: `
-				type User {
-					id: String!
-					username: String!
-					fullName: String!
-					email: String
-					avatar: String
-					status: Int
-
-					boards(limit: Int, offset: Int, sort: String): [Board]
-					boardCount: Int
-				}
-
-				type LoginToken {
+				type LoginResponse {
 					token: String!
 				}
 			`,
 			resolvers: {
-				User: {
+				/*User: {
 					boards: {
 						action: "v1.boards.find",
 						rootParams: {
@@ -121,7 +117,7 @@ module.exports = {
 							id: "query.owner"
 						}
 					}
-				}
+				}*/
 			}
 		}
 	},
@@ -167,12 +163,13 @@ module.exports = {
 		 * @returns {Object} User entity
 		 */
 		me: {
+			description: "Get the logged in user's profile",
 			cache: {
 				keys: ["#userID"]
 			},
 			rest: "GET /me",
 			graphql: {
-				query: "me: User"
+				query: "me: Account"
 			},
 			async handler(ctx) {
 				if (!ctx.meta.userID) return null;
@@ -192,11 +189,15 @@ module.exports = {
 		 *
 		 */
 		register: {
+			description: "Register a new user account",
 			params: generateValidatorSchemaFromFields(
 				_.pick(FIELDS, ["username", "fullName", "email", "password", "avatar"]),
 				{ type: "create" }
 			),
 			rest: "POST /register",
+			graphql: {
+				mutation: `register(username: String!, fullName: String!, email: String!, password: String, avatar: String): Account!`
+			},
 			async handler(ctx) {
 				if (!this.config["accounts.signup.enabled"])
 					throw new MoleculerClientError(
@@ -263,7 +264,7 @@ module.exports = {
 				entity.verified = !this.config["accounts.verification.enabled"];
 
 				// Create new user
-				const user = await this.createEntity(ctx, entity);
+				const user = await this.createEntity(ctx, entity, { permissive: true });
 
 				// Send email
 				if (user.verified) {
@@ -288,10 +289,14 @@ module.exports = {
 		 * Verify an account
 		 */
 		verify: {
+			description: "Verify an account",
 			params: {
 				token: { type: "string" }
 			},
 			rest: "POST /verify",
+			graphql: {
+				mutation: `accountVerify(token: String!): LoginResponse!`
+			},
 			async handler(ctx) {
 				const token = await ctx.call("v1.tokens.check", {
 					type: C.TOKEN_TYPE_VERIFICATION,
@@ -308,10 +313,14 @@ module.exports = {
 				let user = await this.resolveEntities(ctx, { id: token.owner });
 				this.checkUser(user, { noVerification: true });
 
-				user = await this.updateEntity(ctx, {
-					id: token.owner,
-					verified: true
-				});
+				user = await this.updateEntity(
+					ctx,
+					{
+						id: token.owner,
+						verified: true
+					},
+					{ permissive: true }
+				);
 
 				// Remove token
 				await ctx.call("v1.tokens.remove", {
@@ -333,10 +342,14 @@ module.exports = {
 		 * Disable an account
 		 */
 		disable: {
+			description: "Disable an account",
 			params: {
 				id: { type: "string" }
 			},
 			needEntity: true,
+			graphql: {
+				mutation: `accountDisable(id: String!): Account!`
+			},
 			async handler(ctx) {
 				const user = ctx.locals.entity;
 				if (user.status == 0)
@@ -346,15 +359,16 @@ module.exports = {
 						"ERR_USER_ALREADY_DISABLED"
 					);
 
-				const res = await this.updateEntity(ctx, {
-					id: user.id,
-					status: 0
-				});
+				const res = await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						status: 0
+					},
+					{ permissive: true }
+				);
 
-				return {
-					id: user.id,
-					status: res.status
-				};
+				return res;
 			}
 		},
 
@@ -362,10 +376,14 @@ module.exports = {
 		 * Enable an account
 		 */
 		enable: {
+			description: "Enable an account",
 			params: {
 				id: { type: "string" }
 			},
 			needEntity: true,
+			graphql: {
+				mutation: `accountEnable(id: String!): Account!`
+			},
 			async handler(ctx) {
 				const user = ctx.locals.entity;
 				if (user.status == 1)
@@ -375,10 +393,14 @@ module.exports = {
 						"ERR_USER_ALREADY_ENABLED"
 					);
 
-				const res = await this.updateEntity(ctx, {
-					id: user.id,
-					status: 1
-				});
+				const res = await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						status: 1
+					},
+					{ permissive: true }
+				);
 
 				return {
 					id: user.id,
@@ -391,6 +413,7 @@ module.exports = {
 		 * Handle local login
 		 */
 		login: {
+			description: "Login with local account",
 			params: {
 				email: { type: "string", optional: false },
 				password: { type: "string", optional: true },
@@ -398,7 +421,7 @@ module.exports = {
 			},
 			rest: "POST /login",
 			graphql: {
-				mutation: "login(email: String!, password: String, token: String): LoginToken"
+				mutation: "login(email: String!, password: String, token: String): LoginResponse!"
 			},
 			async handler(ctx) {
 				// Get user by email
@@ -586,10 +609,14 @@ module.exports = {
 		 * Check passwordless token
 		 */
 		passwordless: {
+			description: "Login with passwordless token (magic-link)",
 			params: {
 				token: { type: "string" }
 			},
 			rest: "POST /passwordless",
+			graphql: {
+				mutation: `passwordlessLogin(token: String!): LoginResponse!`
+			},
 			async handler(ctx) {
 				if (!this.config["accounts.passwordless.enabled"])
 					throw new MoleculerClientError(
@@ -618,10 +645,14 @@ module.exports = {
 
 				// Verified account if not
 				if (!user.verified) {
-					await this.updateEntity(ctx, {
-						id: user.id,
-						verified: true
-					});
+					await this.updateEntity(
+						ctx,
+						{
+							id: user.id,
+							verified: true
+						},
+						{ permissive: true }
+					);
 				}
 
 				// Remove token
@@ -640,10 +671,14 @@ module.exports = {
 		 * Start "forgot password" process
 		 */
 		forgotPassword: {
+			description: "Start the 'forgot password' process",
 			params: {
 				email: { type: "email" }
 			},
 			rest: "POST /forgot-password",
+			graphql: {
+				mutation: `forgotPassword(email: String!): Boolean!`
+			},
 			async handler(ctx) {
 				const user = await this.getUserByEmail(ctx, ctx.params.email);
 				this.checkUser(user);
@@ -666,11 +701,15 @@ module.exports = {
 		 * Reset password
 		 */
 		resetPassword: {
+			description: "Reset forgotten password",
 			params: {
 				token: { type: "string" },
 				password: FIELDS.password
 			},
 			rest: "POST /reset-password",
+			graphql: {
+				mutation: `resetPassword(token: String! password: String!): LoginResponse!`
+			},
 			async handler(ctx) {
 				const token = await ctx.call("v1.tokens.check", {
 					type: C.TOKEN_TYPE_PASSWORD_RESET,
@@ -688,12 +727,16 @@ module.exports = {
 				this.checkUser(user, { noVerification: true });
 
 				// Change the password
-				user = await this.updateEntity(ctx, {
-					id: user.id,
-					password: await this.hashPassword(ctx.params.password),
-					passwordless: false,
-					verified: true
-				});
+				user = await this.updateEntity(
+					ctx,
+					{
+						id: user.id,
+						password: await this.hashPassword(ctx.params.password),
+						passwordless: false,
+						verified: true
+					},
+					{ permissive: true }
+				);
 
 				// Remove token
 				await ctx.call("v1.tokens.remove", {
@@ -714,11 +757,16 @@ module.exports = {
 		 * Link account to a social account
 		 */
 		link: {
+			description: "Link account to a social account",
 			params: {
 				id: { type: "string", optional: true },
 				provider: { type: "string" },
 				profile: { type: "object" }
 			},
+			graphql: {
+				mutation: `accountLink(id: String, provider: String, profile: JSON): Account!`
+			},
+
 			async handler(ctx) {
 				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
 				if (!id) throw new MoleculerClientError("Missing user ID.", 400, "MISSING_USER_ID");
@@ -731,11 +779,16 @@ module.exports = {
 		 * Unlink account from a social account
 		 */
 		unlink: {
+			description: "Unlink account from a social account",
 			rest: "GET /unlink",
 			params: {
 				id: { type: "string", optional: true },
 				provider: { type: "string" }
 			},
+			graphql: {
+				mutation: `accountUnlink(id: String, provider: String): Account!`
+			},
+
 			async handler(ctx) {
 				const id = ctx.params.id ? ctx.params.id : ctx.meta.userID;
 				if (!id) throw new MoleculerClientError("Missing user ID.", 400, "MISSING_USER_ID");
@@ -746,13 +799,20 @@ module.exports = {
 
 		/**
 		 * Enable Two-Factor authentication (2FA)
+		 *
+		 * TODO: separate to action (enable2FA, confirm2FA, disable2FA)
 		 */
 		enable2Fa: {
+			description: "Enable Two-Factor authentication (2FA)",
 			params: {
 				token: { type: "string", optional: true, convert: true }
 			},
 			rest: "POST /enable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
+			graphql: {
+				mutation: `accountEnable2FA(token: String): Boolean!`
+			},
+
 			async handler(ctx) {
 				const _user = await this.resolveEntities(
 					ctx,
@@ -764,13 +824,17 @@ module.exports = {
 				if (!ctx.params.token && (!_user.totp || !_user.totp.enabled)) {
 					// Generate a TOTP secret and send back otpauthURL & secret
 					const secret = speakeasy.generateSecret({ length: 10 });
-					await this.updateEntity(ctx, {
-						id: ctx.meta.userID,
-						totp: {
-							enabled: false,
-							secret: secret.base32
-						}
-					});
+					await this.updateEntity(
+						ctx,
+						{
+							id: ctx.meta.userID,
+							totp: {
+								enabled: false,
+								secret: secret.base32
+							}
+						},
+						{ permissive: true }
+					);
 
 					const otpauthURL = speakeasy.otpauthURL({
 						secret: secret.ascii,
@@ -792,12 +856,16 @@ module.exports = {
 						);
 					}
 
-					await this.updateEntity(ctx, {
-						id: ctx.meta.userID,
-						totp: {
-							enabled: true
-						}
-					});
+					await this.updateEntity(
+						ctx,
+						{
+							id: ctx.meta.userID,
+							totp: {
+								enabled: true
+							}
+						},
+						{ permissive: true }
+					);
 
 					return true;
 				}
@@ -808,11 +876,15 @@ module.exports = {
 		 * Disable Two-Factor authentication (2FA)
 		 */
 		disable2Fa: {
+			description: "Disable Two-Factor authentication (2FA)",
 			params: {
 				token: { type: "string", convert: true }
 			},
 			rest: "GET /disable2fa",
 			permissions: [C.ROLE_AUTHENTICATED],
+			graphql: {
+				mutation: `accountDisable2FA(token: String!): Boolean!`
+			},
 			async handler(ctx) {
 				const _user = await this.resolveEntities(
 					ctx,
@@ -837,13 +909,17 @@ module.exports = {
 					);
 				}
 
-				await this.updateEntity(ctx, {
-					id: ctx.meta.userID,
-					totp: {
-						enabled: false,
-						secret: null
-					}
-				});
+				await this.updateEntity(
+					ctx,
+					{
+						id: ctx.meta.userID,
+						totp: {
+							enabled: false,
+							secret: null
+						}
+					},
+					{ permissive: true }
+				);
 
 				return true;
 			}
@@ -974,25 +1050,33 @@ module.exports = {
 		},
 
 		async link(ctx, id, provider, profile) {
-			return await this.updateEntity(ctx, {
-				id,
-				socialLinks: {
-					[provider]: profile.socialID
+			return await this.updateEntity(
+				ctx,
+				{
+					id,
+					socialLinks: {
+						[provider]: profile.socialID
+					},
+					verified: true // if not verified yet via email
 				},
-				verified: true // if not verified yet via email
-			});
+				{ permissive: true }
+			);
 		},
 
 		/**
 		 * Unlink account from a social account
 		 */
 		async unlink(ctx, id, provider) {
-			return await this.updateEntity(ctx, {
-				id,
-				socialLinks: {
-					[provider]: null
-				}
-			});
+			return await this.updateEntity(
+				ctx,
+				{
+					id,
+					socialLinks: {
+						[provider]: null
+					}
+				},
+				{ permissive: true }
+			);
 		},
 
 		/**
@@ -1124,29 +1208,33 @@ module.exports = {
 		 * Seed an empty collection with an `admin` and a `test` users.
 		 */
 		async seedDB() {
-			const res = await this.createEntities(null, [
-				// Administrator
-				{
-					username: "admin",
-					fullName: "Administrator",
-					email: "admin@kantab.io",
-					password: await this.hashPassword("admin"),
-					avatar: "https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
-					roles: ["administrator"],
-					plan: "full",
-					verified: true
-				},
+			const res = await this.createEntities(
+				null,
+				[
+					// Administrator
+					{
+						username: "admin",
+						fullName: "Administrator",
+						email: "admin@kantab.io",
+						password: await this.hashPassword("admin"),
+						avatar: "https://user-images.githubusercontent.com/306521/112635269-e7511f00-8e3b-11eb-8a59-df6dda998d05.png",
+						roles: ["administrator"],
+						plan: "full",
+						verified: true
+					},
 
-				// Test user
-				{
-					username: "test",
-					fullName: "Test User",
-					email: "test@kantab.io",
-					password: await this.hashPassword("test"),
-					avatar: "https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
-					verified: true
-				}
-			]);
+					// Test user
+					{
+						username: "test",
+						fullName: "Test User",
+						email: "test@kantab.io",
+						password: await this.hashPassword("test"),
+						avatar: "https://user-images.githubusercontent.com/306521/112635366-03ed5700-8e3c-11eb-80a3-49804bf7e7c4.png",
+						verified: true
+					}
+				],
+				{ permissive: true }
+			);
 
 			this.logger.info(`Generated ${res.length} users.`);
 		}
