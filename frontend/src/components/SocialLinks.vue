@@ -1,13 +1,13 @@
 <template>
 	<div>
-		<template v-if="providers.length > 0">
+		<template v-if="providers && providers.length > 0">
 			<h4>Link your social accounts</h4>
 			<div class="social-buttons">
 				<template>
 					<a v-if="!isLinked('google')" href="/auth/google" class="button primary"
 						>Link to Google</a
 					>
-					<button v-else @click="unlinkSocial('google')" class="button">
+					<button v-else class="button" @click="unlinkSocial('google')">
 						Unlink from Google
 					</button>
 				</template>
@@ -15,7 +15,7 @@
 					<a v-if="!isLinked('facebook')" href="/auth/facebook" class="button primary"
 						>Link to Facebook</a
 					>
-					<button v-else @click="unlinkSocial('facebook')" class="button">
+					<button v-else class="button" @click="unlinkSocial('facebook')">
 						Unlink from Facebook
 					</button>
 				</template>
@@ -23,7 +23,7 @@
 					<a v-if="!isLinked('github')" href="/auth/github" class="button primary"
 						>Link to Github</a
 					>
-					<button v-else @click="unlinkSocial('github')" class="button">
+					<button v-else class="button" @click="unlinkSocial('github')">
 						Unlink from Github
 					</button>
 				</template>
@@ -37,18 +37,18 @@ import { mapState, mapActions } from "vuex";
 
 export default {
 	computed: {
-		...mapState(["providers", "user"])
+		...mapState("auth", ["providers", "user"])
 	},
 
 	methods: {
-		...mapActions(["unlinkSocial"]),
+		...mapActions("auth", ["unlinkSocial"]),
 
 		isSupported(provider) {
 			return !!this.providers.find(o => o == provider);
 		},
 
 		isLinked(provider) {
-			return !!this.user.socialLinks[provider];
+			return !!this.user?.socialLinks?.[provider];
 		}
 	}
 };

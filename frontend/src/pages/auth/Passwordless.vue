@@ -10,6 +10,7 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
+import { mapActions } from "vuex";
 
 export default {
 	mixins: [AuthMixin],
@@ -20,10 +21,12 @@ export default {
 	},
 
 	methods: {
+		...mapActions("auth", ["passwordless"]),
+
 		async process() {
 			this.success = "Verifying token...";
 
-			await this.$authenticator.passwordless(this.$route.query.token);
+			await this.passwordless({ token: this.$route.query.token });
 			this.success = "Logging in...";
 			setTimeout(() => this.$router.push({ name: "home" }), 1000);
 		}

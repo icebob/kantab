@@ -40,7 +40,7 @@ describe("Test signup page with password", () => {
 
 				cy.visit(`/verify-account?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h3", "My boards");
+				cy.get('#add-board-button');
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -88,7 +88,7 @@ describe("Test signup page with passwordless account", () => {
 
 				cy.visit(`/verify-account?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h3", "My boards");
+				cy.get('#add-board-button');
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -121,7 +121,7 @@ describe("Test signup page with passwordless account", () => {
 
 				cy.visit(`/passwordless?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h3", "My boards");
+				cy.get('#add-board-button');
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});
@@ -147,7 +147,7 @@ describe("Test signup page with passwordless account", () => {
 
 				cy.visit(`/passwordless?token=${token}`);
 				cy.url().should("equal", `${baseUrl}/`);
-				cy.contains("h3", "My boards");
+				cy.get('#add-board-button');
 
 				cy.request("POST", `${baseUrl}/api/maildev/deleteAllEmail`)
 			});

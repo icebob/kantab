@@ -109,15 +109,15 @@ export default {
 	},
 
 	computed: {
-		...mapState(["user"])
+		...mapState("auth", ["user"])
 	},
 
 	methods: {
-		...mapActions(["getMe"]),
+		...mapActions("auth", ["getMe", "enable2FA", "disable2FA", "finalize2FA"]),
 
 		async enable2FA() {
 			try {
-				const res = await this.$authenticator.enable2FA();
+				const res = await this.enable2FA();
 				this.otpauthURL = res.otpauthURL;
 				this.otpSecret = res.secret;
 				this.otpauthImage = qrcode(res.otpauthURL, { size: 200 });
@@ -130,7 +130,7 @@ export default {
 			if (!this.otpUserToken) return;
 
 			try {
-				await this.$authenticator.disable2FA(this.otpUserToken);
+				await this.disable2FA(this.otpUserToken);
 				await this.getMe();
 				this.$swal("Done!", "Two-factor authentication is disabled!", "success");
 				this.disabling = false;
@@ -143,7 +143,7 @@ export default {
 			if (!this.otpUserToken) return;
 
 			try {
-				await this.$authenticator.finalize2FA(this.otpUserToken);
+				await this.finalize2FA(this.otpUserToken);
 				await this.getMe();
 
 				this.otpauthURL = null;

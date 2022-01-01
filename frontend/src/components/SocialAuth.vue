@@ -1,6 +1,6 @@
 <template>
 	<div class="w-full">
-		<template v-if="providers.length > 0">
+		<template v-if="providers && providers.length > 0">
 			<hr class="w-full" />
 			<div class="flex my-4 justify-between">
 				<a v-if="isSupported('google')" class="google" href="/auth/google" title="Google">
@@ -58,7 +58,7 @@ import { mapState } from "vuex";
 
 export default {
 	computed: {
-		...mapState(["providers"])
+		...mapState("auth", ["providers"])
 	},
 
 	methods: {

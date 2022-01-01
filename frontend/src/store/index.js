@@ -1,7 +1,8 @@
 import { createStore } from "vuex";
-import authenticator from "../authenticator";
+import AuthStore from "./auth";
 import { apolloClient } from "../apollo";
 import gql from "graphql-tag";
+import router from "../router";
 
 import toast from "../toast";
 
@@ -16,32 +17,12 @@ function showErrorToast(title) {
 import axios from "axios";
 axios.defaults.headers.common["Content-Type"] = "application/json";
 
-// Add a response interceptor
-axios.interceptors.response.use(
-	response => {
-		// Do something with response data
-		return response.data;
+const store = createStore({
+	modules: {
+		auth: AuthStore
 	},
-	error => {
-		// Forbidden, need to relogin
-		if (error.response && error.response.status == 401) {
-			authenticator.logout();
-			return Promise.reject(error);
-		}
 
-		// Do something with response error
-		if (error.response && error.response.data) return Promise.reject(error.response.data);
-
-		return Promise.reject(error);
-	}
-);
-
-export default createStore({
 	state: {
-		// Logged in user entity
-		user: null,
-		// Social login providers
-		providers: [],
 		// Selected board
 		board: null,
 		// All boards
@@ -57,9 +38,11 @@ export default createStore({
 
 	actions: {
 		async init({ dispatch }) {
+			await dispatch("auth/protectRouter", router);
+
 			try {
-				await dispatch("getMe");
-				await dispatch("getSupportedSocialAuthProviders");
+				await dispatch("auth/getSupportedSocialAuthProviders");
+				await dispatch("auth/getMe");
 				await dispatch("getBoards");
 			} catch (err) {
 				console.log("Error", err);
@@ -70,38 +53,6 @@ export default createStore({
 			/*if (state.profile && state.profile._id) {
 				this._vm.$ga.set("userId", state.profile._id);
 			}*/
-		},
-
-		async getMe({ commit }) {
-			const user = await axios.get("/api/v1/accounts/me");
-			commit("SET_LOGGED_IN_USER", user);
-
-			/*if (process.env.NODE_ENV == "production") {
-				Raven.setUserContext(user);
-				LogRocket.identify(user._id, user);
-			}*/
-
-			return user;
-		},
-
-		async getMeApollo({ commit }) {
-			try {
-				const user = await apolloClient.query({
-					query: gql`
-						query {
-							me {
-								id
-								username
-								fullName
-								avatar
-							}
-						}
-					`
-				});
-				commit("SET_LOGGED_IN_USER", user.data.me);
-			} catch (err) {
-				console.log("Unable to get current user", err);
-			}
 		},
 
 		async selectBoardById({ commit }, id) {
@@ -520,40 +471,10 @@ export default createStore({
 				// First call at moving between lists
 				list.cards.rows = result; // TODO
 			}
-		},
-
-		async getSupportedSocialAuthProviders({ commit }) {
-			const providers = await axios.get("/auth/supported-social-auth-providers");
-			commit("SET_AUTH_PROVIDERS", providers);
-
-			return providers;
-		},
-
-		async unlinkSocial({ commit }, provider) {
-			const user = await axios.get(`/api/v1/accounts/unlink?provider=${provider}`);
-			commit("SET_LOGGED_IN_USER", user);
-
-			return user;
-		},
-
-		logout({ commit }) {
-			commit("LOGOUT");
 		}
 	},
 
 	mutations: {
-		SET_LOGGED_IN_USER(state, user) {
-			state.user = user;
-		},
-
-		SET_AUTH_PROVIDERS(state, providers) {
-			state.providers = providers;
-		},
-
-		LOGOUT(state) {
-			state.user = null;
-		},
-
 		SET_BOARD(state, board) {
 			//console.log(board, Object.isFrozen(board));
 			// TODO: Apollo client set it to frozen, so vuex can't update it.
@@ -647,3 +568,25 @@ export default createStore({
 		}
 	}
 });
+
+export default store;
+
+// Add a response interceptor
+axios.interceptors.response.use(
+	response => {
+		// Do something with response data
+		return response.data;
+	},
+	error => {
+		// Forbidden, need to relogin
+		if (error.response && error.response.status == 401) {
+			store.commit("logout");
+			return Promise.reject(error);
+		}
+
+		// Do something with response error
+		if (error.response && error.response.data) return Promise.reject(error.response.data);
+
+		return Promise.reject(error);
+	}
+);

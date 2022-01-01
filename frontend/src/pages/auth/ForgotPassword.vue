@@ -29,13 +29,16 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
+import { mapActions } from "vuex";
 
 export default {
 	mixins: [AuthMixin],
 
 	methods: {
+		...mapActions("auth", ["forgotPassword"]),
+
 		async process() {
-			await this.$authenticator.forgotPassword(this.email);
+			await this.forgotPassword({ email: this.email });
 			this.success = "E-mail sent.";
 			this.email = "";
 		}

@@ -72,13 +72,16 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
+import { mapActions } from "vuex";
 
 export default {
 	mixins: [AuthMixin],
 
 	methods: {
+		...mapActions("auth", ["register"]),
+
 		async process() {
-			const res = await this.$authenticator.register({
+			const res = await this.register({
 				fullName: this.fullName,
 				email: this.email,
 				username: this.username,

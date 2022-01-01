@@ -35,9 +35,6 @@ import { apolloProvider, apolloClient } from "./apollo";
 // TailwindCSS
 import "./styles/index.css";
 
-// Authenticator
-import authenticator from "./authenticator";
-
 // --- APP ---
 import App from "./App.vue";
 
@@ -55,7 +52,9 @@ VueI18Next().then(i18n => {
 	app.config.globalProperties.$swal = swal;
 	app.config.globalProperties.$toast = iziToast;
 	app.config.globalProperties.$apollo = apolloClient;
-	app.config.globalProperties.$authenticator = authenticator;
 
 	app.mount("#app");
+
+	window.app = app;
+	window.store = store;
 });

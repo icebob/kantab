@@ -102,7 +102,9 @@ module.exports = {
 
 			type: `
 				type LoginResponse {
-					token: String!
+					token: String,
+					passwordless: Boolean,
+					email: String
 				}
 
 				type Member {

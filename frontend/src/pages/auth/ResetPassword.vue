@@ -31,6 +31,7 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
+import { mapActions } from "vuex";
 
 export default {
 	mixins: [AuthMixin],
@@ -40,8 +41,10 @@ export default {
 	},
 
 	methods: {
+		...mapActions("auth", ["resetPassword"]),
+
 		async process() {
-			await this.$authenticator.resetPassword(this.$route.query.token, this.password);
+			await this.resetPassword({ token: this.$route.query.token, password: this.password });
 			this.success = "Password changed. Logging in...";
 			setTimeout(() => this.$router.push({ name: "home" }), 1000);
 		}

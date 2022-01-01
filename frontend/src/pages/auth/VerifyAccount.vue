@@ -10,6 +10,7 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
+import { mapActions } from "vuex";
 
 export default {
 	mixins: [AuthMixin],
@@ -20,10 +21,12 @@ export default {
 	},
 
 	methods: {
+		...mapActions("auth", ["verifyAccount"]),
+
 		async process() {
 			this.success = "Verifying account...";
 
-			await this.$authenticator.verifyAccount(this.$route.query.token);
+			await this.verifyAccount({ token: this.$route.query.token });
 			this.success = "Account verified. Logging in...";
 			setTimeout(() => this.$router.push({ name: "home" }), 1000);
 		}

@@ -27,7 +27,7 @@
 			</div>
 		</div>
 
-		<div class="fixed right-8 bottom-8">
+		<div id="add-board-button" class="fixed right-8 bottom-8">
 			<div
 				class="w-12 h-12 rounded-full bg-primary hover:bg-primary-400 active:bg-primary-600 shadow-lg text-black text-2xl flex justify-center items-center"
 				@click="newBoardDialog()"

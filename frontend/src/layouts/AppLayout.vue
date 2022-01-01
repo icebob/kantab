@@ -11,7 +11,7 @@
 				<router-link class="mx-4 hover:underline" to="/about">{{
 					$t("About")
 				}}</router-link>
-				<template v-if="!$authenticator.isAuthenticated()">
+				<template v-if="!user">
 					<router-link id="link-login" class="mx-4 hover:underline" to="/login"
 						>Login</router-link
 					>
@@ -24,7 +24,7 @@
 						id="link-logout"
 						class="mx-4 hover:underline"
 						style="cursor: pointer"
-						@click="$authenticator.logout()"
+						@click="logout"
 						>Logout</a
 					>
 				</template>
@@ -36,7 +36,7 @@
 
 <script>
 import Logo from "../components/Logo.vue";
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
 	components: {
@@ -44,7 +44,11 @@ export default {
 	},
 
 	computed: {
-		...mapState(["user"])
+		...mapState("auth", ["user"])
+	},
+
+	methods: {
+		...mapActions("auth", ["logout"])
 	}
 };
 </script>

@@ -63,6 +63,7 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
+import { mapActions } from "vuex";
 
 export default {
 	mixins: [AuthMixin],
@@ -75,13 +76,15 @@ export default {
 	},
 
 	methods: {
+		...mapActions("auth", ["login"]),
+
 		async process() {
 			try {
-				const res = await this.$authenticator.login(
-					this.email,
-					this.password,
-					this.need2FAToken ? this.token : null
-				);
+				const res = await this.login({
+					email: this.email,
+					password: this.password,
+					token: this.need2FAToken ? this.token : null
+				});
 				if (res.passwordless) {
 					this.success = `Magic link has been sent to '${res.email}'. Use it to sign in.`;
 				}
