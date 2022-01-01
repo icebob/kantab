@@ -48,6 +48,10 @@ module.exports = {
 	settings: {
 		rest: "/v1/boards/:board/lists/:list/cards",
 
+		graphql: {
+			entityName: "Card"
+		},
+
 		fields: {
 			id: {
 				type: "string",
@@ -124,7 +128,7 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphql: { type: "[Account]", inputType: "String" }
+				graphql: { type: "[Member]", inputType: "String" }
 			},
 			// attachments,
 			...C.ARCHIVED_FIELDS,

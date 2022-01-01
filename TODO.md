@@ -8,15 +8,28 @@
   - [ ] https://github.com/hectorm/otpauth
 - [ ] remove deleted boards, list, cards after 30 days
 - [ ] configure cache dependencies better (if delete a card, it doesn't drop the boards cache)
+- [ ] For ws, using `ws` https://github.com/websockets/ws
+- [ ] https://github.com/dotansimha/graphql-code-generator
+- [ ] https://github.com/graphql-compose/graphql-compose
+- [ ] 
 
 ## Accounts
-- [ ] Configure permissions for accounts actions
-- [ ] Don't publish enable/disable account actions
-- [ ] Separate the entity graphql type to `Profile` and `User`. The `User` is a type what other users can see (only id, username, fullName, avatar). The owner and members returns that type. The `Profile` is the current user's type what contains all available informations.
+- [x] Configure permissions for accounts actions
+- [x] Don't publish enable/disable account actions
+- [x] Separate the entity graphql type to `Profile` and `User`. The `User` is a type what other users can see (only id, username, fullName, avatar). The owner and members returns that type. The `Profile` is the current user's type what contains all available informations.
 - [ ] separate `enable2Fa` to `init2Fa` and `confirm2Fa`
+
+## User preferences
+- [ ] Store the detailed view settings
+- [ ] Store the collapsed lists
+- [ ] Store the last viewed boards
+- [ ] Store the pinned boards and cards
 
 ## Boards
 - [ ] Only the owner can make a board to public/private and remove
+
+## Invitations
+- [ ] Invitations for boards
 
 ## Lists
 
@@ -27,6 +40,10 @@
 
 ## Cards
 - [ ] Generate a unique number for the cards. (too expensive to get the max number, maybe if will be aggregate in `database` module)
+- [ ] Add startDate, dueDate to the entity
+
+## Watchers
+- [ ] Store account <-> board and account <-> list and account <-> card watching links.
 
 ## Login
 - [ ] Password reset doesn't check 2FA and login after the new password without it.
@@ -63,3 +80,6 @@
   - [ ] Basic: Title, tags, members
   - [ ] Detailed: Cover image, Title, tags, comments, dates, members, progress
   - [ ] Expanded: + Description
+  - [ ] Date pickers
+    - [ ] https://litepie.com/#get-started
+    - [ ] https://flowbite.com/docs/plugins/datepicker/

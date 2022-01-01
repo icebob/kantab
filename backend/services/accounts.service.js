@@ -98,9 +98,18 @@ module.exports = {
 		],
 
 		graphql: {
+			entityName: "Profile",
+
 			type: `
 				type LoginResponse {
 					token: String!
+				}
+
+				type Member {
+					id: String!
+					username: String
+					fullName: String!
+					avatar: String
 				}
 			`,
 			resolvers: {
@@ -169,7 +178,7 @@ module.exports = {
 			},
 			rest: "GET /me",
 			graphql: {
-				query: "me: Account"
+				query: "me: Profile"
 			},
 			async handler(ctx) {
 				if (!ctx.meta.userID) return null;
@@ -196,7 +205,7 @@ module.exports = {
 			),
 			rest: "POST /register",
 			graphql: {
-				mutation: `register(username: String!, fullName: String!, email: String!, password: String, avatar: String): Account!`
+				mutation: `register(username: String!, fullName: String!, email: String!, password: String, avatar: String): Profile!`
 			},
 			async handler(ctx) {
 				if (!this.config["accounts.signup.enabled"])
@@ -343,13 +352,14 @@ module.exports = {
 		 */
 		disable: {
 			description: "Disable an account",
+			permissions: [C.ROLE_ADMINISTRATOR],
 			params: {
 				id: { type: "string" }
 			},
 			needEntity: true,
-			graphql: {
-				mutation: `accountDisable(id: String!): Account!`
-			},
+			// graphql: {
+			// 	mutation: `accountDisable(id: String!): Profile!`
+			// },
 			async handler(ctx) {
 				const user = ctx.locals.entity;
 				if (user.status == 0)
@@ -377,13 +387,14 @@ module.exports = {
 		 */
 		enable: {
 			description: "Enable an account",
+			permissions: [C.ROLE_ADMINISTRATOR],
 			params: {
 				id: { type: "string" }
 			},
 			needEntity: true,
-			graphql: {
-				mutation: `accountEnable(id: String!): Account!`
-			},
+			// graphql: {
+			// 	mutation: `accountEnable(id: String!): Account!`
+			// },
 			async handler(ctx) {
 				const user = ctx.locals.entity;
 				if (user.status == 1)
@@ -758,13 +769,14 @@ module.exports = {
 		 */
 		link: {
 			description: "Link account to a social account",
+			permissions: [C.ROLE_AUTHENTICATED],
 			params: {
 				id: { type: "string", optional: true },
 				provider: { type: "string" },
 				profile: { type: "object" }
 			},
 			graphql: {
-				mutation: `accountLink(id: String, provider: String, profile: JSON): Account!`
+				mutation: `accountLink(id: String, provider: String, profile: JSON): Profile!`
 			},
 
 			async handler(ctx) {
@@ -780,13 +792,14 @@ module.exports = {
 		 */
 		unlink: {
 			description: "Unlink account from a social account",
+			permissions: [C.ROLE_AUTHENTICATED],
 			rest: "GET /unlink",
 			params: {
 				id: { type: "string", optional: true },
 				provider: { type: "string" }
 			},
 			graphql: {
-				mutation: `accountUnlink(id: String, provider: String): Account!`
+				mutation: `accountUnlink(id: String, provider: String): Profile!`
 			},
 
 			async handler(ctx) {
@@ -804,11 +817,11 @@ module.exports = {
 		 */
 		enable2Fa: {
 			description: "Enable Two-Factor authentication (2FA)",
+			permissions: [C.ROLE_AUTHENTICATED],
 			params: {
 				token: { type: "string", optional: true, convert: true }
 			},
 			rest: "POST /enable2fa",
-			permissions: [C.ROLE_AUTHENTICATED],
 			graphql: {
 				mutation: `accountEnable2FA(token: String): Boolean!`
 			},
@@ -877,11 +890,11 @@ module.exports = {
 		 */
 		disable2Fa: {
 			description: "Disable Two-Factor authentication (2FA)",
+			permissions: [C.ROLE_AUTHENTICATED],
 			params: {
 				token: { type: "string", convert: true }
 			},
 			rest: "GET /disable2fa",
-			permissions: [C.ROLE_AUTHENTICATED],
 			graphql: {
 				mutation: `accountDisable2FA(token: String!): Boolean!`
 			},

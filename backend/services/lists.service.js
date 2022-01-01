@@ -40,6 +40,10 @@ module.exports = {
 	settings: {
 		rest: "/v1/boards/:board/lists",
 
+		graphql: {
+			entityName: "List"
+		},
+
 		fields: {
 			id: {
 				type: "string",

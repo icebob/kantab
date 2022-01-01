@@ -52,6 +52,10 @@ module.exports = {
 	settings: {
 		rest: true,
 
+		graphql: {
+			entityName: "Board"
+		},
+
 		fields: {
 			id: {
 				type: "string",
@@ -71,7 +75,7 @@ module.exports = {
 				},
 				onCreate: ({ ctx }) => ctx.meta.userID,
 				validate: "validateOwner",
-				graphql: { type: "Account", inputType: "String" }
+				graphql: { type: "Member", inputType: "String" }
 			},
 			title: {
 				type: "string",
@@ -128,7 +132,7 @@ module.exports = {
 						fields: ["id", "username", "fullName", "avatar"]
 					}
 				},
-				graphql: { type: "[Account]", inputType: "String" }
+				graphql: { type: "[Member]", inputType: "String" }
 			},
 			lists: {
 				type: "array",

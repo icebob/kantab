@@ -7,8 +7,14 @@ module.exports = {
 	name: "GraphQL-Generator",
 
 	serviceCreating(svc, schema) {
-		const name = schema.name;
-		if (!["accounts", "boards", "lists", "cards"].includes(name)) return;
+		if (
+			!schema.settings ||
+			!schema.settings.graphql ||
+			!["accounts", "boards", "lists", "cards"].includes(schema.name)
+		)
+			return;
+
+		let name = schema.settings.graphql.entityName || schema.name;
 		const entityName = pluralize(name, 1);
 		generateCRUDGraphQL(entityName, schema);
 	}
