@@ -207,7 +207,9 @@ module.exports = {
 					fields: ["id"],
 					scope: false
 				});
-				await this.Promise.all(lists.map(list => this.removeEntity(ctx, list)));
+				await this.Promise.all(
+					lists.map(list => this.removeEntity(ctx, { id: list.id, scope: false }))
+				);
 			} catch (err) {
 				this.logger.error(`Unable to delete lists of board '${board.id}'`, err);
 			}

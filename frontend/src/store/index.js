@@ -31,9 +31,12 @@ const store = createStore({
 
 	getters: {
 		isPublicBoard: state => !!state.board?.public,
-		userIsOwner: state => state.user && state.board && state.board.owner?.id == state.user.id,
+		userIsOwner: state =>
+			state.auth.user && state.board && state.board.owner?.id == state.auth.user.id,
 		userIsMember: state =>
-			state.user && state.board && state.board.members.find(m => m.id == state.user.id)
+			state.auth.user &&
+			state.board &&
+			state.board.members.find(m => m.id == state.auth.user.id)
 	},
 
 	actions: {

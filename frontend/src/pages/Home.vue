@@ -54,7 +54,8 @@ export default {
 	mixins: [dateFormatter],
 
 	computed: {
-		...mapState(["boards", "user"])
+		...mapState(["boards"]),
+		...mapState("auth", ["user"])
 	},
 
 	methods: {

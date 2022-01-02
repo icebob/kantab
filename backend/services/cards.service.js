@@ -232,12 +232,14 @@ module.exports = {
 		async "boards.removed"(ctx) {
 			const board = ctx.params.data;
 			try {
-				const lists = await this.findEntities(ctx, {
+				const cards = await this.findEntities(ctx, {
 					query: { board: board.id },
 					fields: ["id"],
 					scope: false
 				});
-				await this.Promise.all(lists.map(list => this.removeEntity(ctx, list)));
+				await this.Promise.all(
+					cards.map(card => this.removeEntity(ctx, { id: card.id, scope: false }))
+				);
 			} catch (err) {
 				this.logger.error(`Unable to delete cards of board '${board.id}'`, err);
 			}

@@ -67,6 +67,7 @@
     "graphql-type-json": "^0.3.2",
     "graphql-type-long": "^0.1.1",
     "graphql-validation-complexity": "^0.4.2",
+    "haikunator": "^2.1.2",
     "handlebars": "^4.7.7",
     "hashids": "^2.2.10",
     "helmet": "^4.6.0",

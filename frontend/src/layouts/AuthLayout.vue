@@ -20,7 +20,7 @@ export default {
 	},
 
 	computed: {
-		...mapState(["user"])
+		...mapState("auth", ["user"])
 	}
 };
 </script>

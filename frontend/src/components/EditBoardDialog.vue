@@ -13,7 +13,7 @@
 				<input id="public-checkbox" v-model="board.public" type="checkbox" />
 				<label for="public-checkbox">{{ $t("Public") }}</label>
 			</div>
-			<div class="mt-3">
+			<div v-if="board.id" class="mt-3">
 				<label class="block mt-2 mb-1 text-primary">Owner</label>
 				<div class="ml-4 flex items-center">
 					<img

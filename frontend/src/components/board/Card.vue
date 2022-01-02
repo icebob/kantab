@@ -4,14 +4,14 @@
 		:style="cardStyle"
 		@click="editCard"
 	>
-		<img
+		<!-- <img
 			v-if="coverImage"
 			class="w-full h-24 rounded-t-md shadow-lg object-cover"
 			:src="coverImage"
-		/>
+		/> -->
 		<div class="px-4 py-2">
-			<div class="flex items-center">
-				<!-- <div class="flex-1 flex gap-2">
+			<!-- <div class="flex items-center">
+				<div class="flex-1 flex gap-2">
 					<div
 						class="w-8 bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm"
 						title="Frontend"
@@ -20,7 +20,7 @@
 						class="w-8 bg-negative rounded px-2 py-0.5 text-xs text-white text-shadow-sm"
 						title="High priority"
 					></div>
-				</div> -->
+				</div>
 				<div class="flex-1 flex gap-2 flex-wrap">
 					<div class="bg-primary rounded px-2 py-0.5 text-xs text-black text-shadow-sm">
 						Frontend
@@ -36,9 +36,9 @@
 						<span>3</span>
 					</div>
 				</div>
-			</div>
+			</div> -->
 			<div class="my-2 font-bold text-shadow-sm">{{ card.title }}</div>
-			<div class="flex items-center">
+			<!-- <div class="flex items-center">
 				<div class="flex-1 flex-col text-xxs opacity-75">
 					<div class="flex items-baseline">
 						<i class="fa fa-calendar-o mr-1" />
@@ -71,7 +71,7 @@
 					<div class="progress" style="width: 75%"></div>
 				</div>
 				<div class="ml-1 text-xxs"><i class="fa fa-check-square-o mr-1" />7/10</div>
-			</div>
+			</div> -->
 		</div>
 	</div>
 </template>

@@ -59,7 +59,8 @@ export default {
 	},
 
 	computed: {
-		...mapState(["user", "board"]),
+		...mapState("auth", ["user"]),
+		...mapState(["board"]),
 		...mapGetters(["userIsMember"])
 	},
 

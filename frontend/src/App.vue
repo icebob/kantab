@@ -7,7 +7,7 @@ import { mapState, mapActions } from "vuex";
 
 export default {
 	computed: {
-		...mapState(["user"])
+		...mapState("auth", ["user"])
 	},
 
 	created() {
