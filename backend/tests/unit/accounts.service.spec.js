@@ -5,6 +5,7 @@ const { ServiceBroker, Context } = require("moleculer");
 const TokensService = require("../../services/tokens.service");
 const AccountsService = require("../../services/accounts.service");
 const ConfigService = require("../../services/config.service");
+const C = require("../../constants");
 const E = require("moleculer").Errors;
 const { EntityNotFoundError } = require("@moleculer/database").Errors;
 
@@ -15,12 +16,12 @@ const CheckPermissionsMiddleware = require("../../middlewares/check-permissions.
 const AsyncContextMiddleware = require("../../middlewares/async-context.middleware");
 
 describe("Test Accounts service", () => {
-	async function unverifiedAccount(broker, id) {
-		await broker.call("accounts.update", { id, verified: false });
+	async function unverifiedAccount(svc, id) {
+		await svc.updateEntity(null, { id, verified: false }, { permissive: true });
 	}
 
-	async function verifiedAccount(broker, id) {
-		await broker.call("accounts.update", { id, verified: true });
+	async function verifiedAccount(svc, id) {
+		await svc.updateEntity(null, { id, verified: true }, { permissive: true });
 	}
 
 	async function disableAccount(broker, id) {
@@ -675,7 +676,7 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should throw error if account is not verified", async () => {
-				await unverifiedAccount(broker, savedUser.id);
+				await unverifiedAccount(service, savedUser.id);
 
 				expect.assertions(3);
 				try {
@@ -686,7 +687,7 @@ describe("Test Accounts service", () => {
 					expect(err.type).toBe("ACCOUNT_NOT_VERIFIED");
 				}
 
-				await verifiedAccount(broker, savedUser.id);
+				await verifiedAccount(service, savedUser.id);
 			});
 
 			it("should throw error if account is disabled", async () => {
@@ -732,14 +733,14 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should throw error if account is not activated", async () => {
-				await unverifiedAccount(broker, savedUser.id);
+				await unverifiedAccount(service, savedUser.id);
 
 				const res = await broker.call("accounts.me", null, {
 					meta: { userID: savedUser.id }
 				});
 				expect(res).toBeNull();
 
-				await verifiedAccount(broker, savedUser.id);
+				await verifiedAccount(service, savedUser.id);
 			});
 
 			it("should throw error if account is disabled", async () => {
@@ -1071,13 +1072,17 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should link user to google", async () => {
-				const res = await broker.call("accounts.link", {
-					id: savedUser.id,
-					provider: "google",
-					profile: {
-						socialID: 6000
-					}
-				});
+				const res = await broker.call(
+					"accounts.link",
+					{
+						id: savedUser.id,
+						provider: "google",
+						profile: {
+							socialID: 6000
+						}
+					},
+					{ meta: { userID: savedUser.id } }
+				);
 
 				expect(res).toEqual({
 					...savedUser,
@@ -1089,13 +1094,17 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should link user to facebook", async () => {
-				const res = await broker.call("accounts.link", {
-					id: savedUser.id,
-					provider: "facebook",
-					profile: {
-						socialID: 7000
-					}
-				});
+				const res = await broker.call(
+					"accounts.link",
+					{
+						id: savedUser.id,
+						provider: "facebook",
+						profile: {
+							socialID: 7000
+						}
+					},
+					{ meta: { userID: savedUser.id } }
+				);
 
 				expect(res).toEqual({
 					...savedUser,
@@ -1115,8 +1124,8 @@ describe("Test Accounts service", () => {
 					});
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
-					expect(err.code).toBe(400);
-					expect(err.type).toBe("MISSING_USER_ID");
+					expect(err.code).toBe(401);
+					expect(err.type).toBe("ERR_HAS_NO_ACCESS");
 				}
 			});
 
@@ -1140,10 +1149,14 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should unlink user from facebook", async () => {
-				const res = await broker.call("accounts.unlink", {
-					id: savedUser.id,
-					provider: "facebook"
-				});
+				const res = await broker.call(
+					"accounts.unlink",
+					{
+						id: savedUser.id,
+						provider: "facebook"
+					},
+					{ meta: { userID: savedUser.id } }
+				);
 
 				expect(res).toEqual({
 					...savedUser,
@@ -1251,7 +1264,7 @@ describe("Test Accounts service", () => {
 
 			it("should verify account if it is not verified yet", async () => {
 				passwordlessToken = await generatePasswordlessToken(savedUser.id);
-				await unverifiedAccount(broker, savedUser.id);
+				await unverifiedAccount(service, savedUser.id);
 
 				const res = await broker.call("accounts.passwordless", {
 					token: passwordlessToken
@@ -1316,7 +1329,7 @@ describe("Test Accounts service", () => {
 				});
 
 				it("should throw error if account is not verified", async () => {
-					await unverifiedAccount(broker, savedUser.id);
+					await unverifiedAccount(service, savedUser.id);
 
 					expect.assertions(3);
 					try {
@@ -1327,7 +1340,7 @@ describe("Test Accounts service", () => {
 						expect(err.type).toBe("ACCOUNT_NOT_VERIFIED");
 					}
 
-					await verifiedAccount(broker, savedUser.id);
+					await verifiedAccount(service, savedUser.id);
 				});
 
 				it("should throw error if account is disabled", async () => {
@@ -1479,6 +1492,12 @@ describe("Test Accounts service", () => {
 				fullName: "User Twelve"
 			};
 
+			const adminMeta = {
+				meta: {
+					roles: [C.ROLE_ADMINISTRATOR]
+				}
+			};
+
 			let savedUser;
 
 			beforeAll(async () => {
@@ -1494,7 +1513,7 @@ describe("Test Accounts service", () => {
 			it("should throw error if user not found", async () => {
 				expect.assertions(3);
 				try {
-					await broker.call("accounts.disable", { id: "1234" });
+					await broker.call("accounts.disable", { id: "1234" }, adminMeta);
 				} catch (err) {
 					expect(err).toBeInstanceOf(EntityNotFoundError);
 					expect(err.code).toBe(404);
@@ -1503,10 +1522,12 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should disable account", async () => {
-				const res = await broker.call("accounts.disable", { id: savedUser.id });
+				const res = await broker.call("accounts.disable", { id: savedUser.id }, adminMeta);
 
 				expect(res).toEqual({
-					id: savedUser.id,
+					...savedUser,
+					token: undefined,
+					updatedAt: expect.any(Number),
 					status: 0
 				});
 			});
@@ -1514,7 +1535,7 @@ describe("Test Accounts service", () => {
 			it("should throw error if account has been already disabled", async () => {
 				expect.assertions(3);
 				try {
-					await broker.call("accounts.disable", { id: savedUser.id });
+					await broker.call("accounts.disable", { id: savedUser.id }, adminMeta);
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.code).toBe(400);
@@ -1525,7 +1546,7 @@ describe("Test Accounts service", () => {
 			it("should throw error if user not found", async () => {
 				expect.assertions(3);
 				try {
-					await broker.call("accounts.enable", { id: "1234" });
+					await broker.call("accounts.enable", { id: "1234" }, adminMeta);
 				} catch (err) {
 					expect(err).toBeInstanceOf(EntityNotFoundError);
 					expect(err.code).toBe(404);
@@ -1534,7 +1555,7 @@ describe("Test Accounts service", () => {
 			});
 
 			it("should enable account", async () => {
-				const res = await broker.call("accounts.enable", { id: savedUser.id });
+				const res = await broker.call("accounts.enable", { id: savedUser.id }, adminMeta);
 
 				expect(res).toEqual({
 					id: savedUser.id,
@@ -1545,7 +1566,7 @@ describe("Test Accounts service", () => {
 			it("should throw error if account has been already enabled", async () => {
 				expect.assertions(4);
 				try {
-					await broker.call("accounts.enable", { id: savedUser.id });
+					await broker.call("accounts.enable", { id: savedUser.id }, adminMeta);
 				} catch (err) {
 					expect(err).toBeInstanceOf(E.MoleculerClientError);
 					expect(err.name).toBe("MoleculerClientError");
