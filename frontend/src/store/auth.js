@@ -6,8 +6,10 @@ const COOKIE_EXPIRED_DAYS = 90;
 
 import { Store } from "vuex"; // eslint-disable-line no-unused-vars
 import { apolloClient, apolloAuth } from "../apollo";
-import gql from "graphql-tag";
+//import gql from "graphql-tag";
 import router from "../router";
+import { graphqlClient } from "../graphqlClient";
+import { gql } from "graphql-request";
 
 import { defaultsDeep, isFunction } from "lodash";
 import axios from "axios";
@@ -30,29 +32,28 @@ export default {
 	actions: {
 		async getMe({ commit }) {
 			try {
-				const res = await apolloClient.query({
-					query: gql`
-						query {
-							me {
-								id
-								username
-								fullName
-								avatar
-								verified
-								passwordless
-								# socialLinks
-							}
+				const query = gql`
+					query {
+						me {
+							id
+							username
+							fullName
+							avatar
+							verified
+							passwordless
+							# socialLinks
 						}
-					`
-				});
-				commit("SET_LOGGED_IN_USER", res.data.me);
+					}
+				`;
+				const data = await graphqlClient.request(query);
+				commit("SET_LOGGED_IN_USER", data.me);
 
 				/*if (process.env.NODE_ENV == "production") {
 					Raven.setUserContext(user);
 					LogRocket.identify(user._id, user);
 				}*/
 
-				return res.data.me;
+				return data.me;
 			} catch (err) {
 				console.log("Unable to get current user", err);
 			}

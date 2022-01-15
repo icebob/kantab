@@ -1,7 +1,9 @@
 import { createStore } from "vuex";
 import AuthStore from "./auth";
-import { apolloClient } from "../apollo";
-import gql from "graphql-tag";
+//import { apolloClient } from "../apollo";
+import { graphqlClient } from "../graphqlClient";
+import { gql } from "graphql-request";
+//import gql from "graphql-tag";
 import router from "../router";
 
 import toast from "../toast";
@@ -60,7 +62,57 @@ const store = createStore({
 
 		async selectBoardById({ commit }, id) {
 			try {
-				const res = await apolloClient.query({
+				const query = gql`
+					query boardById($id: String!) {
+						boardById(id: $id) {
+							id
+							title
+							slug
+							description
+							public
+							archived
+							createdAt
+							updatedAt
+							owner {
+								id
+								username
+								fullName
+								avatar
+							}
+							lists(page: 1, pageSize: 10, sort: "position") {
+								rows {
+									id
+									title
+									description
+									position
+									color
+									createdAt
+									updatedAt
+									cards(page: 1, pageSize: 20, sort: "position") {
+										rows {
+											id
+											title
+											description
+											color
+											position
+										}
+										total
+									}
+								}
+								total
+							}
+							members {
+								id
+								username
+								fullName
+								avatar
+							}
+						}
+					}
+				`;
+				const data = await graphqlClient.request(query);
+
+				const res = await graphqlClient.query({
 					query: gql`
 						query boardById($id: String!) {
 							boardById(id: $id) {
@@ -121,31 +173,31 @@ const store = createStore({
 
 		async getBoards({ commit }) {
 			try {
-				const res = await apolloClient.query({
-					query: gql`
-						query boards {
-							boards(page: 1, pageSize: 10, sort: "title") {
-								rows {
-									id
-									title
-									slug
-									description
-									public
-									archived
-									createdAt
-									updatedAt
-									owner {
-										username
-										fullName
-										avatar
-									}
+				const query = gql`
+					query boards {
+						boards(page: 1, pageSize: 10, sort: "title") {
+							rows {
+								id
+								title
+								slug
+								description
+								public
+								archived
+								createdAt
+								updatedAt
+								owner {
+									username
+									fullName
+									avatar
 								}
 							}
 						}
-					`
-				});
-				commit("SET_BOARDS", res.data.boards.rows);
-				return res.data.boards.rows;
+					}
+				`;
+				const data = await graphqlClient.request(query);
+				console.log("getBoards", data);
+				commit("SET_BOARDS", data.boards.rows);
+				return data.boards.rows;
 			} catch (err) {
 				console.log("getBoard error", err);
 				showInfoToast("Could not load boards: " + err.message);
