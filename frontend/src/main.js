@@ -30,13 +30,14 @@ import swal from "sweetalert";
 import iziToast from "./toast";
 
 // --- VUE APOLLO CLIENT ---
-import { apolloProvider, apolloClient } from "./apollo";
-
+//import { apolloProvider, apolloClient } from "./apollo";
+import { graphqlClient } from "./graphqlClient";
 // TailwindCSS
 import "./styles/index.css";
 
 // --- APP ---
 import App from "./App.vue";
+import { isPunctuatorTokenKind } from "graphql/language/lexer";
 
 // --- BOOTSTRAP ---
 VueI18Next().then(i18n => {
@@ -47,11 +48,11 @@ VueI18Next().then(i18n => {
 	app.use(store);
 	app.use(router);
 	app.use(i18n);
-	app.use(apolloProvider);
+	app.use(graphqlClient);
 
 	app.config.globalProperties.$swal = swal;
 	app.config.globalProperties.$toast = iziToast;
-	app.config.globalProperties.$apollo = apolloClient;
+	//app.config.globalProperties.$apollo = apolloClient;
 
 	app.mount("#app");
 
