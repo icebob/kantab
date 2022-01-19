@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "dayjs": "^1.10.7",
+    "graphql-request": "^3.7.0",
     "vue": "^3.2.26"
   },
   "devDependencies": {

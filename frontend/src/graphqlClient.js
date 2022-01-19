@@ -1,4 +1,4 @@
-import { GraphQLClient, gql } from "graphql-request";
+import { GraphQLClient } from "graphql-request";
 import Cookie from "js-cookie";
 
 const COOKIE_TOKEN_NAME = "jwt-token";

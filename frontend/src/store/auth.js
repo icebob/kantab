@@ -5,8 +5,6 @@ const COOKIE_TOKEN_NAME = "jwt-token";
 const COOKIE_EXPIRED_DAYS = 90;
 
 import { Store } from "vuex"; // eslint-disable-line no-unused-vars
-import { apolloClient, apolloAuth } from "../apollo";
-//import gql from "graphql-tag";
 import router from "../router";
 import { graphqlClient } from "../graphqlClient";
 import { gql } from "graphql-request";

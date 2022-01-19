@@ -110,8 +110,13 @@ const store = createStore({
 						}
 					}
 				`;
-				const data = await graphqlClient.request(query);
 
+				const variables = { id };
+				const data = await graphqlClient.request(query, variables);
+				console.log("getBOARD data", data);
+				commit("SET_BOARD", data.boardById);
+				return data.boardById;
+				/*
 				const res = await graphqlClient.query({
 					query: gql`
 						query boardById($id: String!) {
@@ -162,9 +167,7 @@ const store = createStore({
 						}
 					`,
 					variables: { id }
-				});
-				commit("SET_BOARD", res.data.boardById);
-				return res.data.boardById;
+				}); */
 			} catch (err) {
 				console.log("selectBoardById error", err);
 				showInfoToast("Could not load board: " + err.message);
