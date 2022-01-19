@@ -113,61 +113,8 @@ const store = createStore({
 
 				const variables = { id };
 				const data = await graphqlClient.request(query, variables);
-				console.log("getBOARD data", data);
 				commit("SET_BOARD", data.boardById);
 				return data.boardById;
-				/*
-				const res = await graphqlClient.query({
-					query: gql`
-						query boardById($id: String!) {
-							boardById(id: $id) {
-								id
-								title
-								slug
-								description
-								public
-								archived
-								createdAt
-								updatedAt
-								owner {
-									id
-									username
-									fullName
-									avatar
-								}
-								lists(page: 1, pageSize: 10, sort: "position") {
-									rows {
-										id
-										title
-										description
-										position
-										color
-										createdAt
-										updatedAt
-										cards(page: 1, pageSize: 20, sort: "position") {
-											rows {
-												id
-												title
-												description
-												color
-												position
-											}
-											total
-										}
-									}
-									total
-								}
-								members {
-									id
-									username
-									fullName
-									avatar
-								}
-							}
-						}
-					`,
-					variables: { id }
-				}); */
 			} catch (err) {
 				console.log("selectBoardById error", err);
 				showInfoToast("Could not load board: " + err.message);
@@ -198,7 +145,6 @@ const store = createStore({
 					}
 				`;
 				const data = await graphqlClient.request(query);
-				console.log("getBoards", data);
 				commit("SET_BOARDS", data.boards.rows);
 				return data.boards.rows;
 			} catch (err) {
@@ -209,30 +155,29 @@ const store = createStore({
 
 		async createBoard({ commit }, input) {
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation boardCreate($input: BoardCreateInput!) {
-							boardCreate(input: $input) {
-								id
-								title
-								slug
-								description
-								public
-								archived
-								createdAt
-								updatedAt
-								owner {
-									username
-									fullName
-									avatar
-								}
+				const query = gql`
+					mutation boardCreate($input: BoardCreateInput!) {
+						boardCreate(input: $input) {
+							id
+							title
+							slug
+							description
+							public
+							archived
+							createdAt
+							updatedAt
+							owner {
+								username
+								fullName
+								avatar
 							}
 						}
-					`,
-					variables: { input }
-				});
+					}
+				`;
 
-				const created = res.data.boardCreate;
+				const variables = { input };
+				const data = await graphqlClient.request(query, variables);
+				const created = data.boardCreate;
 
 				commit("ADD_BOARD", created);
 				showInfoToast(`Board '${created.title}' created`);
@@ -244,30 +189,29 @@ const store = createStore({
 
 		async updateBoard({ commit }, input) {
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation boardUpdate($input: BoardUpdateInput!) {
-							boardUpdate(input: $input) {
-								id
-								title
-								slug
-								description
-								public
-								archived
-								createdAt
-								updatedAt
-								owner {
-									username
-									fullName
-									avatar
-								}
+				const query = gql`
+					mutation boardUpdate($input: BoardUpdateInput!) {
+						boardUpdate(input: $input) {
+							id
+							title
+							slug
+							description
+							public
+							archived
+							createdAt
+							updatedAt
+							owner {
+								username
+								fullName
+								avatar
 							}
 						}
-					`,
-					variables: { input }
-				});
+					}
+				`;
 
-				const updated = res.data.boardUpdate;
+				const variables = { input };
+				const data = await graphqlClient.request(query, variables);
+				const updated = data.boardUpdate;
 				commit("UPDATE_BOARD", updated);
 				showInfoToast(`Board '${updated.title}' updated`);
 			} catch (err) {
@@ -278,16 +222,15 @@ const store = createStore({
 
 		async removeBoard({ commit }, id) {
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation boardRemove($id: String!) {
-							boardRemove(id: $id)
-						}
-					`,
-					variables: { id }
-				});
+				const query = gql`
+					mutation boardRemove($id: String!) {
+						boardRemove(id: $id)
+					}
+				`;
 
-				commit("REMOVE_BOARD", res.data.boardRemove);
+				const variables = { id };
+				const data = await graphqlClient.request(query, variables);
+				commit("REMOVE_BOARD", data.boardRemove);
 				showInfoToast("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
@@ -296,32 +239,31 @@ const store = createStore({
 		},
 
 		async createList({ commit }, input) {
-			console.log("input", input);
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation listCreate($input: ListCreateInput!) {
-							listCreate(input: $input) {
-								id
-								title
-								description
-								position
-								cards(page: 1, pageSize: 20, sort: "position") {
-									rows {
-										id
-										title
-										description
-										position
-									}
-									total
+				const query = gql`
+					mutation listCreate($input: ListCreateInput!) {
+						listCreate(input: $input) {
+							id
+							title
+							description
+							position
+							cards(page: 1, pageSize: 20, sort: "position") {
+								rows {
+									id
+									title
+									description
+									position
 								}
+								total
 							}
 						}
-					`,
-					variables: { input }
-				});
-				console.log("res", res);
-				commit("ADD_LIST", res.data.listCreate);
+					}
+				`;
+
+				const variables = { input };
+				const data = await graphqlClient.request(query, variables);
+
+				commit("ADD_LIST", data.listCreate);
 				showInfoToast("List created");
 			} catch (err) {
 				console.error("createList err", err);
@@ -331,30 +273,29 @@ const store = createStore({
 
 		async updateList({ commit }, input) {
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation listUpdate($input: ListUpdateInput!) {
-							listUpdate(input: $input) {
-								id
-								title
-								description
-								position
-								cards(page: 1, pageSize: 20, sort: "position") {
-									rows {
-										id
-										title
-										description
-										position
-									}
-									total
+				const query = gql`
+					mutation listUpdate($input: ListUpdateInput!) {
+						listUpdate(input: $input) {
+							id
+							title
+							description
+							position
+							cards(page: 1, pageSize: 20, sort: "position") {
+								rows {
+									id
+									title
+									description
+									position
 								}
+								total
 							}
 						}
-					`,
-					variables: { input }
-				});
+					}
+				`;
+				const variables = { input };
+				const data = await graphqlClient.request(query, variables);
 
-				commit("UPDATE_LIST", res.data.listUpdate);
+				commit("UPDATE_LIST", data.listUpdate);
 				showInfoToast("List updated");
 			} catch (err) {
 				console.error("updateList error: ", err);
@@ -365,15 +306,15 @@ const store = createStore({
 		async removeList({ commit }, { id }) {
 			console.log("id", id);
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation listRemove($id: String!) {
-							listRemove(id: $id)
-						}
-					`,
-					variables: { id }
-				});
-				commit("REMOVE_LIST", res.data.listRemove);
+				const query = gql`
+					mutation listRemove($id: String!) {
+						listRemove(id: $id)
+					}
+				`;
+
+				const variables = { id };
+				const data = await graphqlClient.request(query, variables);
+				commit("REMOVE_LIST", data.listRemove);
 				showInfoToast("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
@@ -383,21 +324,21 @@ const store = createStore({
 
 		async createCard({ commit }, { list, input }) {
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation cardCreate($input: CardCreateInput!) {
-							cardCreate(input: $input) {
-								id
-								title
-								description
-								position
-								color
-							}
+				const query = gql`
+					mutation cardCreate($input: CardCreateInput!) {
+						cardCreate(input: $input) {
+							id
+							title
+							description
+							position
+							color
 						}
-					`,
-					variables: { input }
-				});
-				const created = res.data.cardCreate;
+					}
+				`;
+
+				const variables = { input };
+				const data = await graphqlClient.request(query, variables);
+				const created = data.cardCreate;
 				commit("ADD_CARD", { list, card: created });
 				showInfoToast(`Card '${created.title}' created`);
 			} catch (err) {
@@ -408,22 +349,21 @@ const store = createStore({
 
 		async updateCard({ commit }, { list, input }) {
 			try {
-				const res = await apolloClient.mutate({
-					mutation: gql`
-						mutation cardUpdate($input: CardUpdateInput!) {
-							cardUpdate(input: $input) {
-								id
-								title
-								description
-								position
-								color
-							}
+				const query = gql`
+					mutation cardUpdate($input: CardUpdateInput!) {
+						cardUpdate(input: $input) {
+							id
+							title
+							description
+							position
+							color
 						}
-					`,
-					variables: { input }
-				});
+					}
+				`;
+				const variables = { input };
 
-				const updated = res.data.cardUpdate;
+				const data = await graphqlClient.request(query, variables);
+				const updated = data.cardUpdate;
 				commit("UPDATE_CARD", { list, card: updated });
 				showInfoToast(`Card '${updated.title}' updated`);
 			} catch (err) {
@@ -434,14 +374,13 @@ const store = createStore({
 
 		async removeCard({ commit }, { list, id }) {
 			try {
-				await apolloClient.mutate({
-					mutation: gql`
-						mutation cardRemove($id: String!) {
-							cardRemove(id: $id)
-						}
-					`,
-					variables: { id }
-				});
+				const query = gql`
+					mutation cardRemove($id: String!) {
+						cardRemove(id: $id)
+					}
+				`;
+				const variables = { id };
+				await graphqlClient.request(query, variables);
 				commit("REMOVE_CARD", { list, id });
 				showInfoToast("Card removed");
 			} catch (err) {
@@ -534,22 +473,11 @@ const store = createStore({
 
 	mutations: {
 		SET_BOARD(state, board) {
-			//console.log(board, Object.isFrozen(board));
-			// TODO: Apollo client set it to frozen, so vuex can't update it.
-			if (Object.isFrozen(board)) {
-				state.board = JSON.parse(JSON.stringify(board));
-			} else {
-				state.board = board;
-			}
+			state.board = board;
 		},
 
 		SET_BOARDS(state, boards) {
-			// TODO: Apollo client set it to frozen, so vuex can't update it.
-			if (Object.isFrozen(boards)) {
-				state.boards = JSON.parse(JSON.stringify(boards));
-			} else {
-				state.boards = boards;
-			}
+			state.boards = boards;
 		},
 
 		ADD_BOARD(state, board) {

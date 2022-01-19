@@ -76,7 +76,7 @@ export default {
 
 	events: {
 		newList() {
-			this.$refs.editListDialog?.show();
+			this.$refs.editListDialog?.show({ list: null, boardId: this.id });
 		},
 
 		editList({ list }) {
