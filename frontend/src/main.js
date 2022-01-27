@@ -29,15 +29,13 @@ import swal from "sweetalert";
 // --- NOTIFICATIONS (IZITOAST) ---
 import iziToast from "./toast";
 
-// --- VUE APOLLO CLIENT ---
-//import { apolloProvider, apolloClient } from "./apollo";
+// --- VUE GRAPHQL CLIENT ---
 import { graphqlClient } from "./graphqlClient";
 // TailwindCSS
 import "./styles/index.css";
 
 // --- APP ---
 import App from "./App.vue";
-import { isPunctuatorTokenKind } from "graphql/language/lexer";
 
 // --- BOOTSTRAP ---
 VueI18Next().then(i18n => {

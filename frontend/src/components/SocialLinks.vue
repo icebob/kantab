@@ -3,30 +3,30 @@
 		<template v-if="providers && providers.length > 0">
 			<h4>Link your social accounts</h4>
 			<div class="social-buttons">
-				<template>
+				<div>
 					<a v-if="!isLinked('google')" href="/auth/google" class="button primary"
 						>Link to Google</a
 					>
-					<button v-else class="button" @click="unlinkSocial('google')">
+					<button v-else class="button" @click="unlinkSocial({ provider: 'google' })">
 						Unlink from Google
 					</button>
-				</template>
-				<template>
+				</div>
+				<div>
 					<a v-if="!isLinked('facebook')" href="/auth/facebook" class="button primary"
 						>Link to Facebook</a
 					>
-					<button v-else class="button" @click="unlinkSocial('facebook')">
+					<button v-else class="button" @click="unlinkSocial({ provider: 'facebook' })">
 						Unlink from Facebook
 					</button>
-				</template>
-				<template>
+				</div>
+				<div>
 					<a v-if="!isLinked('github')" href="/auth/github" class="button primary"
 						>Link to Github</a
 					>
-					<button v-else class="button" @click="unlinkSocial('github')">
+					<button v-else class="button" @click="unlinkSocial({ provider: 'github' })">
 						Unlink from Github
 					</button>
-				</template>
+				</div>
 			</div>
 		</template>
 	</div>
@@ -56,6 +56,7 @@ export default {
 
 <style lang="scss" scoped>
 .social-buttons {
+	display: flex;
 	margin: 1em 0;
 	text-align: center;
 

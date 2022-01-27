@@ -40,7 +40,17 @@ const FIELDS = {
 			return this.config["accounts.defaultRoles"];
 		}
 	},
-	socialLinks: { type: "object", readonly: true, default: () => ({}), graphql: { type: "JSON" } },
+	socialLinks: {
+		type: "object",
+		readonly: true,
+		default: () => ({}),
+		//graphql: { type: "JSON" }
+		properties: {
+			github: { type: "String" },
+			google: { type: "String" },
+			facebook: { type: "String" }
+		}
+	},
 	status: { type: "number", readonly: true, default: 1 },
 	plan: {
 		type: "string",
@@ -102,9 +112,14 @@ module.exports = {
 
 			type: `
 				type LoginResponse {
-					token: String,
-					passwordless: Boolean,
+					token: String
+					passwordless: Boolean
 					email: String
+				}
+
+				type Enable2FAResponse {
+					otpauthURL: String!
+					secret: String!
 				}
 
 				type Member {
@@ -814,20 +829,14 @@ module.exports = {
 
 		/**
 		 * Enable Two-Factor authentication (2FA)
-		 *
-		 * TODO: separate to action (enable2FA, confirm2FA, disable2FA)
 		 */
 		enable2Fa: {
 			description: "Enable Two-Factor authentication (2FA)",
 			permissions: [C.ROLE_AUTHENTICATED],
-			params: {
-				token: { type: "string", optional: true, convert: true }
-			},
 			rest: "POST /enable2fa",
 			graphql: {
-				mutation: `accountEnable2FA(token: String): Boolean!`
+				mutation: `accountEnable2FA: Enable2FAResponse!`
 			},
-
 			async handler(ctx) {
 				const _user = await this.resolveEntities(
 					ctx,
@@ -836,54 +845,75 @@ module.exports = {
 				);
 				this.checkUser(_user);
 
-				if (!ctx.params.token && (!_user.totp || !_user.totp.enabled)) {
-					// Generate a TOTP secret and send back otpauthURL & secret
-					const secret = speakeasy.generateSecret({ length: 10 });
-					await this.updateEntity(
-						ctx,
-						{
-							id: ctx.meta.userID,
-							totp: {
-								enabled: false,
-								secret: secret.base32
-							}
-						},
-						{ permissive: true }
+				// Generate a TOTP secret and send back otpauthURL & secret
+				const secret = speakeasy.generateSecret({ length: 10 });
+				await this.updateEntity(
+					ctx,
+					{
+						id: ctx.meta.userID,
+						totp: {
+							enabled: false,
+							secret: secret.base32
+						}
+					},
+					{ permissive: true }
+				);
+
+				const otpauthURL = speakeasy.otpauthURL({
+					secret: secret.ascii,
+					label: _user.email,
+					issuer: this.configObj.site.name
+				});
+
+				return {
+					secret: secret.base32,
+					otpauthURL
+				};
+			}
+		},
+
+		/**
+		 * Finalize Two-Factor authentication (2FA)
+		 */
+		finalize2Fa: {
+			description: "Finalize Two-Factor authentication (2FA)",
+			permissions: [C.ROLE_AUTHENTICATED],
+			params: {
+				token: { type: "string", optional: true, convert: true }
+			},
+			rest: "POST /finalize2Fa",
+			graphql: {
+				mutation: `accountFinalize2FA(token: String): Boolean!`
+			},
+			async handler(ctx) {
+				const _user = await this.resolveEntities(
+					ctx,
+					{ id: ctx.meta.userID },
+					{ transform: false }
+				);
+				this.checkUser(_user);
+
+				// Verify the token with secret
+				if (!(await this.verify2FA(_user.totp.secret, ctx.params.token))) {
+					throw new MoleculerClientError(
+						"Invalid token.",
+						400,
+						"TWOFACTOR_INVALID_TOKEN"
 					);
-
-					const otpauthURL = speakeasy.otpauthURL({
-						secret: secret.ascii,
-						label: _user.email,
-						issuer: this.configObj.site.name
-					});
-
-					return {
-						secret: secret.base32,
-						otpauthURL
-					};
-				} else {
-					// Verify the token with secret
-					if (!(await this.verify2FA(_user.totp.secret, ctx.params.token))) {
-						throw new MoleculerClientError(
-							"Invalid token.",
-							400,
-							"TWOFACTOR_INVALID_TOKEN"
-						);
-					}
-
-					await this.updateEntity(
-						ctx,
-						{
-							id: ctx.meta.userID,
-							totp: {
-								enabled: true
-							}
-						},
-						{ permissive: true }
-					);
-
-					return true;
 				}
+
+				await this.updateEntity(
+					ctx,
+					{
+						id: ctx.meta.userID,
+						totp: {
+							enabled: true
+						}
+					},
+					{ permissive: true }
+				);
+
+				return true;
 			}
 		},
 
@@ -1202,7 +1232,8 @@ module.exports = {
 			return speakeasy.totp.verify({
 				secret,
 				encoding: "base32",
-				token
+				token,
+				window: 2
 			});
 		},
 

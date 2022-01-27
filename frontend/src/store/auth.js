@@ -10,7 +10,6 @@ import { graphqlClient } from "../graphqlClient";
 import { gql } from "graphql-request";
 
 import { defaultsDeep, isFunction } from "lodash";
-import axios from "axios";
 
 export default {
 	namespaced: true,
@@ -39,7 +38,14 @@ export default {
 							avatar
 							verified
 							passwordless
-							# socialLinks
+							totp {
+								enabled
+							}
+							socialLinks {
+								github
+								google
+								facebook
+							}
 						}
 					}
 				`;
@@ -95,7 +101,7 @@ export default {
 			};
 			const data = await graphqlClient.request(query, variables);
 			if (data.register.verified) {
-				const user = await this.applyToken(data.register.token);
+				const user = await dispatch("applyToken", data.login.token);
 
 				const { redirect } = state.route.query;
 				router.push(redirect ? redirect : { name: "home" });
@@ -111,17 +117,17 @@ export default {
 		 * @param {Store} store
 		 * @param {Object} param1
 		 */
-		async login({ rootState, dispatch }, { email, password }) {
+		async login({ rootState, dispatch }, { email, password, token }) {
 			const query = gql`
-				mutation login($email: String!, $password: String) {
-					login(email: $email, password: $password) {
+				mutation login($email: String!, $password: String, $token: String) {
+					login(email: $email, password: $password, token: $token) {
 						token
 						passwordless
 						email
 					}
 				}
 			`;
-			const variables = { email, password };
+			const variables = { email, password, token };
 			const data = await graphqlClient.request(query, variables);
 
 			if (data.login.token) {
@@ -242,32 +248,92 @@ export default {
 			return await dispatch("getMe");
 		},
 
-		async enable2FA() {
-			return await axios.post("/api/v1/accounts/enable2fa");
+		async enable2FA({ dispatch }) {
+			const query = gql`
+				mutation accountEnable2FA {
+					accountEnable2FA {
+						secret
+						otpauthURL
+					}
+				}
+			`;
+
+			const data = await graphqlClient.request(query);
+			console.log("enable2FA: ", data.accountEnable2FA);
+			return data.accountEnable2FA;
 		},
 
-		async finalize2FA({ dispatch }, token) {
-			await axios.post("/api/v1/accounts/enable2fa", { token });
-			return await dispatch("getMe");
+		async finalize2FA({ dispatch }, { token }) {
+			const query = gql`
+				mutation accountFinalize2FA($token: String) {
+					accountFinalize2FA(token: $token)
+				}
+			`;
+			const variables = { token };
+			const data = await graphqlClient.request(query, variables);
+			console.log("finalize2FA: ", data);
+			return data;
 		},
 
-		async disable2FA({ dispatch }, token) {
-			await axios.post("/api/v1/accounts/disable2fa", { token });
-			return await dispatch("getMe");
+		async disable2FA({ dispatch }, { token }) {
+			const query = gql`
+				mutation accountDisable2FA($token: String!) {
+					accountDisable2FA(token: $token)
+				}
+			`;
+			const variables = { token };
+			const data = await graphqlClient.request(query, variables);
+			console.log("disable2FA: ", data);
+			return data;
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {
-			const providers = await axios.get("/auth/supported-social-auth-providers");
-			commit("SET_AUTH_PROVIDERS", providers);
-
-			return providers;
+			try {
+				const query = gql`
+					query supportedSocialAuthProviders {
+						supportedSocialAuthProviders
+					}
+				`;
+				const data = await graphqlClient.request(query);
+				commit("SET_AUTH_PROVIDERS", data.supportedSocialAuthProviders);
+				return data.supportedSocialAuthProviders;
+			} catch (err) {
+				console.log("cant get auth", err);
+			}
+			return null;
 		},
 
-		async unlinkSocial({ commit }, provider) {
-			const user = await axios.get(`/api/v1/accounts/unlink?provider=${provider}`);
-			commit("SET_LOGGED_IN_USER", user);
+		async unlinkSocial({ commit }, { id, provider }) {
+			try {
+				const query = gql`
+					mutation accountUnlink($id: String, $provider: String!) {
+						accountUnlink(id: $id, provider: $provider) {
+							id
+							username
+							fullName
+							avatar
+							verified
+							passwordless
+							totp {
+								enabled
+							}
+							socialLinks {
+								github
+								google
+								facebook
+							}
+						}
+					}
+				`;
 
-			return user;
+				const variables = { id, provider };
+				const data = await graphqlClient.request(query, variables);
+				console.log("unlinkSocial: ", data.accountUnlink);
+				commit("SET_LOGGED_IN_USER", data.accountUnlink);
+				return null;
+			} catch (err) {
+				console.log("unlinkSocial", err?.response?.errors?.[0]?.message);
+			}
 		},
 
 		protectRouter({ state, dispatch }, router) {

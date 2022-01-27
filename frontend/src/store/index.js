@@ -1,9 +1,7 @@
 import { createStore } from "vuex";
 import AuthStore from "./auth";
-//import { apolloClient } from "../apollo";
 import { graphqlClient } from "../graphqlClient";
 import { gql } from "graphql-request";
-//import gql from "graphql-tag";
 import router from "../router";
 
 import toast from "../toast";

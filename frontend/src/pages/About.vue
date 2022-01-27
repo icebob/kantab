@@ -1,12 +1,143 @@
 <template>
 	<div class="about">
-		<h1>This is an about page</h1>
+		<h2 class="mb-8">This is an about page</h2>
 		<template v-if="user">
-			<img :src="user.avatar" />
-			<pre><code>{{ user }}</code></pre>
+			<div class="flex mb-4">
+				<div class="w-1/3">
+					<img :src="user.avatar" class="mx-auto object-cover w-21 h-21 rounded-full" />
+				</div>
+				<div class="w-2/3">
+					<!-- 			//<pre><code>{{ user }}</code></pre> -->
+					<div class="overflow-hidden">
+						<table class="min-w-full divide-y divide-gray-200">
+							<tbody>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										ID
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										{{ user.id }}
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Username
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										{{ user.username }}
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Full name
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										{{ user.fullName }}
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Avatar
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										{{ user.avatar }}
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Verified
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										<i
+											:class="user.verified ? 'fa fa-check' : 'fa fa-times'"
+										></i>
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Passwordless
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										<i
+											:class="
+												user.passwordless ? 'fa fa-check' : 'fa fa-times'
+											"
+										></i>
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Two factor auth
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										<i
+											:class="
+												user.totp.enabled ? 'fa fa-check' : 'fa fa-times'
+											"
+										></i>
+									</td>
+								</tr>
+								<tr>
+									<td
+										class="px-6 py-3 text-left text-lg font-medium text-gray-300 uppercase tracking-wider"
+									>
+										Socials
+									</td>
+									<td class="px-6 py-4 whitespace-nowrap text-lg">
+										<span class="pr-3">
+											Github
+											<i
+												:class="
+													user.socialLinks.github
+														? 'fa fa-check'
+														: 'fa fa-times'
+												"
+											></i>
+										</span>
+										<span class="pr-3">
+											Google
+											<i
+												:class="
+													user.socialLinks.google
+														? 'fa fa-check'
+														: 'fa fa-times'
+												"
+											></i>
+										</span>
+										<span class="pr-3">
+											Facebook
+											<i
+												:class="
+													user.socialLinks.facebook
+														? 'fa fa-check'
+														: 'fa fa-times'
+												"
+											></i>
+										</span>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
 			<social-links />
 			<template v-if="!user.totp || !user.totp.enabled">
-				<button class="button secondary" @click="enable2FA">
+				<button class="button secondary" @click="doEnable2FA">
 					Enable Two-Factor Authentication
 				</button>
 				<template v-if="otpauthURL">
@@ -51,9 +182,9 @@
 									<input
 										v-model="otpUserToken"
 										class="form-control"
-										@keyup.enter.prevent="finalize2FA"
+										@keyup.enter.prevent="doFinalize2FA"
 									/>
-									<button class="button primary" @click="finalize2FA">
+									<button class="button primary" @click="doFinalize2FA">
 										Activate
 									</button>
 								</div>
@@ -78,9 +209,9 @@
 							<input
 								v-model="otpUserToken"
 								class="form-control"
-								@keyup.enter.prevent="disable2FA"
+								@keyup.enter.prevent="doDisable2FA"
 							/>
-							<button class="button primary" @click="disable2FA">Deactivate</button>
+							<button class="button primary" @click="doDisable2FA">Deactivate</button>
 						</div>
 					</div>
 				</template>
@@ -115,7 +246,7 @@ export default {
 	methods: {
 		...mapActions("auth", ["getMe", "enable2FA", "disable2FA", "finalize2FA"]),
 
-		async enable2FA() {
+		async doEnable2FA() {
 			try {
 				const res = await this.enable2FA();
 				this.otpauthURL = res.otpauthURL;
@@ -126,11 +257,11 @@ export default {
 			}
 		},
 
-		async disable2FA() {
+		async doDisable2FA() {
 			if (!this.otpUserToken) return;
 
 			try {
-				await this.disable2FA(this.otpUserToken);
+				await this.disable2FA({ token: this.otpUserToken });
 				await this.getMe();
 				this.$swal("Done!", "Two-factor authentication is disabled!", "success");
 				this.disabling = false;
@@ -139,12 +270,12 @@ export default {
 			}
 		},
 
-		async finalize2FA() {
+		async doFinalize2FA() {
 			if (!this.otpUserToken) return;
 
 			try {
-				await this.finalize2FA(this.otpUserToken);
-				await this.getMe();
+				await this.finalize2FA({ token: this.otpUserToken });
+				//await this.getMe();
 
 				this.otpauthURL = null;
 				this.otpUserToken = "";
