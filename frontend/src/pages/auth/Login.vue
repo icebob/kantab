@@ -90,7 +90,10 @@ export default {
 				}
 			} catch (err) {
 				console.log(err);
-				if (err.type == "ERR_MISSING_2FA_CODE") {
+				if (
+					err?.response?.errors?.[0]?.extensions?.exception?.type ==
+					"ERR_MISSING_2FA_CODE"
+				) {
 					this.need2FAToken = true;
 					this.token = "";
 					this.success = "Open your authenticator app and enter the verification code";

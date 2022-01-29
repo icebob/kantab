@@ -5,13 +5,11 @@ const COOKIE_TOKEN_NAME = "jwt-token";
 const COOKIE_EXPIRED_DAYS = 90;
 
 import { Store } from "vuex"; // eslint-disable-line no-unused-vars
-
 import router from "../router";
 import { graphqlClient } from "../graphqlClient";
 import { gql } from "graphql-request";
 
 import { defaultsDeep, isFunction } from "lodash";
-import axios from "axios";
 
 export default {
 	namespaced: true,
@@ -40,7 +38,14 @@ export default {
 							avatar
 							verified
 							passwordless
-							# socialLinks
+							totp {
+								enabled
+							}
+							socialLinks {
+								github
+								google
+								facebook
+							}
 						}
 					}
 				`;
@@ -66,37 +71,37 @@ export default {
 		 * @param {Object} params
 		 */
 		async register({ state, dispatch }, params) {
-			const res = await apolloClient.mutate({
-				mutation: gql`
-					mutation register(
-						$username: String!
-						$fullName: String!
-						$email: String!
-						$password: String
+			// Res.token is missing?
+			const query = gql`
+				mutation register(
+					$username: String!
+					$fullName: String!
+					$email: String!
+					$password: String
+				) {
+					register(
+						username: $username
+						fullName: $fullName
+						email: $email
+						password: $password
 					) {
-						register(
-							username: $username
-							fullName: $fullName
-							email: $email
-							password: $password
-						) {
-							id
-							username
-							fullName
-							avatar
-							verified
-							passwordless
-						}
+						id
+						username
+						fullName
+						avatar
+						verified
+						passwordless
 					}
-				`,
-				variables: {
-					...params,
-					password: params.password || null
 				}
-			});
+			`;
 
-			if (res.data.register.verified) {
-				const user = await this.applyToken(res.token);
+			const variables = {
+				...params,
+				password: params.password || null
+			};
+			const data = await graphqlClient.request(query, variables);
+			if (data.register.verified) {
+				const user = await dispatch("applyToken", data.login.token);
 
 				const { redirect } = state.route.query;
 				router.push(redirect ? redirect : { name: "home" });
@@ -112,48 +117,47 @@ export default {
 		 * @param {Store} store
 		 * @param {Object} param1
 		 */
-		async login({ rootState, dispatch }, { email, password }) {
-			const res = await apolloClient.mutate({
-				mutation: gql`
-					mutation login($email: String!, $password: String) {
-						login(email: $email, password: $password) {
-							token
-							passwordless
-							email
-						}
+		async login({ rootState, dispatch }, { email, password, token }) {
+			const query = gql`
+				mutation login($email: String!, $password: String, $token: String) {
+					login(email: $email, password: $password, token: $token) {
+						token
+						passwordless
+						email
 					}
-				`,
-				variables: { email, password }
-			});
-			if (res.data.login.token) {
-				await dispatch("applyToken", res.data.login.token);
+				}
+			`;
+			const variables = { email, password, token };
+			const data = await graphqlClient.request(query, variables);
+
+			if (data.login.token) {
+				await dispatch("applyToken", data.login.token);
 				await dispatch("getBoards", null, { root: true });
 				const { redirect } = rootState.route.query;
 				router.push(redirect ? redirect : { name: "home" });
 			}
 
-			return res.data.login;
+			return data.login;
 		},
 
 		async passwordless({ dispatch, rootState }, { token }) {
-			const res = await apolloClient.mutate({
-				mutation: gql`
-					mutation passwordlessLogin($token: String!) {
-						passwordlessLogin(token: $token) {
-							token
-						}
+			const query = gql`
+				mutation passwordlessLogin($token: String!) {
+					passwordlessLogin(token: $token) {
+						token
 					}
-				`,
-				variables: { token }
-			});
-			if (res.data.passwordlessLogin.token) {
-				await dispatch("applyToken", res.data.passwordlessLogin.token);
+				}
+			`;
+			const variables = { token };
+			const data = await graphqlClient.request(query, variables);
+			if (data.passwordlessLogin.token) {
+				await dispatch("applyToken", data.passwordlessLogin.token);
 				await dispatch("getBoards", null, { root: true });
 				const { redirect } = rootState.route.query;
 				router.push(redirect ? redirect : { name: "home" });
 			}
 
-			return res.data.passwordlessLogin;
+			return data.passwordlessLogin;
 		},
 
 		/**
@@ -174,14 +178,13 @@ export default {
 		 * @param {String} email
 		 */
 		async forgotPassword(store, { email }) {
-			await apolloClient.mutate({
-				mutation: gql`
-					mutation forgotPassword($email: String!) {
-						forgotPassword(email: $email)
-					}
-				`,
-				variables: { email }
-			});
+			const query = gql`
+				mutation forgotPassword($email: String!) {
+					forgotPassword(email: $email)
+				}
+			`;
+			const variables = { email };
+			await graphqlClient.request(query, variables);
 		},
 
 		/**
@@ -191,19 +194,18 @@ export default {
 		 * @param {Object} param1
 		 */
 		async resetPassword({ dispatch }, { token, password }) {
-			const res = await apolloClient.mutate({
-				mutation: gql`
-					mutation resetPassword($token: String!, $password: String!) {
-						resetPassword(token: $token, password: $password) {
-							token
-						}
+			const query = gql`
+				mutation resetPassword($token: String!, $password: String!) {
+					resetPassword(token: $token, password: $password) {
+						token
 					}
-				`,
-				variables: { token, password }
-			});
+				}
+			`;
+			const variables = { token, password };
+			const data = await graphqlClient.request(query, variables);
 
-			if (res.data.resetPassword.token) {
-				const user = await dispatch("applyToken", res.data.resetPassword.token);
+			if (data.resetPassword.token) {
+				const user = await dispatch("applyToken", data.resetPassword.token);
 				await dispatch("getBoards", null, { root: true });
 				router.push({ name: "home" });
 
@@ -217,19 +219,17 @@ export default {
 		 * @param {String} verifyToken
 		 */
 		async verifyAccount({ dispatch }, { token }) {
-			const res = await apolloClient.mutate({
-				mutation: gql`
-					mutation accountVerify($token: String!) {
-						accountVerify(token: $token) {
-							token
-						}
+			const query = gql`
+				mutation accountVerify($token: String!) {
+					accountVerify(token: $token) {
+						token
 					}
-				`,
-				variables: { token }
-			});
-
-			if (res.data.accountVerify.token) {
-				const user = await dispatch("applyToken", res.data.accountVerify.token);
+				}
+			`;
+			const variables = { token };
+			const data = await graphqlClient.request(query, variables);
+			if (data.accountVerify.token) {
+				const user = await dispatch("applyToken", data.accountVerify.token);
 				await dispatch("getBoards", null, { root: true });
 				router.push({ name: "home" });
 
@@ -245,36 +245,92 @@ export default {
 		 */
 		async applyToken({ dispatch }, token) {
 			Cookie.set(COOKIE_TOKEN_NAME, token, { expires: COOKIE_EXPIRED_DAYS });
-			await apolloAuth();
 			return await dispatch("getMe");
 		},
 
-		async enable2FA() {
-			return await axios.post("/api/v1/accounts/enable2fa");
+		async enable2FA({ dispatch }) {
+			const query = gql`
+				mutation accountEnable2FA {
+					accountEnable2FA {
+						secret
+						otpauthURL
+					}
+				}
+			`;
+
+			const data = await graphqlClient.request(query);
+			return data.accountEnable2FA;
 		},
 
-		async finalize2FA({ dispatch }, token) {
-			await axios.post("/api/v1/accounts/enable2fa", { token });
-			return await dispatch("getMe");
+		async finalize2FA({ dispatch }, { token }) {
+			const query = gql`
+				mutation accountFinalize2FA($token: String) {
+					accountFinalize2FA(token: $token)
+				}
+			`;
+			const variables = { token };
+			const data = await graphqlClient.request(query, variables);
+			return data;
 		},
 
-		async disable2FA({ dispatch }, token) {
-			await axios.post("/api/v1/accounts/disable2fa", { token });
-			return await dispatch("getMe");
+		async disable2FA({ dispatch }, { token }) {
+			const query = gql`
+				mutation accountDisable2FA($token: String!) {
+					accountDisable2FA(token: $token)
+				}
+			`;
+			const variables = { token };
+			const data = await graphqlClient.request(query, variables);
+			return data;
 		},
 
 		async getSupportedSocialAuthProviders({ commit }) {
-			const providers = await axios.get("/auth/supported-social-auth-providers");
-			commit("SET_AUTH_PROVIDERS", providers);
-
-			return providers;
+			try {
+				const query = gql`
+					query supportedSocialAuthProviders {
+						supportedSocialAuthProviders
+					}
+				`;
+				const data = await graphqlClient.request(query);
+				commit("SET_AUTH_PROVIDERS", data.supportedSocialAuthProviders);
+				return data.supportedSocialAuthProviders;
+			} catch (err) {
+				console.log("cant get auth", err);
+			}
+			return null;
 		},
 
-		async unlinkSocial({ commit }, provider) {
-			const user = await axios.get(`/api/v1/accounts/unlink?provider=${provider}`);
-			commit("SET_LOGGED_IN_USER", user);
+		async unlinkSocial({ commit }, { id, provider }) {
+			try {
+				const query = gql`
+					mutation accountUnlink($id: String, $provider: String!) {
+						accountUnlink(id: $id, provider: $provider) {
+							id
+							username
+							fullName
+							avatar
+							verified
+							passwordless
+							totp {
+								enabled
+							}
+							socialLinks {
+								github
+								google
+								facebook
+							}
+						}
+					}
+				`;
 
-			return user;
+				const variables = { id, provider };
+				const data = await graphqlClient.request(query, variables);
+				console.log("unlinkSocial: ", data.accountUnlink);
+				commit("SET_LOGGED_IN_USER", data.accountUnlink);
+				return null;
+			} catch (err) {
+				console.log("unlinkSocial", err?.response?.errors?.[0]?.message);
+			}
 		},
 
 		protectRouter({ state, dispatch }, router) {

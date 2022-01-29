@@ -32,8 +32,13 @@ module.exports = function (mixinOptions) {
 			/**
 			 * Return the supported Social Auth providers
 			 */
-			supportedSocialAuthProviders() {
-				return Providers.map(o => o.name);
+			supportedSocialAuthProviders: {
+				graphql: {
+					query: "supportedSocialAuthProviders: [String]"
+				},
+				handler() {
+					return Providers.map(o => o.name);
+				}
 			}
 		},
 

@@ -25,7 +25,6 @@ export default {
 
 		async process() {
 			this.success = "Verifying account...";
-
 			await this.verifyAccount({ token: this.$route.query.token });
 			this.success = "Account verified. Logging in...";
 			setTimeout(() => this.$router.push({ name: "home" }), 1000);
