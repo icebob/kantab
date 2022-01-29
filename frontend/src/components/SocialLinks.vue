@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="mb-8 ml-4">
 		<template v-if="providers && providers.length > 0">
 			<h4>Link your social accounts</h4>
 			<div class="social-buttons">

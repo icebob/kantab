@@ -259,7 +259,6 @@ export default {
 			`;
 
 			const data = await graphqlClient.request(query);
-			console.log("enable2FA: ", data.accountEnable2FA);
 			return data.accountEnable2FA;
 		},
 
@@ -271,7 +270,6 @@ export default {
 			`;
 			const variables = { token };
 			const data = await graphqlClient.request(query, variables);
-			console.log("finalize2FA: ", data);
 			return data;
 		},
 
@@ -283,7 +281,6 @@ export default {
 			`;
 			const variables = { token };
 			const data = await graphqlClient.request(query, variables);
-			console.log("disable2FA: ", data);
 			return data;
 		},
 
