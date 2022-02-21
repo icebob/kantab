@@ -54,11 +54,12 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState } from "pinia";
+import { authStore } from "../store/authStore";
 
 export default {
 	computed: {
-		...mapState("auth", ["providers"])
+		...mapState(authStore, ["providers"])
 	},
 
 	methods: {

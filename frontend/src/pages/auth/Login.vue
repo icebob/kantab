@@ -63,7 +63,9 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
-import { mapActions } from "vuex";
+//import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { authStore } from "../../store/authStore";
 
 export default {
 	mixins: [AuthMixin],
@@ -76,7 +78,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions("auth", ["login"]),
+		...mapActions(authStore, ["login"]),
 
 		async process() {
 			try {

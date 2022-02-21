@@ -52,7 +52,8 @@
 	</k-dialog>
 </template>
 <script>
-import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { mainStore } from "../store/store";
 import KDialog from "./Dialog.vue";
 
 export default {
@@ -73,7 +74,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["updateBoard", "createBoard", "removeBoard"]),
+		...mapActions(mainStore, ["updateBoard", "createBoard", "removeBoard"]),
 
 		show(board) {
 			if (board) {

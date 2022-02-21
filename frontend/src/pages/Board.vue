@@ -39,7 +39,9 @@
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState, mapActions } from "pinia";
+import { authStore } from "../store/authStore";
+import { mainStore } from "../store/store";
 
 import Board from "../components/board/Board.vue";
 
@@ -59,9 +61,9 @@ export default {
 	},
 
 	computed: {
-		...mapState("auth", ["user"]),
-		...mapState(["board"]),
-		...mapGetters(["userIsMember"])
+		...mapState(authStore, ["user"]),
+		...mapState(mainStore, ["board"]),
+		...mapState(mainStore, ["userIsMember"])
 	},
 
 	watch: {
@@ -89,7 +91,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["selectBoardById"]),
+		...mapActions(mainStore, ["selectBoardById"]),
 
 		editBoard() {
 			this.$refs.editBoardDialog.show(this.board);

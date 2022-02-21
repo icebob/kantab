@@ -26,7 +26,8 @@
 
 <script>
 import { Container, Draggable } from "vue3-smooth-dnd";
-import { mapGetters, mapActions } from "vuex";
+import { mapActions, mapState } from "pinia";
+import { mainStore } from "../../store/store";
 import BoardList from "./List.vue";
 
 export default {
@@ -54,7 +55,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapGetters(["userIsMember"]),
+		...mapState(mainStore, ["userIsMember"]),
 
 		listComponentType() {
 			return this.userIsMember ? "Draggable" : "div";
@@ -62,7 +63,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["changeListPosition"]),
+		...mapActions(mainStore, ["changeListPosition"]),
 
 		async onListDrop(dropResult) {
 			const { removedIndex, addedIndex } = dropResult;

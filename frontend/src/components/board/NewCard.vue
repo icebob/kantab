@@ -65,7 +65,8 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { mainStore } from "../../store/store";
 
 export default {
 	props: {
@@ -88,7 +89,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["createCard"]),
+		...mapActions(mainStore, ["createCard"]),
 
 		async create() {
 			if (this.title.trim() === "") {

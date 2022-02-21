@@ -11,7 +11,9 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState } from "pinia";
+import { authStore } from "../store/authStore";
+
 import Logo from "../components/Logo.vue";
 
 export default {
@@ -20,7 +22,7 @@ export default {
 	},
 
 	computed: {
-		...mapState("auth", ["user"])
+		...mapState(authStore, ["user"])
 	}
 };
 </script>

@@ -93,7 +93,8 @@
 	</k-dialog>
 </template>
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "pinia";
+import { authStore } from "../store/authStore";
 import KDialog from "./Dialog.vue";
 import qrcode from "yaqrcode";
 export default {
@@ -111,10 +112,10 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("auth", ["user"])
+		...mapState(authStore, ["user"])
 	},
 	methods: {
-		...mapActions("auth", ["getMe", "enable2FA", "disable2FA", "finalize2FA"]),
+		...mapActions(authStore, ["getMe", "enable2FA", "disable2FA", "finalize2FA"]),
 
 		show({ disabling }) {
 			this.disabling = disabling;

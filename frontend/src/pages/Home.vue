@@ -41,7 +41,10 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState } from "pinia";
+import { authStore } from "../store/authStore";
+import { mainStore } from "../store/store";
+
 import dateFormatter from "../mixins/dateFormatter";
 import EditBoardDialog from "../components/EditBoardDialog.vue";
 import Card from "../components/Card.vue";
@@ -54,8 +57,8 @@ export default {
 	mixins: [dateFormatter],
 
 	computed: {
-		...mapState(["boards"]),
-		...mapState("auth", ["user"])
+		...mapState(mainStore, ["boards"]),
+		...mapState(authStore, ["user"])
 	},
 
 	methods: {
