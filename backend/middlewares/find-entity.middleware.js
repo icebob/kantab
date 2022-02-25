@@ -12,8 +12,8 @@ module.exports = {
 			return async function FindEntityMiddleware(ctx) {
 				const svc = ctx.service;
 				const params = { id: ctx.params.id };
-				if (action.defaultScopes) {
-					params.scope = action.defaultScopes;
+				if (action.scopes) {
+					params.scope = action.scopes;
 				} else {
 					params.scope = ctx.params.scope;
 				}

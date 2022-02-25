@@ -180,7 +180,11 @@ module.exports = {
 			notDeleted: { deletedAt: null },
 
 			// List public boards
-			public: { public: true }
+			public(query, ctx) {
+				query.public = true;
+				delete query.members;
+				return query;
+			}
 		},
 
 		defaultScopes: ["membership", "notArchived", "notDeleted"]
@@ -362,7 +366,7 @@ module.exports = {
 				id: "string"
 			},
 			needEntity: true,
-			defaultScopes: ["membership", "notDeleted"],
+			scopes: ["-notArchived"],
 			permissions: [C.ROLE_BOARD_OWNER],
 			graphql: {
 				mutation: `boardUnarchive(id: String!): Board!`
@@ -414,6 +418,12 @@ module.exports = {
 
 			const max = labels.reduce((m, lbl) => Math.max(m, lbl.id || 0), 0);
 			return max + 1;
+		},
+
+		async checkScopeAuthority(ctx, name, operation) {
+			if (operation == "remove") return !["membership", "notDeleted"].includes(name);
+
+			return true;
 		},
 
 		/**

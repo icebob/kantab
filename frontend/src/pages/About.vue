@@ -86,7 +86,9 @@
 									<td class="px-6 py-4 whitespace-nowrap text-lg">
 										<i
 											:class="
-												user.totp.enabled ? 'fa fa-check' : 'fa fa-times'
+												user.totp && user.totp.enabled
+													? 'fa fa-check'
+													: 'fa fa-times'
 											"
 										></i>
 									</td>
@@ -137,7 +139,11 @@
 			</div>
 			<social-links />
 			<div class="pl-3">
-				<button v-if="!user.totp.enabled" class="button secondary" @click="show2FADialog">
+				<button
+					v-if="!user.totp || !user.totp.enabled"
+					class="button secondary"
+					@click="show2FADialog"
+				>
 					Enable Two-Factor Authentication
 				</button>
 				<button v-else class="button secondary" @click="show2FADialog">
@@ -177,7 +183,7 @@ export default {
 
 	methods: {
 		async show2FADialog() {
-			if (this.user.totp.enabled) {
+			if (this.user.totp?.enabled) {
 				this.$refs.E2FADialog?.show({ disabling: true });
 			} else {
 				this.$refs.E2FADialog?.show({ disabling: false });

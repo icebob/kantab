@@ -632,7 +632,7 @@ describe("Integration test", () => {
 				it("check visibility with 'list' and disabled scope", async () => {
 					await checkBoardVisibility(
 						helper.boards,
-						{ scope: ["membership", "notDeleted"] }, // TODO: it should work with `scope: false` as well
+						{ scope: false },
 						{
 							u1: {
 								data: listResponse([state.boards.u1_b1])
@@ -660,7 +660,7 @@ describe("Integration test", () => {
 				it("check visibility with 'find' and disabled scope", async () => {
 					await checkBoardVisibility(
 						helper.boardsAll,
-						{ scope: ["membership", "notDeleted"] }, // TODO: it should work with `scope: false` as well
+						{ scope: false },
 						{
 							u1: { data: [state.boards.u1_b1] },
 							u2: { data: [state.boards.u1_b1] },
@@ -680,7 +680,7 @@ describe("Integration test", () => {
 				it("check visibility with 'count' and disabled scope", async () => {
 					await checkBoardVisibility(
 						helper.boardsCount,
-						{ scope: ["membership", "notDeleted"] }, // TODO: it should work with `scope: false` as well,
+						{ scope: false },
 						{
 							u1: { data: 1 },
 							u2: { data: 1 },
@@ -708,7 +708,7 @@ describe("Integration test", () => {
 
 					await checkBoardVisibility(
 						helper.boardByID,
-						{ id: state.boards.u1_b1.id, scope: ["membership", "notDeleted"] }, // TODO: it should work with `scope: false` as well,
+						{ id: state.boards.u1_b1.id, scope: false },
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
@@ -734,7 +734,7 @@ describe("Integration test", () => {
 				it("check visibility with 'resolve' and disabled scope", async () => {
 					await checkBoardVisibility(
 						helper.boardResolve,
-						{ id: state.boards.u1_b1.id, scope: ["membership", "notDeleted"] }, // TODO: it should work with `scope: false` as well,
+						{ id: state.boards.u1_b1.id, scope: false },
 						{
 							u1: { data: state.boards.u1_b1 },
 							u2: { data: state.boards.u1_b1 },
