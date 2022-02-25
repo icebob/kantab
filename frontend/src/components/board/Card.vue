@@ -77,7 +77,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
+import { mainStore } from "../../store/store";
+
 import dateFormatter from "../../mixins/dateFormatter";
 import { getTextColorByBackgroundColor } from "../../utils";
 
@@ -93,7 +95,7 @@ export default {
 	emits: ["editCard"],
 
 	computed: {
-		...mapGetters(["userIsMember"]),
+		...mapState(mainStore, ["userIsMember"]),
 
 		coverImage() {
 			return Math.random() > 0.7 ? "https://picsum.photos/id/1041/300/100" : null;

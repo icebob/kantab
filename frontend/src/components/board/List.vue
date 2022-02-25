@@ -89,8 +89,8 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from "vuex";
-
+import { mapState, mapActions } from "pinia";
+import { mainStore } from "../../store/store";
 import BoardCard from "./Card.vue";
 import NewCard from "./NewCard.vue";
 import { Container, Draggable } from "vue3-smooth-dnd";
@@ -124,7 +124,7 @@ export default {
 	},
 
 	computed: {
-		...mapGetters(["userIsMember"]),
+		...mapState(mainStore, ["userIsMember"]),
 
 		cardComponentType() {
 			return this.userIsMember ? "Draggable" : "div";
@@ -142,7 +142,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["changeCardPosition"]),
+		...mapActions(mainStore, ["changeCardPosition"]),
 
 		editList() {
 			if (this.userIsMember) {

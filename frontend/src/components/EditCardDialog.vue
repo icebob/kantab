@@ -61,7 +61,8 @@
 
 <script>
 import { cloneDeep } from "lodash";
-import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { mainStore } from "../store/store";
 import KDialog from "./Dialog.vue";
 
 export default {
@@ -103,7 +104,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["updateCard", "removeCard"]),
+		...mapActions(mainStore, ["updateCard", "removeCard"]),
 
 		show({ list, card }) {
 			this.list = list;

@@ -9,12 +9,12 @@ import eventBus from "./bus";
 // --- VUE-ROUTER ---
 import router from "./router";
 
-// --- VUEX STORE ---
-import store from "./store";
+// --- PINIA STORE ---
+import { createPinia } from "pinia";
 
 // --- VUE-ROUTER-SYNC ---
-import { sync } from "vuex-router-sync";
-sync(store, router);
+//import { sync } from "vuex-router-sync";
+//sync(store, router);
 
 // --- SOCKET.IO CLIENT ---
 //import VueWebsocket from "vue-websocket";
@@ -43,10 +43,10 @@ VueI18Next().then(i18n => {
 		render: () => h(App)
 	});
 	app.use(eventBus);
-	app.use(store);
 	app.use(router);
 	app.use(i18n);
 	app.use(graphqlClient);
+	app.use(createPinia());
 
 	app.config.globalProperties.$swal = swal;
 	app.config.globalProperties.$toast = iziToast;
@@ -55,5 +55,4 @@ VueI18Next().then(i18n => {
 	app.mount("#app");
 
 	window.app = app;
-	window.store = store;
 });

@@ -33,15 +33,16 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions } from "pinia";
+import { authStore } from "../store/authStore";
 
 export default {
 	computed: {
-		...mapState("auth", ["providers", "user"])
+		...mapState(authStore, ["providers", "user"])
 	},
 
 	methods: {
-		...mapActions("auth", ["unlinkSocial"]),
+		...mapActions(authStore, ["unlinkSocial"]),
 
 		isSupported(provider) {
 			return !!this.providers.find(o => o == provider);

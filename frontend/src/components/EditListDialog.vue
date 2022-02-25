@@ -50,7 +50,8 @@
 </template>
 <script>
 import { cloneDeep } from "lodash";
-import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { mainStore } from "../store/store";
 import KDialog from "./Dialog.vue";
 
 export default {
@@ -73,7 +74,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["createList", "updateList", "removeList"]),
+		...mapActions(mainStore, ["createList", "updateList", "removeList"]),
 
 		show({ list, boardId }) {
 			if (list) {

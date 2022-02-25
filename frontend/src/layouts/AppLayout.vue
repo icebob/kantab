@@ -36,7 +36,8 @@
 
 <script>
 import Logo from "../components/Logo.vue";
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions } from "pinia";
+import { authStore } from "../store/authStore";
 
 export default {
 	components: {
@@ -44,11 +45,11 @@ export default {
 	},
 
 	computed: {
-		...mapState("auth", ["user"])
+		...mapState(authStore, ["user"])
 	},
 
 	methods: {
-		...mapActions("auth", ["logout"])
+		...mapActions(authStore, ["logout"])
 	}
 };
 </script>

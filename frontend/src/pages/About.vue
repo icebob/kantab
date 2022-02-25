@@ -157,7 +157,9 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState } from "pinia";
+import { authStore } from "../store/authStore";
+
 import SocialLinks from "../components/SocialLinks.vue";
 import E2FADialog from "../components/E2FADialog.vue";
 
@@ -176,7 +178,7 @@ export default {
 	},
 
 	computed: {
-		...mapState("auth", ["user"])
+		...mapState(authStore, ["user"])
 	},
 
 	methods: {

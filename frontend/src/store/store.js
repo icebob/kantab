@@ -1,5 +1,5 @@
-import { createStore } from "vuex";
-import AuthStore from "./auth";
+import { defineStore } from "pinia";
+import { authStore } from "./authStore";
 import { graphqlClient } from "../graphqlClient";
 import { gql } from "graphql-request";
 import router from "../router";
@@ -14,51 +14,40 @@ function showErrorToast(title) {
 	toast.error({ title });
 }
 
-import axios from "axios";
-axios.defaults.headers.common["Content-Type"] = "application/json";
+export const mainStore = defineStore({
+	id: "mainStore",
 
-const store = createStore({
-	modules: {
-		auth: AuthStore
-	},
-
-	state: {
+	state: () => ({
 		// Selected board
 		board: null,
 		// All boards
 		boards: []
-	},
+	}),
 
 	getters: {
 		isPublicBoard: state => !!state.board?.public,
 		userIsOwner: state =>
-			state.auth.user && state.board && state.board.owner?.id == state.auth.user.id,
+			authStore().user && state.board && state.board.owner?.id == authStore().user.id,
 		userIsMember: state =>
-			state.auth.user &&
+			authStore().user &&
 			state.board &&
-			state.board.members.find(m => m.id == state.auth.user.id)
+			state.board.members.find(m => m.id == authStore().user.id)
 	},
-
 	actions: {
-		async init({ dispatch }) {
-			await dispatch("auth/protectRouter", router);
-
+		async init() {
+			await authStore().protectRouter();
 			try {
-				await dispatch("auth/getSupportedSocialAuthProviders");
-				await dispatch("auth/getMe");
-				await dispatch("getBoards");
+				await authStore().getSupportedSocialAuthProviders();
+				await authStore().getMe();
+
+				await this.getBoards();
 			} catch (err) {
 				console.log("Error", err);
 				//Raven.captureException(err);
 			}
-			//commit("READY");
-
-			/*if (state.profile && state.profile._id) {
-				this._vm.$ga.set("userId", state.profile._id);
-			}*/
 		},
 
-		async selectBoardById({ commit }, id) {
+		async selectBoardById(id) {
 			try {
 				const query = gql`
 					query boardById($id: String!) {
@@ -111,7 +100,7 @@ const store = createStore({
 
 				const variables = { id };
 				const data = await graphqlClient.request(query, variables);
-				commit("SET_BOARD", data.boardById);
+				this.board = data.boardById;
 				return data.boardById;
 			} catch (err) {
 				console.log("selectBoardById error", err);
@@ -119,7 +108,7 @@ const store = createStore({
 			}
 		},
 
-		async getBoards({ commit }) {
+		async getBoards() {
 			try {
 				const query = gql`
 					query boards {
@@ -143,7 +132,7 @@ const store = createStore({
 					}
 				`;
 				const data = await graphqlClient.request(query);
-				commit("SET_BOARDS", data.boards.rows);
+				this.boards = data.boards.rows;
 				return data.boards.rows;
 			} catch (err) {
 				console.log("getBoard error", err);
@@ -151,7 +140,7 @@ const store = createStore({
 			}
 		},
 
-		async createBoard({ commit }, input) {
+		async createBoard(input) {
 			try {
 				const query = gql`
 					mutation boardCreate($input: BoardCreateInput!) {
@@ -177,7 +166,7 @@ const store = createStore({
 				const data = await graphqlClient.request(query, variables);
 				const created = data.boardCreate;
 
-				commit("ADD_BOARD", created);
+				this.boards = [...this.boards, created];
 				showInfoToast(`Board '${created.title}' created`);
 			} catch (err) {
 				console.error("createBoard err", err);
@@ -185,7 +174,7 @@ const store = createStore({
 			}
 		},
 
-		async updateBoard({ commit }, input) {
+		async updateBoard(input) {
 			try {
 				const query = gql`
 					mutation boardUpdate($input: BoardUpdateInput!) {
@@ -210,7 +199,18 @@ const store = createStore({
 				const variables = { input };
 				const data = await graphqlClient.request(query, variables);
 				const updated = data.boardUpdate;
-				commit("UPDATE_BOARD", updated);
+				//commit("UPDATE_BOARD", updated);
+				const found = this.boards.find(b => b.id == updated.id);
+				if (found) {
+					Object.assign(found, updated);
+				} else {
+					this.boards = [...this.boards, updated];
+				}
+
+				// Update the selected board
+				if (this.board?.id == updated.id) {
+					Object.assign(this.board, updated);
+				}
 				showInfoToast(`Board '${updated.title}' updated`);
 			} catch (err) {
 				console.error("updateBoard error: ", err);
@@ -218,7 +218,7 @@ const store = createStore({
 			}
 		},
 
-		async removeBoard({ commit }, id) {
+		async removeBoard(id) {
 			try {
 				const query = gql`
 					mutation boardRemove($id: String!) {
@@ -228,7 +228,8 @@ const store = createStore({
 
 				const variables = { id };
 				const data = await graphqlClient.request(query, variables);
-				commit("REMOVE_BOARD", data.boardRemove);
+
+				this.boards = this.boards.filter(b => b.id !== data.boardRemove);
 				showInfoToast("Board removed");
 			} catch (err) {
 				console.error("removeBoard error: ", err);
@@ -236,7 +237,7 @@ const store = createStore({
 			}
 		},
 
-		async createList({ commit }, input) {
+		async createList(input) {
 			try {
 				const query = gql`
 					mutation listCreate($input: ListCreateInput!) {
@@ -261,7 +262,7 @@ const store = createStore({
 				const variables = { input };
 				const data = await graphqlClient.request(query, variables);
 
-				commit("ADD_LIST", data.listCreate);
+				this.board.lists.rows = [...this.board.lists.rows, data.listCreate];
 				showInfoToast("List created");
 			} catch (err) {
 				console.error("createList err", err);
@@ -269,7 +270,7 @@ const store = createStore({
 			}
 		},
 
-		async updateList({ commit }, input) {
+		async updateList(input) {
 			try {
 				const query = gql`
 					mutation listUpdate($input: ListUpdateInput!) {
@@ -293,7 +294,12 @@ const store = createStore({
 				const variables = { input };
 				const data = await graphqlClient.request(query, variables);
 
-				commit("UPDATE_LIST", data.listUpdate);
+				const found = this.board.lists.rows.find(b => b.id == data.listUpdate.id);
+				if (found) {
+					Object.assign(found, data.listUpdate);
+				} else {
+					this.board.lists.rows.push(data.listUpdate);
+				}
 				showInfoToast("List updated");
 			} catch (err) {
 				console.error("updateList error: ", err);
@@ -301,7 +307,7 @@ const store = createStore({
 			}
 		},
 
-		async removeList({ commit }, { id }) {
+		async removeList({ id }) {
 			console.log("id", id);
 			try {
 				const query = gql`
@@ -312,7 +318,8 @@ const store = createStore({
 
 				const variables = { id };
 				const data = await graphqlClient.request(query, variables);
-				commit("REMOVE_LIST", data.listRemove);
+
+				this.board.lists.rows = this.board.lists.rows.filter(b => b.id !== data.listRemove);
 				showInfoToast("List removed");
 			} catch (err) {
 				console.error("removeList error: ", err);
@@ -320,7 +327,7 @@ const store = createStore({
 			}
 		},
 
-		async createCard({ commit }, { list, input }) {
+		async createCard({ list, input }) {
 			try {
 				const query = gql`
 					mutation cardCreate($input: CardCreateInput!) {
@@ -337,7 +344,20 @@ const store = createStore({
 				const variables = { input };
 				const data = await graphqlClient.request(query, variables);
 				const created = data.cardCreate;
-				commit("ADD_CARD", { list, card: created });
+
+				let pos = null;
+				for (let i = 0; i < list.cards.rows.length; i++) {
+					if (list.cards.rows[i].position > created.position) {
+						pos = i;
+						break;
+					}
+				}
+				if (pos === null) {
+					list.cards.rows.push(created);
+				} else {
+					list.cards.rows.splice(pos, 0, created);
+				}
+
 				showInfoToast(`Card '${created.title}' created`);
 			} catch (err) {
 				console.error("createCard err", err);
@@ -345,7 +365,7 @@ const store = createStore({
 			}
 		},
 
-		async updateCard({ commit }, { list, input }) {
+		async updateCard({ list, input }) {
 			try {
 				const query = gql`
 					mutation cardUpdate($input: CardUpdateInput!) {
@@ -362,7 +382,13 @@ const store = createStore({
 
 				const data = await graphqlClient.request(query, variables);
 				const updated = data.cardUpdate;
-				commit("UPDATE_CARD", { list, card: updated });
+
+				const found = list.cards.rows.find(c => c.id == updated.id);
+				if (found) {
+					Object.assign(found, updated);
+				} else {
+					list.cards.rows.push(updated);
+				}
 				showInfoToast(`Card '${updated.title}' updated`);
 			} catch (err) {
 				console.error("updateCard error: ", err);
@@ -370,7 +396,7 @@ const store = createStore({
 			}
 		},
 
-		async removeCard({ commit }, { list, id }) {
+		async removeCard({ list, id }) {
 			try {
 				const query = gql`
 					mutation cardRemove($id: String!) {
@@ -379,7 +405,9 @@ const store = createStore({
 				`;
 				const variables = { id };
 				await graphqlClient.request(query, variables);
-				commit("REMOVE_CARD", { list, id });
+
+				const idx = list.cards.rows.findIndex(c => c.id === id);
+				if (idx >= 0) list.cards.rows.splice(idx, 1);
 				showInfoToast("Card removed");
 			} catch (err) {
 				console.error("removeCard error: ", err);
@@ -387,8 +415,8 @@ const store = createStore({
 			}
 		},
 
-		async changeListPosition({ state, dispatch, commit }, { fromIndex, toIndex }) {
-			let arr = state.board.lists.rows;
+		async changeListPosition({ fromIndex, toIndex }) {
+			let arr = this.board.lists.rows;
 
 			const result = [...arr];
 			let movedList;
@@ -416,15 +444,16 @@ const store = createStore({
 			);
 
 			movedList.position = newPosition;
-			commit("SET_NEW_LIST_ORDER", result);
 
-			await dispatch("updateList", {
+			this.board.lists.rows = result;
+
+			this.updateList({
 				id: movedList.id,
 				position: newPosition
 			});
 		},
 
-		async changeCardPosition({ state, dispatch, commit }, { list, fromIndex, toIndex, card }) {
+		async changeCardPosition({ list, fromIndex, toIndex, card }) {
 			const result = [...list.cards.rows];
 
 			if (fromIndex !== null) {
@@ -452,9 +481,8 @@ const store = createStore({
 
 				card.position = newPosition;
 				list.cards.rows = result; // TODO
-				// commit("SET_NEW_LIST_ORDER", result);
 
-				await dispatch("updateCard", {
+				this.updateCard({
 					list,
 					input: {
 						id: card.id,
@@ -467,110 +495,5 @@ const store = createStore({
 				list.cards.rows = result; // TODO
 			}
 		}
-	},
-
-	mutations: {
-		SET_BOARD(state, board) {
-			state.board = board;
-		},
-
-		SET_BOARDS(state, boards) {
-			state.boards = boards;
-		},
-
-		ADD_BOARD(state, board) {
-			state.boards = [...state.boards, board];
-		},
-
-		UPDATE_BOARD(state, board) {
-			const found = state.boards.find(b => b.id == board.id);
-			if (found) {
-				Object.assign(found, board);
-			} else {
-				state.boards = [...state.boards, board];
-			}
-
-			// Update the selected board
-			if (state.board?.id == board.id) {
-				Object.assign(state.board, board);
-			}
-		},
-
-		REMOVE_BOARD(state, id) {
-			state.boards = state.boards.filter(b => b.id !== id);
-		},
-
-		ADD_LIST(state, list) {
-			state.board.lists.rows = [...state.board.lists.rows, list];
-		},
-
-		UPDATE_LIST(state, list) {
-			const found = state.board.lists.rows.find(b => b.id == list.id);
-			if (found) {
-				Object.assign(found, list);
-			} else {
-				state.board.lists.rows.push(list);
-			}
-		},
-
-		REMOVE_LIST(state, id) {
-			state.board.lists.rows = state.board.lists.rows.filter(b => b.id !== id);
-		},
-
-		ADD_CARD(state, { list, card }) {
-			// Find the correct position
-			let pos = null;
-			for (let i = 0; i < list.cards.rows.length; i++) {
-				if (list.cards.rows[i].position > card.position) {
-					pos = i;
-					break;
-				}
-			}
-			if (pos === null) {
-				list.cards.rows.push(card);
-			} else {
-				list.cards.rows.splice(pos, 0, card);
-			}
-		},
-
-		UPDATE_CARD(state, { list, card }) {
-			const found = list.cards.rows.find(c => c.id == card.id);
-			if (found) {
-				Object.assign(found, card);
-			} else {
-				list.cards.rows.push(card);
-			}
-		},
-
-		REMOVE_CARD(state, { list, id }) {
-			const idx = list.cards.rows.findIndex(c => c.id === id);
-			if (idx >= 0) list.cards.rows.splice(idx, 1);
-		},
-
-		SET_NEW_LIST_ORDER(state, listsInOrder) {
-			state.board.lists.rows = listsInOrder;
-		}
 	}
 });
-
-export default store;
-
-// Add a response interceptor
-axios.interceptors.response.use(
-	response => {
-		// Do something with response data
-		return response.data;
-	},
-	error => {
-		// Forbidden, need to relogin
-		if (error.response && error.response.status == 401) {
-			store.commit("logout");
-			return Promise.reject(error);
-		}
-
-		// Do something with response error
-		if (error.response && error.response.data) return Promise.reject(error.response.data);
-
-		return Promise.reject(error);
-	}
-);

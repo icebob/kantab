@@ -31,7 +31,8 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
-import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { authStore } from "../../store/authStore";
 
 export default {
 	mixins: [AuthMixin],
@@ -41,7 +42,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions("auth", ["resetPassword"]),
+		...mapActions(authStore, ["resetPassword"]),
 
 		async process() {
 			await this.resetPassword({ token: this.$route.query.token, password: this.password });

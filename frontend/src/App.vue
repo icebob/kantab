@@ -3,11 +3,14 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+//import { mapState, mapActions } from "vuex";
 
+import { mapState, mapActions } from "pinia";
+import { authStore } from "./store/authStore";
+import { mainStore } from "./store/store";
 export default {
 	computed: {
-		...mapState("auth", ["user"])
+		...mapState(authStore, ["user"])
 	},
 
 	created() {
@@ -15,7 +18,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions(["init"])
+		...mapActions(mainStore, ["init"])
 	}
 };
 </script>

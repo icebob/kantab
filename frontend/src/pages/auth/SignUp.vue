@@ -72,13 +72,14 @@
 
 <script>
 import AuthMixin from "../../mixins/auth.mixin";
-import { mapActions } from "vuex";
+import { mapActions } from "pinia";
+import { authStore } from "../../store/authStore";
 
 export default {
 	mixins: [AuthMixin],
 
 	methods: {
-		...mapActions("auth", ["register"]),
+		...mapActions(authStore, ["register"]),
 
 		async process() {
 			const res = await this.register({
