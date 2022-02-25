@@ -45,8 +45,6 @@
     "vue-router": "^4.0.12",
     "vue-websocket": "^0.2.3",
     "vue3-smooth-dnd": "0.0.2",
-    "vuex": "^4.0.2",
-    "vuex-router-sync": "^6.0.0-rc.1",
     "yaqrcode": "^0.2.1"
   }
 }
