@@ -322,7 +322,7 @@ function generateOpenAPISchema(name, schema) {
 
 	if (!schema.settings) return;
 	if (!schema.settings.rest) return;
-	if (!schema.settings.fields) return;
+	//if (!schema.settings.fields) return;
 	if (!schema.actions) return;
 
 	const isDatabaseService = !!(
