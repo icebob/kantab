@@ -349,11 +349,13 @@ function generateOpenAPISchema(name, schema) {
 	});
 
 	// Generate common entity schema
-	generateEntityType(
-		schema.settings.openapi.components.schemas,
-		entityName,
-		schema.settings.fields
-	);
+    if (isDatabaseService) {
+        generateEntityType(
+            schema.settings.openapi.components.schemas,
+            entityName,
+            schema.settings.fields
+        );
+    }
 
 	Object.keys(schema.actions).forEach(actionName => {
 		const actionDef = schema.actions[actionName];
