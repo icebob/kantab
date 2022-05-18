@@ -114,9 +114,8 @@ module.exports = function (mixinOptions) {
 					if (process.env.NODE_ENV != "production") {
 						fs.writeFileSync("./openapi.json", JSON.stringify(schema, null, 4), "utf8");
 					}
-
-					return schema;
 				}
+				return schema;
 			}
 		},
 
