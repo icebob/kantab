@@ -74,7 +74,10 @@ module.exports = function (mixinOptions) {
 					services.forEach(service => {
 						// --- COMPILE SERVICE-LEVEL DEFINITIONS ---
 						if (service.settings.openapi) {
-							_.merge(res, service.settings.openapi);
+							_.mergeWith(res, service.settings.openapi, (resValue, svcValue) => {
+								if (_.isArray(resValue))
+									return resValue.concat(svcValue);
+							});
 						}
 
 						// --- COMPILE ACTION-LEVEL DEFINITIONS ---
