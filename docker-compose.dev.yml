@@ -1,0 +1,25 @@
+version: '3.0'
+services:
+  nats:
+    image: nats:2
+    ports:
+      - '4222:4222'
+    restart: unless-stopped
+    command:
+      - '-m'
+      - '8222'
+  redis:
+    image: redis:6-alpine
+    ports:
+      - '6379:6379'
+    restart: unless-stopped
+  mongo:
+    image: mongo:4
+    ports:
+    - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+volumes:
+  mongo_data:
+    driver: local
