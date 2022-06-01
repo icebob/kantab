@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: tokens
-          image: kantab
+          image: icebob/kantab:latest
           envFrom:
             - configMapRef:
                 name: kantab-configmap
