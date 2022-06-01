@@ -98,7 +98,7 @@
     "uid-generator": "2.0.0"
   },
   "engines": {
-    "node": ">= 12.x.x"
+    "node": ">= 16.x.x"
   },
   "jest": {
     "coverageDirectory": "./coverage",
