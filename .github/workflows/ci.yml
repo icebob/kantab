@@ -15,10 +15,10 @@ jobs:
         node-version: 16.x
 
     - name: Install dependencies
-      run: npm i
+      run: npm i --legacy-peer-deps
 
     - name: Install dependencies in frontend
-      run: npm i
+      run: npm i --legacy-peer-deps
       working-directory: frontend
 
     - name: Build frontend
