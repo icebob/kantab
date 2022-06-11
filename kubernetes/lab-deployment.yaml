@@ -10,8 +10,8 @@ spec:
   selector:
     app: lab
   ports:
-    - port: 3210
-      targetPort: 3210
+    - port: 3212
+      targetPort: 3212
   type: LoadBalancer
 ---
 apiVersion: apps/v1
@@ -42,11 +42,15 @@ spec:
                 name: kantab-secrets
           env:
             - name: SERVICES
-              value: lab
+              value: laboratory
+          ports:
+            - name: lab
+              protocol: TCP
+              containerPort: 3212
           resources:
-            requests:
-              memory: "200Mi"
-              cpu: "100m"
             limits:
-              memory: "300Mi"
-              cpu: "150m"
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 50m
+              memory: 40Mi

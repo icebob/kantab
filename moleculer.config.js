@@ -130,7 +130,7 @@ module.exports = {
 		require("./backend/middlewares/find-entity.middleware"),
 		require("./backend/middlewares/graphql-generator.middleware"),
 		require("./backend/middlewares/openapi-generator.middleware"),
-		...(process.env.TEST_E2E || process.env.TEST_INT
+		...(process.env.TEST_E2E || process.env.TEST_INT || isProd
 			? []
 			: [
 					require("./backend/middlewares/docker-compose-generator.middleware"),
