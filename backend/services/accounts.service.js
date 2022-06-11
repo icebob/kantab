@@ -81,7 +81,7 @@ module.exports = {
 	version: 1,
 
 	mixins: [
-		DbService({ actionVisibility: C.VISIBILITY_PROTECTED }),
+		DbService({ actionVisibility: C.VISIBILITY_PUBLIC }),
 		ConfigLoader(["site.**", "mail.**", "accounts.**"])
 	],
 
