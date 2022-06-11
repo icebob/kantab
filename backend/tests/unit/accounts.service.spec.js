@@ -66,28 +66,22 @@ describe("Test Accounts service", () => {
 
 		it("check action permissions", async () => {
 			expect(broker.findNextActionEndpoint("accounts.create").action.visibility).toBe(
-				"protected"
+				"public"
 			);
-			expect(broker.findNextActionEndpoint("accounts.find").action.visibility).toBe(
-				"protected"
-			);
+			expect(broker.findNextActionEndpoint("accounts.find").action.visibility).toBe("public");
 			expect(broker.findNextActionEndpoint("accounts.count").action.visibility).toBe(
-				"protected"
+				"public"
 			);
-			expect(broker.findNextActionEndpoint("accounts.list").action.visibility).toBe(
-				"protected"
-			);
-			expect(broker.findNextActionEndpoint("accounts.get").action.visibility).toBe(
-				"protected"
-			);
+			expect(broker.findNextActionEndpoint("accounts.list").action.visibility).toBe("public");
+			expect(broker.findNextActionEndpoint("accounts.get").action.visibility).toBe("public");
 			expect(broker.findNextActionEndpoint("accounts.resolve").action.visibility).toBe(
-				"protected"
+				"public"
 			);
 			expect(broker.findNextActionEndpoint("accounts.update").action.visibility).toBe(
-				"protected"
+				"public"
 			);
 			expect(broker.findNextActionEndpoint("accounts.remove").action.visibility).toBe(
-				"protected"
+				"public"
 			);
 		});
 
