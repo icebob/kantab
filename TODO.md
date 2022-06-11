@@ -73,9 +73,9 @@
 ## Frontend
 - [ ] Avatar component, if no user's avatar create one with initials and hashed bg color of name
 
-## Lists
+### Lists
 
-## Cards
+### Cards
 - [ ] Multi-level view
   - [ ] Minimal: Only the title and tags without name
   - [ ] Basic: Title, tags, members
@@ -84,3 +84,10 @@
   - [ ] Date pickers
     - [ ] https://litepie.com/#get-started
     - [ ] https://flowbite.com/docs/plugins/datepicker/
+
+
+## Kubernetes
+
+- [ ] using Redis Cluster
+- [ ] NATS as DaemonSet and nodes connected to local NATS pod
+- [ ] using MongoDB ReplicaSet
