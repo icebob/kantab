@@ -78,6 +78,7 @@
     "ioredis": "^4.28.4",
     "js-yaml": "^4.1.0",
     "jsonwebtoken": "8.5.1",
+    "kleur": "^4.1.4",
     "moleculer": "github:moleculerjs/moleculer#b9519933c06a2daaef39ce4744da0397fda9d84d",
     "moleculer-apollo-server": "github:moleculerjs/moleculer-apollo-server#7f0e2e2e2cb8c3118aa19385025578b2e5d7526f",
     "moleculer-io": "^2.0.0",

@@ -11,4 +11,4 @@ kubectl create configmap generic kantab-configmap --from-env-file=./.env.example
 
 3. Kubectl apply -f *.yaml
 
-This will create all serives without ingress.
+This will create all services without ingress.
