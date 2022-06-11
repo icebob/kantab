@@ -1,11 +1,13 @@
 .vscode
 .github
+coverage/
 frontend/
 kubernetes/
 logs/
 monitoring/
 node_modules/
 tests/
+tools/
 .env
 docker-compose*.env
 docker-compose*.yml

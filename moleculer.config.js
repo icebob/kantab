@@ -279,7 +279,7 @@ module.exports = {
 
 			serviceTemplate: {
 				image: "kantab",
-				env_file: "docker-compose.env",
+				env_file: ["docker-compose.env", ".env"],
 				volumes: [
 					"app_data:/app/data",
 					"./monitoring/prometheus:/app/monitoring/prometheus"

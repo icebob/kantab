@@ -88,7 +88,9 @@ services:
     restart: unless-stopped
   v1_accounts:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -103,7 +105,9 @@ services:
       SERVICES: accounts.service.js
   v1_activities:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -123,7 +127,9 @@ services:
       - traefik.http.routers.api.rule=PathPrefix(`/`)
       - traefik.http.services.api.loadbalancer.server.port=4000
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -138,7 +144,9 @@ services:
       SERVICES: api.service.js
   v1_boards:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -153,7 +161,9 @@ services:
       SERVICES: boards.service.js
   v1_card_attachments:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -168,7 +178,9 @@ services:
       SERVICES: card.attachments.service.js
   v1_card_checklists:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -183,7 +195,9 @@ services:
       SERVICES: card.checklists.service.js
   v1_cards:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -198,7 +212,9 @@ services:
       SERVICES: cards.service.js
   v1_config:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -217,7 +233,9 @@ services:
     ports:
       - '3212:3212'
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -230,7 +248,9 @@ services:
       SERVICES: laboratory.service.js
   v1_lists:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -245,7 +265,9 @@ services:
       SERVICES: lists.service.js
   v1_mail:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus
@@ -260,7 +282,9 @@ services:
       SERVICES: mail.service.js
   v1_tokens:
     image: kantab
-    env_file: docker-compose.env
+    env_file:
+      - docker-compose.env
+      - .env
     volumes:
       - app_data:/app/data
       - ./monitoring/prometheus:/app/monitoring/prometheus

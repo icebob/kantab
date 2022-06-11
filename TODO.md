@@ -28,8 +28,9 @@
 ## Boards
 - [ ] Only the owner can make a board to public/private and remove
 
-## Invitations
-- [ ] Invitations for boards
+## Board Members collection
+- [ ] It stores the board <-> account relations. 
+- [ ] Extra field for using invitations.
 
 ## Lists
 
