@@ -1,0 +1,56 @@
+apiVersion: apps/v1 # API version
+kind: StatefulSet
+metadata:
+  name: mongodb # Unique name for the deployment
+  labels:
+    app: mongodb # Labels to be applied to this deployment
+spec:
+  serviceName: mongo
+  replicas: 1 # Run a single pod in the deployment
+  selector:
+    matchLabels: # This deployment applies to the Pods matching these labels
+      app: mongodb
+  template: # Template for the pods that will be created by this deployment
+    metadata:
+      labels: # Labels to be applied to the Pods in this deployment
+        app: mongodb
+    spec: # Spec for the container which will be run inside the Pod.
+      containers:
+        - name: mongodb
+          image: mongo
+          ports:
+            - containerPort: 27017
+          resources: {}
+          volumeMounts:
+              - mountPath: /data/db
+                name: mongo-data
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: mongo-data
+---
+apiVersion: v1
+kind: Service # Type of Kubernetes resource
+metadata:
+  name: mongodb # Name of the Kubernetes resource
+  labels: # Labels that will be applied to this resource
+    app: mongodb
+spec:
+  ports:
+    - port: 27017 # Map incoming connections on port 27017 to the target port 27017 of the Pod
+      targetPort: 27017
+  selector: # Map any Pod with the specified labels to this service
+    app: mongodb
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-data
+  labels:
+    name: mongo-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

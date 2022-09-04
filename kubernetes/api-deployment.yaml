@@ -15,7 +15,7 @@ spec:
   ports:
     - port: 3000
       targetPort: 3000
-  type: NodePort
+  type: LoadBalancer
 ---
 #########################################################
 # API Gateway Deployment
@@ -43,24 +43,28 @@ spec:
           image: icebob/kantab:latest
           envFrom:
             - configMapRef:
-                name: kantab-secrets
-            - secretRef:
                 name: kantab-configmap
+            - secretRef:
+                name: kantab-secrets
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: 3000
           env:
             - name: SERVICES
               value: api
           resources:
             limits:
-              cpu: 100m
-              memory: 400Mi
+              cpu: 200m
+              memory: 500Mi
             requests:
-              cpu: 50m
-              memory: 200Mi
+              cpu: 100m
+              memory: 40Mi
 ---
 #########################################################
 # Horizontal Pod AutoScaler for API service (K8s >= v1.17)
 #########################################################
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: hpa-api

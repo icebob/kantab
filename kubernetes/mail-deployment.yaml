@@ -31,17 +31,17 @@ spec:
             - name: SERVICES
               value: mail
           resources:
-            requests:
-              memory: "200Mi"
-              cpu: "100m"
             limits:
-              memory: "300Mi"
-              cpu: "150m"
+              cpu: 200m
+              memory: 500Mi
+            requests:
+              cpu: 50m
+              memory: 40Mi
 ---
 #########################################################
 # Horizontal Pod AutoScaler for mail service (K8s >= v1.17)
 #########################################################
-apiVersion: autoscaling/v2beta2
+apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: hpa-mail
