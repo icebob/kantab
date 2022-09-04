@@ -323,7 +323,7 @@ export const authStore = defineStore({
 				if (!from.name) {
 					const token = Cookie.get(COOKIE_TOKEN_NAME);
 					if (token) {
-						this.getMe();
+						await this.getMe();
 					}
 				}
 
